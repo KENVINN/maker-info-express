@@ -18,7 +18,7 @@ const Footer = () => {
         <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground text-center">
           <div className="flex items-center gap-2">
             <MapPin size={16} className="text-primary" />
-            <span>DIGITE SEU ENDEREÇO AQUI EM VÁRZEA GRANDE, MT</span>
+            <span>Rua Olinda, Q: V L: 11 - Jardim União, Várzea Grande - MT, 78118-720</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock size={16} className="text-primary" />
