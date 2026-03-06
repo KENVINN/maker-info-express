@@ -1,11 +1,10 @@
-import { MapPin, Clock, Phone, Navigation } from "lucide-react";
+import { MapPin, Clock, Navigation } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollReveal from "@/components/ScrollReveal";
 
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 const MAPS_URL = "https://www.google.com/maps/dir/?api=1&destination=Rua+Olinda+Jardim+União+Várzea+Grande+MT+78118-720";
-const MAPS_EMBED = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3842.0!2d-56.13!3d-15.65!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sRua+Olinda%2C+Jardim+União%2C+Várzea+Grande+-+MT%2C+78118-720!5e0!3m2!1spt-BR!2sbr!4v1600000000000!5m2!1spt-BR!2sbr";
 
 const horarios = [
   { dia: "Segunda-feira", hora: "08:00 – 18:00" },
@@ -42,26 +41,20 @@ const Localizacao = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-            {/* Mapa */}
+            {/* Mapa OpenStreetMap - gratuito, sem chave */}
             <ScrollReveal>
               <div className="rounded-2xl overflow-hidden neon-border-cyan h-80 lg:h-full min-h-[320px]">
                 <iframe
                   title="Localização Maker Info"
-                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&q=Rua+Olinda,+Jardim+União,+Várzea+Grande,+MT,+78118-720&language=pt-BR`}
+                  src="https://www.openstreetmap.org/export/embed.html?bbox=-56.1450%2C-15.6620%2C-56.1250%2C-15.6420&layer=mapnik&marker=-15.6520%2C-56.1350"
                   width="100%"
                   height="100%"
                   style={{ border: 0, minHeight: "320px" }}
                   allowFullScreen
                   loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  onError={(e) => {
-                    // fallback to static map link if embed fails
-                    (e.target as HTMLIFrameElement).style.display = "none";
-                  }}
                 />
               </div>
 
-              {/* Fallback caso embed não carregue */}
               <a
                 href={MAPS_URL}
                 target="_blank"
@@ -69,7 +62,7 @@ const Localizacao = () => {
                 className="mt-3 flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors text-sm"
               >
                 <Navigation size={16} />
-                Abrir no Google Maps
+                Abrir rota no Google Maps
               </a>
             </ScrollReveal>
 
@@ -111,7 +104,6 @@ const Localizacao = () => {
                   </div>
                   <ul className="space-y-2">
                     {horarios.map((item, i) => {
-                      // hoje: 0=Dom(6), 1=Seg(0)...
                       const diaIndex = i === 6 ? 0 : i + 1;
                       const isHoje = diaIndex === hoje;
                       return (
@@ -121,8 +113,17 @@ const Localizacao = () => {
                             isHoje ? "text-primary font-semibold" : "text-muted-foreground"
                           }`}
                         >
-                          <span>{item.dia} {isHoje && <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">hoje</span>}</span>
-                          <span className={item.hora === "Fechado" ? "text-destructive" : ""}>{item.hora}</span>
+                          <span>
+                            {item.dia}{" "}
+                            {isHoje && (
+                              <span className="ml-1 text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                                hoje
+                              </span>
+                            )}
+                          </span>
+                          <span className={item.hora === "Fechado" ? "text-destructive" : ""}>
+                            {item.hora}
+                          </span>
                         </li>
                       );
                     })}
