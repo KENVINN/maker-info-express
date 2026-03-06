@@ -31,7 +31,7 @@ const Navbar = () => {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-heading text-sm font-bold neon-glow-green hover:brightness-110 transition-all"
+            className="px-5 py-2 rounded-lg bg-primary text-primary-foreground font-heading text-sm font-bold neon-glow-cyan hover:brightness-110 transition-all"
           >
             WHATSAPP
           </a>
@@ -60,7 +60,7 @@ const Navbar = () => {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-heading text-sm font-bold text-center neon-glow-green"
+            className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-heading text-sm font-bold text-center neon-glow-cyan"
           >
             WHATSAPP
           </a>
