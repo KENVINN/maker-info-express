@@ -2,7 +2,15 @@ import { MapPin, Clock, Navigation } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
-const MAPS_URL = "https://www.google.com/maps/dir/?api=1&destination=Rua+Olinda+Jardim+União+Várzea+Grande+MT+78118-720";
+const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Rua+Olinda+Jardim+União+Várzea+Grande+MT+78118-720";
+
+// Coordenadas exatas do Jardim União, Várzea Grande - MT (Plus Code 8WW5+82)
+const LAT = -15.7205;
+const LON = -56.1480;
+
+// BBox com ~500m de raio ao redor da loja
+const BBOX = `${LON - 0.008},${LAT - 0.005},${LON + 0.008},${LAT + 0.005}`;
+const MAP_SRC = `https://www.openstreetmap.org/export/embed.html?bbox=${BBOX}&layer=mapnik&marker=${LAT},${LON}`;
 
 const LocationSection = () => {
   return (
@@ -26,7 +34,7 @@ const LocationSection = () => {
             <div className="rounded-2xl overflow-hidden neon-border-cyan h-72">
               <iframe
                 title="Localização Maker Info"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=-56.1450%2C-15.6620%2C-56.1250%2C-15.6420&layer=mapnik&marker=-15.6520%2C-56.1350"
+                src={MAP_SRC}
                 width="100%"
                 height="100%"
                 style={{ border: 0, minHeight: "288px" }}
