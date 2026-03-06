@@ -31,7 +31,7 @@ const BeforeAfterSection = () => {
           {/* Slider */}
           <div
             ref={containerRef}
-            className="relative max-w-2xl mx-auto aspect-square rounded-2xl overflow-hidden cursor-col-resize neon-border-blue select-none"
+            className="relative max-w-2xl mx-auto aspect-square rounded-2xl overflow-hidden cursor-col-resize neon-border-purple select-none"
             onMouseMove={(e) => e.buttons === 1 && handleMove(e.clientX)}
             onTouchMove={(e) => handleMove(e.touches[0].clientX)}
           >
@@ -39,8 +39,8 @@ const BeforeAfterSection = () => {
             <div className="absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
               <img src={beforeImg} alt="Antes da manutenção" className="absolute inset-0 w-full h-full object-cover" style={{ minWidth: containerRef.current?.offsetWidth || "100%" }} loading="lazy" />
             </div>
-            <div className="absolute top-0 bottom-0 w-1 bg-primary neon-glow-green z-10" style={{ left: `${sliderPos}%`, transform: "translateX(-50%)" }}>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-primary flex items-center justify-center neon-glow-green">
+            <div className="absolute top-0 bottom-0 w-1 bg-primary neon-glow-cyan z-10" style={{ left: `${sliderPos}%`, transform: "translateX(-50%)" }}>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-primary flex items-center justify-center neon-glow-cyan">
                 <span className="text-primary-foreground text-xs font-bold">⟨⟩</span>
               </div>
             </div>

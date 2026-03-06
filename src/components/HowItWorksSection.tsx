@@ -36,7 +36,7 @@ const HowItWorksSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           {steps.map((step, i) => (
             <ScrollReveal key={i} delay={i * 150}>
-              <div className="flex flex-col items-center text-center p-8 rounded-2xl bg-background neon-border-blue hover:neon-glow-blue transition-all duration-300 group h-full">
+              <div className="flex flex-col items-center text-center p-8 rounded-2xl bg-background neon-border-purple hover:neon-glow-purple transition-all duration-300 group h-full">
                 <div className="text-5xl mb-5 group-hover:animate-float">
                   {step.emoji}
                 </div>
