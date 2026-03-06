@@ -1,3 +1,6 @@
+import { useState, useRef } from "react";
+import ScrollReveal from "./ScrollReveal";
+
 const BeforeAfterSection = () => {
   const [sliderPos, setSliderPos] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
