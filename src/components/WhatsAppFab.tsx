@@ -1,17 +1,17 @@
 import { MessageCircle } from "lucide-react";
 
-const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Ol%C3%A1%2C+gostaria+de+fazer+um+or%C3%A7amento&type=phone_number&app_absent=0";
-
 const WhatsAppFab = () => {
+  const whatsappUrl = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
+
   return (
     <a
-      href={WHATSAPP_URL}
+      href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Fale pelo WhatsApp"
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary flex items-center justify-center animate-pulse-neon hover:scale-110 transition-transform"
+      className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-110 active:scale-95"
+      aria-label="Contato via WhatsApp"
     >
-      <MessageCircle size={26} className="text-primary-foreground" />
+      <MessageCircle size={32} fill="white" stroke="white" />
     </a>
   );
 };
