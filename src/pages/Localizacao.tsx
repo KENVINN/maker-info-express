@@ -46,7 +46,7 @@ const Localizacao = () => {
               <div className="rounded-2xl overflow-hidden neon-border-cyan h-80 lg:h-full min-h-[320px]">
                 <iframe
                   title="Localização Maker Info"
-                  src="https://www.openstreetmap.org/export/embed.html?bbox=-56.1450%2C-15.6620%2C-56.1250%2C-15.6420&layer=mapnik&marker=-15.6520%2C-56.1350"
+                  src="https://www.openstreetmap.org/export/embed.html?bbox=-56.1560%2C-15.7255%2C-56.1400%2C-15.7155&layer=mapnik&marker=-15.7205%2C-56.1480"
                   width="100%"
                   height="100%"
                   style={{ border: 0, minHeight: "320px" }}
