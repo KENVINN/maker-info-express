@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import beforeImg from "@/assets/before-pc.jpg";
 import afterImg from "@/assets/after-pc.jpg";
+import ScrollReveal from "./ScrollReveal";
 
 const BeforeAfterSection = () => {
   const [sliderPos, setSliderPos] = useState(50);
@@ -16,13 +17,15 @@ const BeforeAfterSection = () => {
   return (
     <section id="antes-depois" className="py-20 md:py-28">
       <div className="container px-4">
-        <h2 className="font-heading text-3xl md:text-4xl font-black text-center mb-4">
-          Dá uma olhada no nível da nossa{" "}
-          <span className="text-primary">manutenção</span>:
-        </h2>
-        <p className="text-muted-foreground text-center mb-12 text-sm">
-          Arraste para comparar o antes e depois
-        </p>
+        <ScrollReveal>
+          <h2 className="font-heading text-3xl md:text-4xl font-black text-center mb-4">
+            Dá uma olhada no nível da nossa{" "}
+            <span className="text-primary">manutenção</span>:
+          </h2>
+          <p className="text-muted-foreground text-center mb-12 text-sm">
+            Arraste para comparar o antes e depois
+          </p>
+        </ScrollReveal>
 
         {/* Slider */}
         <div
