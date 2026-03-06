@@ -52,8 +52,12 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         neon: {
-          green: "hsl(var(--neon-green))",
-          blue: "hsl(var(--neon-blue))",
+          cyan: "hsl(var(--neon-cyan))",
+          purple: "hsl(var(--neon-purple))",
+        },
+        highlight: {
+          pink: "hsl(var(--highlight-pink))",
+          amber: "hsl(var(--highlight-amber))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -82,10 +86,10 @@ export default {
         },
         "pulse-neon": {
           "0%, 100%": {
-            boxShadow: "0 0 15px hsl(145 100% 45% / 0.5), 0 0 40px hsl(145 100% 45% / 0.2)",
+            boxShadow: "0 0 15px hsl(193 95% 48% / 0.5), 0 0 40px hsl(193 95% 48% / 0.2)",
           },
           "50%": {
-            boxShadow: "0 0 25px hsl(145 100% 45% / 0.7), 0 0 60px hsl(145 100% 45% / 0.35)",
+            boxShadow: "0 0 25px hsl(193 95% 48% / 0.7), 0 0 60px hsl(193 95% 48% / 0.35)",
           },
         },
         float: {
