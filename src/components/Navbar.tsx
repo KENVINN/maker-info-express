@@ -26,7 +26,7 @@ const Navbar = () => {
           <a href="/#antes-depois" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Antes e Depois
           </a>
-          <a href="/localizacao" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="/#localizacao" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Localização
           </a>
           <a
@@ -58,7 +58,7 @@ const Navbar = () => {
           <a href="/#antes-depois" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Antes e Depois
           </a>
-          <a href="/localizacao" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="/#localizacao" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Localização
           </a>
           <a
