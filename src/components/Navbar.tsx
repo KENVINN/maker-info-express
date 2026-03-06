@@ -11,12 +11,11 @@ const Navbar = () => {
       <div className="container flex items-center justify-between h-16">
         {/* Logo */}
         <a href="#" className="flex items-center gap-2 group">
-          <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary font-heading text-primary-foreground text-lg font-black tracking-tight">
-            M
-          </span>
-          <span className="font-heading text-lg font-bold text-foreground tracking-tight">
-            Maker <span className="text-primary">Info</span>
-          </span>
+          <img
+            src="/maker_info_logo.png"
+            alt="Maker Info"
+            className="h-9 w-auto object-contain"
+          />
         </a>
 
         {/* Desktop links */}
