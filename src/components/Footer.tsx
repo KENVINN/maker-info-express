@@ -23,14 +23,14 @@ const Footer = () => {
           <a
             href="#"
             aria-label="Instagram"
-            className="p-2.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+            className="p-2.5 rounded-lg border border-border text-muted-foreground hover:text-highlight-pink hover:border-highlight-pink transition-colors"
           >
             <Instagram size={18} />
           </a>
           <a
             href="#"
             aria-label="Facebook"
-            className="p-2.5 rounded-lg border border-border text-muted-foreground hover:text-secondary hover:border-secondary transition-colors"
+            className="p-2.5 rounded-lg border border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors"
           >
             <Facebook size={18} />
           </a>
