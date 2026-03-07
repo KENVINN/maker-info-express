@@ -1,37 +1,48 @@
-<!doctype html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Maker Info | Conserto de PC e Notebook em Cuiabá e VG</title>
-    <meta name="description" content="Consertamos seu PC e Notebook com rapidez. Buscamos e entregamos na sua porta em Cuiabá e Várzea Grande." />
-    <meta name="author" content="Maker Info" />
+import Navbar from "@/components/Navbar";
+import HeroSection from "@/components/HeroSection";
+import BeforeAfterSection from "@/components/BeforeAfterSection";
+import HowItWorksSection from "@/components/HowItWorksSection";
+import LocationSection from "@/components/locationsection";
+import Footer from "@/components/Footer";
+import WhatsAppFab from "@/components/WhatsAppFab";
+import ScrollReveal from "@/components/ScrollReveal";
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
-    <meta property="og:title" content="Maker Info | Conserto de PC e Notebook" />
-    <meta property="og:description" content="Consertamos seu PC e Notebook com rapidez. Buscamos na sua porta!" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="/maker_info_logo.png" />
+const ServicosPreview = () => (
+  <section className="py-16 bg-card">
+    <div className="container px-4 text-center">
+      <ScrollReveal>
+        <h2 className="font-heading text-3xl md:text-4xl font-black mb-4">
+          O que a gente <span className="text-secondary">conserta</span>
+        </h2>
+        <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+          Limpeza, formatação, upgrade de SSD, recuperação de dados, remoção de vírus e muito mais.
+        </p>
+        <a
+          href="/servicos"
+          className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-primary text-primary font-heading font-bold text-base hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+        >
+          Ver todos os serviços →
+        </a>
+      </ScrollReveal>
+    </div>
+  </section>
+);
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="/maker_info_logo.png" />
+const Index = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <HeroSection />
+      <HowItWorksSection />
+      <ServicosPreview />
+      <BeforeAfterSection />
+      <LocationSection />
+      <Footer />
+      <WhatsAppFab />
+    </div>
+  );
+};
 
-    <!-- Google Analytics (GA4) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK4SMH266D"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-RK4SMH266D');
-    </script>
-  </head>
-
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+export default Index;
