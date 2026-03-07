@@ -9,18 +9,12 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
       <div className="container flex items-center justify-between h-16">
-        {/* Logo */}
         <a href="/" className="flex items-center gap-2 group">
-          <img
-            src="/maker_info_logo.png"
-            alt="Maker Info"
-            className="h-9 w-auto object-contain"
-          />
+          <img src="/maker_info_logo.png" alt="Maker Info" className="h-9 w-auto object-contain" />
         </a>
 
-        {/* Desktop links */}
         <div className="hidden md:flex items-center gap-8">
-          <a href="/#servicos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="/servicos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Serviços
           </a>
           <a href="/#antes-depois" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -39,20 +33,14 @@ const Navbar = () => {
           </a>
         </div>
 
-        {/* Mobile toggle */}
-        <button
-          onClick={() => setOpen(!open)}
-          className="md:hidden p-2 text-foreground"
-          aria-label="Menu"
-        >
+        <button onClick={() => setOpen(!open)} className="md:hidden p-2 text-foreground" aria-label="Menu">
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {open && (
         <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border px-6 pb-6 pt-2 flex flex-col gap-4 animate-fade-in-up">
-          <a href="/#servicos" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="/servicos" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Serviços
           </a>
           <a href="/#antes-depois" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
