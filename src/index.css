@@ -1,41 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  .dark {
     --background: 220 15% 5%;
     --foreground: 210 20% 96%;
-
     --card: 220 15% 8%;
     --card-foreground: 210 20% 96%;
-
     --popover: 220 15% 8%;
     --popover-foreground: 210 20% 96%;
-
     --primary: 193 95% 48%;
     --primary-foreground: 220 15% 5%;
-
     --secondary: 268 100% 71%;
     --secondary-foreground: 220 15% 5%;
-
     --muted: 220 12% 14%;
     --muted-foreground: 220 10% 58%;
-
     --accent: 268 100% 71%;
     --accent-foreground: 220 15% 5%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 20% 96%;
-
     --border: 220 12% 18%;
     --input: 220 12% 18%;
     --ring: 193 95% 48%;
-
     --radius: 0.75rem;
-
     --sidebar-background: 220 15% 6%;
     --sidebar-foreground: 210 20% 96%;
     --sidebar-primary: 193 95% 48%;
@@ -44,11 +34,45 @@
     --sidebar-accent-foreground: 210 20% 96%;
     --sidebar-border: 220 12% 18%;
     --sidebar-ring: 193 95% 48%;
-
     --neon-cyan: 193 95% 48%;
     --neon-purple: 268 100% 71%;
     --highlight-pink: 330 90% 65%;
     --highlight-amber: 38 100% 60%;
+  }
+
+  .light {
+    --background: 0 0% 97%;
+    --foreground: 220 15% 10%;
+    --card: 0 0% 92%;
+    --card-foreground: 220 15% 10%;
+    --popover: 0 0% 97%;
+    --popover-foreground: 220 15% 10%;
+    --primary: 193 95% 38%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 268 80% 55%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 14% 86%;
+    --muted-foreground: 220 10% 40%;
+    --accent: 268 80% 55%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 78%;
+    --input: 220 13% 78%;
+    --ring: 193 95% 38%;
+    --radius: 0.75rem;
+    --sidebar-background: 0 0% 94%;
+    --sidebar-foreground: 220 15% 10%;
+    --sidebar-primary: 193 95% 38%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 14% 86%;
+    --sidebar-accent-foreground: 220 15% 10%;
+    --sidebar-border: 220 13% 78%;
+    --sidebar-ring: 193 95% 38%;
+    --neon-cyan: 193 95% 38%;
+    --neon-purple: 268 80% 55%;
+    --highlight-pink: 330 90% 55%;
+    --highlight-amber: 38 100% 50%;
   }
 }
 
