@@ -10,7 +10,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
 const ServicosPreview = () => (
-  <section className="py-16 bg-card">
+  <section className="py-16 bg-card/60 backdrop-blur">
     <div className="container px-4 text-center">
       <ScrollReveal>
         <h2 className="font-heading text-3xl md:text-4xl font-black mb-4">
