@@ -4,11 +4,8 @@ import ScrollReveal from "./ScrollReveal";
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Rua+Olinda+Jardim+União+Várzea+Grande+MT+78118-720";
 
-// Coordenadas exatas do Jardim União, Várzea Grande - MT (Plus Code 8WW5+82)
-const LAT = -15.7205;
-const LON = -56.1480;
-
-// BBox com ~500m de raio ao redor da loja
+const LAT = -15.7052;
+const LON = -56.1398;
 const BBOX = `${LON - 0.008},${LAT - 0.005},${LON + 0.008},${LAT + 0.005}`;
 const MAP_SRC = `https://www.openstreetmap.org/export/embed.html?bbox=${BBOX}&layer=mapnik&marker=${LAT},${LON}`;
 
@@ -16,7 +13,6 @@ const LocationSection = () => {
   return (
     <section id="localizacao" className="py-20 md:py-28 bg-card">
       <div className="container px-4 max-w-5xl mx-auto">
-
         <ScrollReveal>
           <h2 className="font-heading text-3xl md:text-4xl font-black text-center mb-4">
             Onde nos{" "}
@@ -28,8 +24,6 @@ const LocationSection = () => {
         </ScrollReveal>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-
-          {/* Mapa */}
           <ScrollReveal>
             <div className="rounded-2xl overflow-hidden neon-border-cyan h-72">
               <iframe
@@ -53,10 +47,7 @@ const LocationSection = () => {
             </a>
           </ScrollReveal>
 
-          {/* Infos */}
           <div className="flex flex-col gap-5">
-
-            {/* Endereço */}
             <ScrollReveal delay={100}>
               <div className="p-6 rounded-2xl bg-background neon-border-purple">
                 <div className="flex items-start gap-3">
@@ -82,7 +73,6 @@ const LocationSection = () => {
               </div>
             </ScrollReveal>
 
-            {/* Horário */}
             <ScrollReveal delay={200}>
               <div className="p-6 rounded-2xl bg-background neon-border-purple">
                 <div className="flex items-center gap-3 mb-3">
@@ -106,7 +96,6 @@ const LocationSection = () => {
               </div>
             </ScrollReveal>
 
-            {/* CTA WhatsApp */}
             <ScrollReveal delay={300}>
               <a
                 href={WHATSAPP_URL}
@@ -121,7 +110,6 @@ const LocationSection = () => {
                 Prefere que buscamos aí? Fale conosco!
               </a>
             </ScrollReveal>
-
           </div>
         </div>
       </div>
