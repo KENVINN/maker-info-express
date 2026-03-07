@@ -13,7 +13,7 @@ const WhatsAppIcon = () => (
 const stats = [
   { valor: "100%", label: "Garantia nos serviços" },
   { valor: "10min", label: "Orçamento no WhatsApp" },
-  { valor: "VG+CPA", label: "Busca na sua porta" },
+  { valor: "VG+CBA", label: "Busca na sua porta" },
 ];
 
 const frases = [
