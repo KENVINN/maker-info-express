@@ -18,7 +18,7 @@ const servicos = [
     emoji: "🧹",
     titulo: "Limpeza e Manutenção Preventiva",
     problema: "PC lento, superaquecendo ou fazendo barulho estranho?",
-    descricao: "Poeira acumulada mata o desempenho e a vida útil do seu equipamento. Fazemos limpeza completa interna, troca de pasta térmica e verificação geral — seu PC volta a respirar.",
+    descricao: "Poeira acumulada mata o desempenho e a vida útil do seu equipamento. Fazemos limpeza completa interna, troca de pasta térmica e verificação geral. Seu PC volta a respirar.",
     beneficios: ["Temperatura reduzida", "Desempenho restaurado", "Vida útil prolongada"],
     tag: "Mais pedido",
     tagColor: "bg-primary/20 text-primary",
@@ -36,7 +36,7 @@ const servicos = [
     emoji: "⚡",
     titulo: "Upgrade de Memória RAM e SSD",
     problema: "Computador trava ao abrir vários programas?",
-    descricao: "Trocar o HD por um SSD é a atualização mais impactante que existe — o PC pode ficar até 5x mais rápido. Também fazemos upgrade de RAM para multitarefa sem travar.",
+    descricao: "Trocar o HD por um SSD é a atualização mais impactante que existe. O PC pode ficar até 5x mais rápido. Também fazemos upgrade de RAM para multitarefa sem travar.",
     beneficios: ["Boot em segundos", "Programas abrindo na hora", "Sem travamentos"],
     tag: "Melhor custo-benefício",
     tagColor: "bg-secondary/20 text-secondary",
@@ -45,7 +45,7 @@ const servicos = [
     emoji: "💾",
     titulo: "Recuperação de Dados",
     problema: "Perdeu fotos, documentos ou arquivos importantes?",
-    descricao: "HD com defeito, acidente ou formatação acidental — tentamos recuperar seus dados antes de qualquer outro procedimento. Avaliamos e só cobramos se recuperar.",
+    descricao: "HD com defeito, acidente ou formatação acidental. Tentamos recuperar seus dados antes de qualquer outro procedimento. Avaliamos e só cobramos se recuperar.",
     beneficios: ["Avaliação gratuita", "Sem recuperação = sem custo", "Sigilo garantido"],
     tag: "Avaliação grátis",
     tagColor: "bg-highlight-amber/20 text-highlight-amber",
@@ -54,7 +54,7 @@ const servicos = [
     emoji: "🛡️",
     titulo: "Remoção de Vírus e Malware",
     problema: "PC lento, com anúncios estranhos ou comportamento suspeito?",
-    descricao: "Vírus, ransomware, adware — identificamos e eliminamos qualquer ameaça. Instalamos proteção para você não passar por isso de novo.",
+    descricao: "Vírus, ransomware, adware. Identificamos e eliminamos qualquer ameaça e instalamos proteção para você não passar por isso de novo.",
     beneficios: ["Remoção completa", "Antivírus configurado", "Orientação de segurança"],
     tag: null,
     tagColor: "",
@@ -94,7 +94,6 @@ const Servicos = () => {
       <Navbar />
       <main className="pt-24 pb-20">
 
-        {/* Hero */}
         <div className="container px-4 max-w-4xl mx-auto text-center mb-20">
           <ScrollReveal>
             <span className="inline-block px-4 py-1.5 rounded-full bg-primary/15 text-primary text-sm font-semibold mb-6">
@@ -119,40 +118,20 @@ const Servicos = () => {
           </ScrollReveal>
         </div>
 
-        {/* Serviços */}
         <div className="container px-4 max-w-6xl mx-auto mb-24">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {servicos.map((s, i) => (
               <ScrollReveal key={i} delay={i * 100}>
                 <div className="relative flex flex-col h-full p-6 rounded-2xl bg-card neon-border-purple hover:neon-glow-purple transition-all duration-300 group">
-                  {/* Tag */}
                   {s.tag && (
                     <span className={`absolute top-4 right-4 text-xs font-bold px-2.5 py-1 rounded-full ${s.tagColor}`}>
                       {s.tag}
                     </span>
                   )}
-
-                  {/* Emoji */}
-                  <div className="text-4xl mb-4 group-hover:animate-float">
-                    {s.emoji}
-                  </div>
-
-                  {/* Título */}
-                  <h2 className="font-heading font-black text-lg mb-2 text-foreground">
-                    {s.titulo}
-                  </h2>
-
-                  {/* Problema */}
-                  <p className="text-primary text-sm font-semibold mb-3 italic">
-                    "{s.problema}"
-                  </p>
-
-                  {/* Descrição */}
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-5 flex-1">
-                    {s.descricao}
-                  </p>
-
-                  {/* Benefícios */}
+                  <div className="text-4xl mb-4 group-hover:animate-float">{s.emoji}</div>
+                  <h2 className="font-heading font-black text-lg mb-2 text-foreground">{s.titulo}</h2>
+                  <p className="text-primary text-sm font-semibold mb-3 italic">"{s.problema}"</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-5 flex-1">{s.descricao}</p>
                   <ul className="space-y-1.5 mb-6">
                     {s.beneficios.map((b, j) => (
                       <li key={j} className="flex items-center gap-2 text-sm text-foreground">
@@ -161,8 +140,6 @@ const Servicos = () => {
                       </li>
                     ))}
                   </ul>
-
-                  {/* CTA */}
                   <a
                     href={WHATSAPP_URL}
                     target="_blank"
@@ -178,7 +155,6 @@ const Servicos = () => {
           </div>
         </div>
 
-        {/* Diferenciais */}
         <div className="bg-card py-16">
           <div className="container px-4 max-w-5xl mx-auto">
             <ScrollReveal>
@@ -203,14 +179,13 @@ const Servicos = () => {
           </div>
         </div>
 
-        {/* CTA Final */}
         <div className="container px-4 max-w-2xl mx-auto text-center mt-24">
           <ScrollReveal>
             <h2 className="font-heading text-3xl md:text-4xl font-black mb-4">
               Pronto para resolver de vez? 🚀
             </h2>
             <p className="text-muted-foreground mb-8">
-              Manda uma mensagem agora — orçamento grátis, sem compromisso e a gente busca aí.
+              Manda uma mensagem agora. Orçamento grátis, sem compromisso e a gente busca aí.
             </p>
             <a
               href={WHATSAPP_URL}
