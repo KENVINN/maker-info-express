@@ -3,11 +3,10 @@ import HeroSection from "@/components/HeroSection";
 import BeforeAfterSection from "@/components/BeforeAfterSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import LocationSection from "@/components/locationsection";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import ScrollReveal from "@/components/ScrollReveal";
-
-const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
 const ServicosPreview = () => (
   <section className="py-16 bg-card/60 backdrop-blur">
@@ -38,6 +37,7 @@ const Index = () => {
       <HowItWorksSection />
       <ServicosPreview />
       <BeforeAfterSection />
+      <TestimonialsSection />
       <LocationSection />
       <Footer />
       <WhatsAppFab />
