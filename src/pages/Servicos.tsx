@@ -3,6 +3,7 @@ import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import ScrollReveal from "@/components/ScrollReveal";
 import { ShieldCheck, Truck, MessageCircle } from "lucide-react";
+import TestimonialsSection from "@/components/TestimonialsSection";
 
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
@@ -178,6 +179,8 @@ const Servicos = () => {
             </div>
           </div>
         </div>
+
+        <TestimonialsSection />
 
         <div className="container px-4 max-w-2xl mx-auto text-center mt-24">
           <ScrollReveal>
