@@ -1,6 +1,5 @@
-import heroBg from "@/assets/hero-bg.jpg";
+import ScrollReveal from "@/components/ScrollReveal";
 
-// Número correto do WhatsApp
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
 const WhatsAppIcon = () => (
@@ -10,31 +9,81 @@ const WhatsAppIcon = () => (
   </svg>
 );
 
+const stats = [
+  { valor: "100%", label: "Garantia nos serviços" },
+  { valor: "10min", label: "Orçamento no WhatsApp" },
+  { valor: "VG+CPA", label: "Busca na sua porta" },
+];
+
+const problemas = [
+  "🐢 PC travando e lento?",
+  "🦠 Cheio de vírus?",
+  "💀 Não liga mais?",
+  "💾 Perdeu seus dados?",
+];
+
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden">
-      <div className="absolute inset-0 z-0">
-        <img src={heroBg} alt="" className="w-full h-full object-cover opacity-30" loading="eager" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+    <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-16 overflow-hidden">
+      {/* Glow de fundo */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
+
+      <div className="container px-4 max-w-5xl mx-auto text-center">
+        <ScrollReveal>
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold mb-8">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            Várzea Grande e Cuiabá · Busca na sua porta
+          </div>
+
+          {/* Título principal */}
+          <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] mb-6">
+            Seu PC ou Notebook{" "}
+            <span className="text-gradient-neon block">Deixou Você na Mão?</span>
+          </h1>
+
+          {/* Subtítulo */}
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto mb-8">
+            A gente conserta rápido e ainda busca na sua porta. Orçamento grátis em menos de 10 minutos.
+          </p>
+
+          {/* Problemas em pílulas */}
+          <div className="flex flex-wrap justify-center gap-2 mb-10">
+            {problemas.map((p, i) => (
+              <span key={i} className="px-3 py-1.5 rounded-full bg-card border border-border text-sm text-muted-foreground">
+                {p}
+              </span>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-3 px-10 py-5 rounded-xl bg-primary text-primary-foreground font-heading text-lg font-black animate-pulse-neon hover:brightness-110 transition-all shadow-2xl shadow-primary/30 mb-14"
+          >
+            <WhatsAppIcon />
+            FAZER ORÇAMENTO AGORA
+          </a>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+            {stats.map((s, i) => (
+              <div key={i} className="flex flex-col items-center p-4 rounded-2xl bg-card/60 backdrop-blur border border-border">
+                <span className="font-heading text-2xl font-black text-primary mb-1">{s.valor}</span>
+                <span className="text-xs text-muted-foreground text-center leading-snug">{s.label}</span>
+              </div>
+            ))}
+          </div>
+        </ScrollReveal>
       </div>
-      <div className="container relative z-10 text-center px-4 py-20 md:py-32">
-        <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight mb-6 animate-fade-in-up">
-          Seu PC ou Notebook{" "}
-          <span className="text-gradient-neon">Deixou Você na Mão?</span>
-        </h1>
-        <h2 className="text-lg sm:text-xl md:text-2xl text-muted-foreground font-body max-w-2xl mx-auto mb-10 animate-fade-in-up" style={{ animationDelay: "0.15s" }}>
-          Consertamos Rápido e Buscamos na Sua Porta! 🛵
-        </h2>
-        <a
-          href={WHATSAPP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-3 px-8 py-4 md:px-10 md:py-5 rounded-xl bg-primary text-primary-foreground font-heading text-base md:text-lg font-bold animate-pulse-neon hover:brightness-110 transition-all animate-fade-in-up"
-          style={{ animationDelay: "0.3s" }}
-        >
-          <WhatsAppIcon />
-          FAZER ORÇAMENTO AGORA
-        </a>
+
+      {/* Seta scroll */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce text-muted-foreground/40">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 5v14M5 12l7 7 7-7"/>
+        </svg>
       </div>
     </section>
   );
