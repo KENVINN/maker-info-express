@@ -4,6 +4,8 @@ import BeforeAfterSection from "@/components/BeforeAfterSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
 import LocationSection from "@/components/locationsection";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import FaqSection from "@/components/FaqSection";
+import StatsBar from "@/components/StatsBar";
 import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -34,10 +36,12 @@ const Index = () => {
     <div className="min-h-screen">
       <Navbar />
       <HeroSection />
+      <StatsBar />
       <HowItWorksSection />
       <ServicosPreview />
       <BeforeAfterSection />
       <TestimonialsSection />
+      <FaqSection />
       <LocationSection />
       <Footer />
       <WhatsAppFab />
