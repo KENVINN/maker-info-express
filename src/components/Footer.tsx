@@ -4,15 +4,12 @@ const Footer = () => {
   return (
     <footer className="py-12 border-t border-border">
       <div className="container px-4 flex flex-col items-center gap-6">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary font-heading text-primary-foreground text-sm font-black">
-            M
-          </span>
-          <span className="font-heading text-base font-bold text-foreground">
-            Maker <span className="text-primary">Info</span>
-          </span>
-        </div>
+        {/* Logo completa */}
+        <img
+          src="/maker_info_logo.png"
+          alt="Maker Info"
+          className="h-14 w-auto object-contain"
+        />
 
         {/* Informações de Contato e Horário */}
         <div className="flex flex-col items-center gap-3 text-sm text-muted-foreground text-center">
