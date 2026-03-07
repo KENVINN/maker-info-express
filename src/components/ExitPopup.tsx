@@ -17,7 +17,7 @@ const ExitPopup = () => {
   useEffect(() => {
     // Desktop: mouse sai pelo topo
     const onMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 10) show();
+      if (e.clientY <= 30) show();
     };
 
     // Mobile: scroll rápido pra cima
