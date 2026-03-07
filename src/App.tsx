@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Servicos from "./pages/Servicos";
 import Localizacao from "./pages/Localizacao";
 import NotFound from "./pages/NotFound";
+import CircuitBackground from "./components/CircuitBackground";
 
 const queryClient = new QueryClient();
 
@@ -15,14 +16,19 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/servicos" element={<Servicos />} />
-          <Route path="/localizacao" element={<Localizacao />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <div className="relative min-h-screen bg-background">
+        <CircuitBackground />
+        <div className="relative z-10">
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/servicos" element={<Servicos />} />
+              <Route path="/localizacao" element={<Localizacao />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </div>
+      </div>
     </TooltipProvider>
   </QueryClientProvider>
 );
