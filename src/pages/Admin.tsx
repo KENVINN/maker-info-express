@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase, Pedido, STATUS_CONFIG, StatusPedido } from "@/lib/supabase";
 
-const ADMIN_PASS = "makerinfo2024";
+const ADMIN_PASS = "#090925";
 const STATUSES = Object.keys(STATUS_CONFIG) as StatusPedido[];
 
 const gerarCodigo = () => {
