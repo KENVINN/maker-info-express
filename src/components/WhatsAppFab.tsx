@@ -1,21 +1,12 @@
-import { useState } from "react";
-
 const WhatsAppFab = () => {
-  const [hovered, setHovered] = useState(false);
   const whatsappUrl = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
-      {/* Tooltip */}
-      <div
-        className={`transition-all duration-300 ${
-          hovered ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"
-        }`}
-      >
-        <div className="bg-[#25D366] text-white text-sm font-semibold px-4 py-2.5 rounded-2xl rounded-br-sm shadow-lg max-w-[200px] leading-snug">
-          💬 Seu orçamento pronto em menos de 10 minutos!
-          <div className="absolute right-[-6px] bottom-2 w-0 h-0 border-t-[6px] border-t-transparent border-l-[6px] border-l-[#25D366] border-b-[0px]" />
-        </div>
+      {/* Mensagem sempre visível */}
+      <div className="relative bg-[#25D366] text-white text-sm font-semibold px-4 py-2.5 rounded-2xl rounded-br-none shadow-lg max-w-[190px] leading-snug animate-fade-in-up">
+        💬 Orçamento pronto em menos de 10 min!
+        <div className="absolute bottom-0 right-[-8px] w-0 h-0 border-t-[8px] border-t-[#25D366] border-r-[8px] border-r-transparent" />
       </div>
 
       {/* Botão */}
@@ -23,9 +14,7 @@ const WhatsAppFab = () => {
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 shadow-[#25D366]/30 hover:shadow-[#25D366]/60"
+        className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 shadow-[#25D366]/30 hover:shadow-[#25D366]/60"
         aria-label="Contato via WhatsApp"
       >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-9 h-9">
