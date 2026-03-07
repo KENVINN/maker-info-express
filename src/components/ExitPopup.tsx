@@ -1,42 +1,72 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
 const ExitPopup = () => {
   const [visible, setVisible] = useState(false);
-  const [shown, setShown] = useState(false);
+  const shown = useRef(false);
+  const lastScrollY = useRef(0);
+  const lastScrollTime = useRef(Date.now());
+
+  const show = () => {
+    if (shown.current) return;
+    shown.current = true;
+    setVisible(true);
+  };
 
   useEffect(() => {
-    const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 10 && !shown) {
-        setVisible(true);
-        setShown(true);
-      }
+    // Desktop: mouse sai pelo topo
+    const onMouseLeave = (e: MouseEvent) => {
+      if (e.clientY <= 10) show();
     };
-    document.addEventListener("mouseleave", handleMouseLeave);
-    return () => document.removeEventListener("mouseleave", handleMouseLeave);
-  }, [shown]);
+
+    // Mobile: scroll rápido pra cima
+    const onScroll = () => {
+      const now = Date.now();
+      const currentY = window.scrollY;
+      const delta = lastScrollY.current - currentY;
+      const timeDelta = now - lastScrollTime.current;
+
+      // scroll pra cima rápido (>300px em <400ms) e já rolou bastante
+      if (delta > 80 && timeDelta < 400 && currentY > 300) {
+        show();
+      }
+
+      lastScrollY.current = currentY;
+      lastScrollTime.current = now;
+    };
+
+    // Tab visibility (usuário troca de aba no celular)
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") show();
+    };
+
+    document.addEventListener("mouseleave", onMouseLeave);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      document.removeEventListener("mouseleave", onMouseLeave);
+      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
 
   if (!visible) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
       <div className="relative bg-card border border-primary/30 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl shadow-primary/20">
-        {/* Fechar */}
         <button
           onClick={() => setVisible(false)}
           className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors text-xl leading-none"
-        >
-          ✕
-        </button>
+        >✕</button>
 
-        {/* Emoji */}
         <div className="text-5xl mb-4">⚡</div>
 
         <h2 className="font-heading text-2xl font-black mb-2">
           Espera! Antes de ir...
         </h2>
-
         <p className="text-muted-foreground mb-2">
           Seu computador com problema pode piorar se você esperar.
         </p>
