@@ -27,7 +27,6 @@ const ExitPopup = () => {
       const delta = lastScrollY.current - currentY;
       const timeDelta = now - lastScrollTime.current;
 
-      // scroll pra cima rápido (>300px em <400ms) e já rolou bastante
       if (delta > 80 && timeDelta < 400 && currentY > 300) {
         show();
       }
@@ -36,19 +35,12 @@ const ExitPopup = () => {
       lastScrollTime.current = now;
     };
 
-    // Tab visibility (usuário troca de aba no celular)
-    const onVisibility = () => {
-      if (document.visibilityState === "hidden") show();
-    };
-
     document.addEventListener("mouseleave", onMouseLeave);
     window.addEventListener("scroll", onScroll, { passive: true });
-    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       document.removeEventListener("mouseleave", onMouseLeave);
       window.removeEventListener("scroll", onScroll);
-      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
