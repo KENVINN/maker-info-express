@@ -90,7 +90,7 @@ const diferenciais = [
 
 const Servicos = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Navbar />
       <main className="pt-24 pb-20">
 
@@ -155,7 +155,7 @@ const Servicos = () => {
           </div>
         </div>
 
-        <div className="bg-card py-16">
+        <div className="py-16 bg-card/60 backdrop-blur">
           <div className="container px-4 max-w-5xl mx-auto">
             <ScrollReveal>
               <h2 className="font-heading text-3xl font-black text-center mb-12">
