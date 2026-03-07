@@ -6,7 +6,6 @@ import LocationSection from "@/components/locationsection";
 import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import ScrollReveal from "@/components/ScrollReveal";
-import CircuitBackground from "@/components/CircuitBackground";
 
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
@@ -33,18 +32,15 @@ const ServicosPreview = () => (
 
 const Index = () => {
   return (
-    <div className="relative min-h-screen bg-background">
-      <CircuitBackground />
-      <div className="relative z-10">
-        <Navbar />
-        <HeroSection />
-        <HowItWorksSection />
-        <ServicosPreview />
-        <BeforeAfterSection />
-        <LocationSection />
-        <Footer />
-        <WhatsAppFab />
-      </div>
+    <div className="min-h-screen">
+      <Navbar />
+      <HeroSection />
+      <HowItWorksSection />
+      <ServicosPreview />
+      <BeforeAfterSection />
+      <LocationSection />
+      <Footer />
+      <WhatsAppFab />
     </div>
   );
 };
