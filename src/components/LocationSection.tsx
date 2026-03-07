@@ -4,8 +4,8 @@ import ScrollReveal from "./ScrollReveal";
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Rua+Olinda+Jardim+União+Várzea+Grande+MT+78118-720";
 
-const LAT = -15.7052;
-const LON = -56.1398;
+const LAT = -15.7048;
+const LON = -56.1372;
 const BBOX = `${LON - 0.008},${LAT - 0.005},${LON + 0.008},${LAT + 0.005}`;
 const MAP_SRC = `https://www.openstreetmap.org/export/embed.html?bbox=${BBOX}&layer=mapnik&marker=${LAT},${LON}`;
 
