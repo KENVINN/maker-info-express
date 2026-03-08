@@ -53,6 +53,43 @@ const Pedido = () => {
       badge: "/maker_info_logo.png",
       tag: `pedido-${codigo}`,
     });
+    tocarSom(status === "Pronto para Retirada" || status === "Entregue" ? "pronto" : "notificacao");
+  };
+
+  const tocarSom = (tipo: "notificacao" | "pronto") => {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (tipo === "pronto") {
+        // Som de celebração — sequência de notas
+        const notas = [523, 659, 784, 1047];
+        notas.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.15);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.15 + 0.3);
+          osc.start(ctx.currentTime + i * 0.15);
+          osc.stop(ctx.currentTime + i * 0.15 + 0.3);
+        });
+      } else {
+        // Som de notificação — dois bips suaves
+        [0, 0.2].forEach(delay => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = "sine";
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.2, ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.15);
+          osc.start(ctx.currentTime + delay);
+          osc.stop(ctx.currentTime + delay + 0.15);
+        });
+      }
+    } catch (e) {}
   };
 
   const buscar = async () => {
@@ -85,7 +122,10 @@ const Pedido = () => {
         filter: `id=eq.${pedido.id}`,
       }, (payload) => {
         const novo = payload.new as PedidoType;
-        if (pedido && novo.status !== pedido.status) dispararNotificacao(novo.codigo, novo.status);
+        if (pedido && novo.status !== pedido.status) {
+          dispararNotificacao(novo.codigo, novo.status);
+          tocarSom(novo.status === "Pronto para Retirada" || novo.status === "Entregue" ? "pronto" : "notificacao");
+        }
         setPedido(novo);
       })
       .subscribe();
