@@ -3,7 +3,7 @@ import ScrollReveal from "@/components/ScrollReveal";
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
 const diferenciais = [
-  { emoji: "📍", title: "Sabe onde está seu PC", desc: "Diagnóstico, reparo, testes — você vê cada etapa acontecendo em tempo real." },
+  { emoji: "📍", title: "Sabe onde está seu PC", desc: "Diagnóstico, reparo e testes você vê cada etapa acontecendo em tempo real." },
   { emoji: "🔔", title: "Sem precisar ligar", desc: "Chega de ficar ligando pra saber se ficou pronto. O status aparece no seu celular." },
   { emoji: "🛵", title: "A gente busca na sua porta", desc: "Não precisa sair de casa. Buscamos e entregamos em Várzea Grande e Cuiabá." },
   { emoji: "⚡", title: "Atualiza no mesmo segundo", desc: "Assim que o técnico muda o status, você já vê no celular. Sem delay, sem enrolação." },
@@ -24,7 +24,7 @@ const TrackingSection = () => (
             Você acompanha o reparo <span className="text-gradient-neon">ao vivo</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Igual rastrear uma entrega do iFood — mas pro seu computador. Nenhuma outra assistência técnica de Várzea Grande oferece isso.
+            Igual rastrear uma entrega do iFood mas pro seu computador. Nenhuma outra assistência técnica de Várzea Grande oferece isso.
           </p>
         </div>
 
