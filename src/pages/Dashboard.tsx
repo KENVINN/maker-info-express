@@ -90,9 +90,12 @@ const Dashboard = () => {
     if (periodo === "tudo") return items;
     const days = parseInt(periodo);
     const limite = new Date();
+    limite.setHours(0, 0, 0, 0);
     limite.setDate(limite.getDate() - days);
     return items.filter(i => {
-      const d = new Date(i.created_at || i.data || "");
+      const raw = i.created_at || i.data || "";
+      // handle date-only strings like "2026-02-18" without timezone shift
+      const d = raw.length === 10 ? new Date(raw + "T00:00:00") : new Date(raw);
       return d >= limite;
     });
   };
