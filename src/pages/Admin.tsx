@@ -16,7 +16,7 @@ const Admin = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(false);
   const TODAS_ETAPAS = Object.keys(STATUS_CONFIG) as StatusPedido[];
-  const [form, setForm] = useState({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo(), telefone: "" });
+  const [form, setForm] = useState({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo(), telefone: "", valor: "" });
   const [etapasSelecionadas, setEtapasSelecionadas] = useState<StatusPedido[]>(TODAS_ETAPAS);
   const [salvando, setSalvando] = useState(false);
   const [editando, setEditando] = useState<string | null>(null);
@@ -62,7 +62,7 @@ const Admin = () => {
   const criarPedido = async () => {
     if (!form.cliente_nome || !form.equipamento || !form.problema) return;
     setSalvando(true);
-    const { error } = await supabase.from("pedidos").insert({ ...form, status: "Em Diagnóstico", etapas: etapasSelecionadas });
+    const { error } = await supabase.from("pedidos").insert({ ...form, valor: parseFloat(form.valor.replace(",", ".")) || 0, status: "Em Diagnóstico", etapas: etapasSelecionadas });
     if (!error) {
       setSucesso(`Pedido ${form.codigo} criado!`);
       if (form.telefone) {
@@ -147,11 +147,12 @@ const Admin = () => {
 
   const abrirEdicao = (p: Pedido) => {
     setEditando(p.id);
-    setEditForm({ cliente_nome: p.cliente_nome, equipamento: p.equipamento, problema: p.problema, telefone: p.telefone });
+    setEditForm({ cliente_nome: p.cliente_nome, equipamento: p.equipamento, problema: p.problema, telefone: p.telefone, valor: p.valor?.toString() || "" });
   };
 
   const salvarEdicao = async (id: string) => {
-    await supabase.from("pedidos").update(editForm).eq("id", id);
+    const valorNum = parseFloat(((editForm as any).valor || "0").replace(",", ".")) || 0;
+await supabase.from("pedidos").update({ ...editForm, valor: valorNum }).eq("id", id);
     setPedidos(prev => prev.map(p => p.id === id ? { ...p, ...editForm } : p));
     setEditando(null);
   };
@@ -234,6 +235,12 @@ const Admin = () => {
               <label className="text-xs text-muted-foreground mb-1 block">Problema *</label>
               <input value={form.problema} onChange={e => setForm(f => ({ ...f, problema: e.target.value }))}
                 placeholder="Ex: Lento, não liga"
+                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Valor do Serviço (R$)</label>
+              <input value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))}
+                placeholder="Ex: 120,00"
                 className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
             </div>
           </div>
@@ -321,6 +328,9 @@ const Admin = () => {
                       className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
                     <input value={editForm.telefone || ""} onChange={e => setEditForm(f => ({ ...f, telefone: e.target.value }))}
                       placeholder="WhatsApp (ex: 65999999999)"
+                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                    <input value={(editForm as any).valor || ""} onChange={e => setEditForm(f => ({ ...f, valor: e.target.value } as any))}
+                      placeholder="Valor do serviço (ex: 120,00)"
                       className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
                     <div className="flex gap-2 pt-1">
                       <button onClick={() => salvarEdicao(p.id)} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-heading font-bold hover:brightness-110 transition-all">Salvar</button>
