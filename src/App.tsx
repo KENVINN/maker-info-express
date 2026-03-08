@@ -10,6 +10,7 @@ import Pedido from "./pages/Pedido";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import CircuitBackground from "./components/CircuitBackground";
+import ExitPopup from "./components/ExitPopup";
 
 const queryClient = new QueryClient();
 
