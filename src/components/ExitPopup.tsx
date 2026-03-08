@@ -8,7 +8,7 @@ const ExitPopup = () => {
 
   useEffect(() => {
     const handleMouseLeave = (e: MouseEvent) => {
-      if (e.clientY <= 10 && !shown) {
+      if (e.clientY <= 5 && !shown) {
         setVisible(true);
         setShown(true);
       }
