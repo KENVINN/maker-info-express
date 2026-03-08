@@ -112,12 +112,15 @@ const Admin = () => {
   };
 
   const carregarFotos = async (pedidoId: string) => {
-    const { data } = await supabase.storage.from("pedidos").list(pedidoId);
-    if (data) {
+    const { data } = await supabase.storage.from("pedidos").list(pedidoId, { sortBy: { column: "created_at", order: "desc" } });
+    if (data && data.length > 0) {
+      const ts = Date.now();
       const urls = data.map(f =>
-        supabase.storage.from("pedidos").getPublicUrl(`${pedidoId}/${f.name}`).data.publicUrl
+        supabase.storage.from("pedidos").getPublicUrl(`${pedidoId}/${f.name}`).data.publicUrl + `?t=${ts}`
       );
       setFotos(prev => ({ ...prev, [pedidoId]: urls }));
+    } else {
+      setFotos(prev => ({ ...prev, [pedidoId]: [] }));
     }
   };
 
@@ -130,13 +133,17 @@ const Admin = () => {
       await supabase.storage.from("pedidos").upload(`${pedidoId}/${nome}`, file);
     }
     await carregarFotos(pedidoId);
+    await supabase.from("pedidos").update({ fotos_updated_at: new Date().toISOString() }).eq("id", pedidoId);
     setUploadingId(null);
   };
 
   const deletarFoto = async (pedidoId: string, url: string) => {
-    const nome = url.split(`${pedidoId}/`)[1];
+    const partes = url.split(`${pedidoId}/`);
+    const nome = partes[1]?.split("?")[0];
+    if (!nome) return;
     await supabase.storage.from("pedidos").remove([`${pedidoId}/${nome}`]);
     setFotos(prev => ({ ...prev, [pedidoId]: prev[pedidoId].filter(u => u !== url) }));
+    await supabase.from("pedidos").update({ fotos_updated_at: new Date().toISOString() }).eq("id", pedidoId);
   };
 
   const abrirEdicao = (p: Pedido) => {
