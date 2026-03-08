@@ -11,25 +11,11 @@ const Pedido = () => {
   const [pedido, setPedido] = useState<PedidoType | null>(null);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
-  const [fotos, setFotos] = useState<string[]>([]);
-
-  const carregarFotos = async (pedidoId: string) => {
-    const { data: arquivos } = await supabase.storage.from("pedidos").list(pedidoId);
-    if (arquivos) {
-      const urls = arquivos.map(f =>
-        supabase.storage.from("pedidos").getPublicUrl(`${pedidoId}/${f.name}`).data.publicUrl
-      );
-      setFotos(urls);
-    }
-  };
-
   const buscar = async () => {
     if (!codigo.trim()) return;
     setLoading(true);
     setErro("");
     setPedido(null);
-    setFotos([]);
-
     const { data, error } = await supabase
       .from("pedidos")
       .select("*")
@@ -40,7 +26,6 @@ const Pedido = () => {
       setErro("Código não encontrado. Verifique e tente novamente.");
     } else {
       setPedido(data);
-      await carregarFotos(data.id);
     }
     setLoading(false);
   };
@@ -57,7 +42,6 @@ const Pedido = () => {
       }, (payload) => {
         const novo = payload.new as PedidoType;
         setPedido(novo);
-        carregarFotos(novo.id);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -169,11 +153,11 @@ const Pedido = () => {
               </div>
             )}
 
-            {fotos.length > 0 && (
+            {(pedido as any).fotos_urls?.length > 0 && (
               <div>
                 <p className="text-xs text-muted-foreground mb-3">📸 Fotos do reparo</p>
                 <div className="grid grid-cols-3 gap-2">
-                  {fotos.map((url, i) => (
+                  {((pedido as any).fotos_urls as string[]).map((url, i) => (
                     <a key={i} href={url} target="_blank" rel="noopener noreferrer">
                       {url.match(/\.(mp4|mov|webm)$/i) ? (
                         <video src={url} className="w-full aspect-square object-cover rounded-xl border border-border" />
