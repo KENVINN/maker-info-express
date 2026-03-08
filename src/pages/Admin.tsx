@@ -15,7 +15,9 @@ const Admin = () => {
   const [erroLogin, setErroLogin] = useState("");
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(false);
+  const TODAS_ETAPAS = Object.keys(STATUS_CONFIG) as StatusPedido[];
   const [form, setForm] = useState({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo() });
+  const [etapasSelecionadas, setEtapasSelecionadas] = useState<StatusPedido[]>(TODAS_ETAPAS);
   const [salvando, setSalvando] = useState(false);
   const [sucesso, setSucesso] = useState("");
 
@@ -52,10 +54,11 @@ const Admin = () => {
   const criarPedido = async () => {
     if (!form.cliente_nome || !form.equipamento || !form.problema) return;
     setSalvando(true);
-    const { error } = await supabase.from("pedidos").insert({ ...form, status: "Em Diagnóstico" });
+    const { error } = await supabase.from("pedidos").insert({ ...form, status: "Em Diagnóstico", etapas: etapasSelecionadas });
     if (!error) {
       setSucesso(`Pedido ${form.codigo} criado! Envie o código pro cliente via WhatsApp.`);
       setForm({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo() });
+      setEtapasSelecionadas(TODAS_ETAPAS);
       setTimeout(() => setSucesso(""), 5000);
     }
     setSalvando(false);
@@ -145,6 +148,27 @@ const Admin = () => {
             <input value={form.observacao} onChange={e => setForm(f => ({ ...f, observacao: e.target.value }))}
               placeholder="Ex: Aguardando peça"
               className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+          </div>
+          <div className="mb-4">
+            <label className="text-xs text-muted-foreground mb-2 block">Etapas do serviço (desmarque as que não se aplicam)</label>
+            <div className="flex flex-wrap gap-2">
+              {TODAS_ETAPAS.map(e => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => setEtapasSelecionadas(prev =>
+                    prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e]
+                  )}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-heading font-bold transition-all border ${
+                    etapasSelecionadas.includes(e)
+                      ? "bg-primary/20 border-primary text-primary"
+                      : "bg-background border-border text-muted-foreground opacity-40"
+                  }`}
+                >
+                  {STATUS_CONFIG[e].emoji} {e}
+                </button>
+              ))}
+            </div>
           </div>
           {sucesso && <p className="text-green-500 text-sm mb-3 font-semibold">✓ {sucesso}</p>}
           <button onClick={criarPedido} disabled={salvando}
