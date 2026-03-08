@@ -49,6 +49,9 @@ const Pedido = () => {
   }, [pedido?.id]);
 
   const currentStep = pedido ? STATUS_CONFIG[pedido.status as StatusPedido]?.step ?? 0 : 0;
+  const etapasVisiveis = pedido?.etapas
+    ? STATUSES.filter(s => (pedido.etapas as string[]).includes(s))
+    : STATUSES;
 
   return (
     <div className="min-h-screen">
@@ -126,7 +129,7 @@ const Pedido = () => {
                 />
 
                 <div className="space-y-3">
-                  {STATUSES.map((s) => {
+                  {etapasVisiveis.map((s) => {
                     const cfg = STATUS_CONFIG[s];
                     const done = cfg.step < currentStep;
                     const active = cfg.step === currentStep;
