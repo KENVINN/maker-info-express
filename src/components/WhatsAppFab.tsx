@@ -1,7 +1,10 @@
+import React from 'react';
+
 const WhatsAppFab = () => {
   const whatsappUrl = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
   const handleWhatsAppClick = () => {
+    // Verifica se o gtag existe (carregado pela index.html) antes de disparar
     if (typeof window !== "undefined" && (window as any).gtag) {
       (window as any).gtag("event", "conversion", {
         send_to: "AW-17997609434/Kv8YCPm3voQcENrz9oVD",
@@ -11,13 +14,13 @@ const WhatsAppFab = () => {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
-      {/* Mensagem sempre visível */}
+      {/* Mensagem flutuante */}
       <div className="relative bg-[#25D366] text-white text-sm font-semibold px-4 py-2.5 rounded-2xl rounded-br-none shadow-lg max-w-[190px] leading-snug animate-fade-in-up">
         💬 Orçamento pronto em menos de 10 min!
         <div className="absolute bottom-0 right-[-8px] w-0 h-0 border-t-[8px] border-t-[#25D366] border-r-[8px] border-r-transparent" />
       </div>
 
-      {/* Botão com o evento onClick adicionado */}
+      {/* Botão de Ação */}
       <a
         href={whatsappUrl}
         target="_blank"
