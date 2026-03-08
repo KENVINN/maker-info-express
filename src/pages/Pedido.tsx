@@ -11,6 +11,33 @@ const Pedido = () => {
   const [pedido, setPedido] = useState<PedidoType | null>(null);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
+  const pedirPermissaoNotificacao = async () => {
+    if ("Notification" in window && Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+  };
+
+  const dispararNotificacao = (codigo: string, status: string) => {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const emojis: Record<string, string> = {
+      "Em Diagnóstico": "🔍",
+      "Limpeza / Formatação": "🧹",
+      "Peça Solicitada": "📦",
+      "Em Reparo": "🔧",
+      "Testes Finais": "🧪",
+      "Pronto para Retirada": "✅",
+      "Saída para Entrega": "🛵",
+      "Entregue": "🎉",
+    };
+    const emoji = emojis[status] || "🔧";
+    new Notification(`${emoji} Maker Info — Pedido ${codigo}`, {
+      body: `Status atualizado: ${status}\nClique para acompanhar`,
+      icon: "/maker_info_logo.png",
+      badge: "/maker_info_logo.png",
+      tag: `pedido-${codigo}`,
+    });
+  };
+
   const buscar = async () => {
     if (!codigo.trim()) return;
     setLoading(true);
@@ -41,6 +68,7 @@ const Pedido = () => {
         filter: `id=eq.${pedido.id}`,
       }, (payload) => {
         const novo = payload.new as PedidoType;
+        if (pedido && novo.status !== pedido.status) dispararNotificacao(novo.codigo, novo.status);
         setPedido(novo);
       })
       .subscribe();
