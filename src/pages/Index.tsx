@@ -6,6 +6,7 @@ import LocationSection from "@/components/locationsection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import FaqSection from "@/components/FaqSection";
 import StatsBar from "@/components/StatsBar";
+import TrackingSection from "@/components/TrackingSection";
 import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import ScrollReveal from "@/components/ScrollReveal";
@@ -20,10 +21,8 @@ const ServicosPreview = () => (
         <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
           Limpeza, formatação, upgrade de SSD, recuperação de dados, remoção de vírus e muito mais.
         </p>
-        <a
-          href="/servicos"
-          className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-primary text-primary font-heading font-bold text-base hover:bg-primary hover:text-primary-foreground transition-all duration-200"
-        >
+        <a href="/servicos"
+          className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-primary text-primary font-heading font-bold text-base hover:bg-primary hover:text-primary-foreground transition-all duration-200">
           Ver todos os serviços →
         </a>
       </ScrollReveal>
@@ -38,6 +37,7 @@ const Index = () => {
       <HeroSection />
       <StatsBar />
       <HowItWorksSection />
+      <TrackingSection />
       <ServicosPreview />
       <BeforeAfterSection />
       <TestimonialsSection />
