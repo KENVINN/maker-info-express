@@ -58,7 +58,15 @@ const Admin = () => {
     setSalvando(true);
     const { error } = await supabase.from("pedidos").insert({ ...form, status: "Em Diagnóstico", etapas: etapasSelecionadas });
     if (!error) {
-      setSucesso(`Pedido ${form.codigo} criado! Envie o código pro cliente via WhatsApp.`);
+      setSucesso(`Pedido ${form.codigo} criado!`);
+      if (form.telefone) {
+        const tel = form.telefone.replace(/\D/g, "");
+        const numero = tel.startsWith("55") ? tel : `55${tel}`;
+        const msg = encodeURIComponent(
+          `🔧 *Maker Info — Seu pedido foi aberto!*\n\nOlá, *${form.cliente_nome}*! Recebemos seu equipamento.\n\nCódigo do seu pedido: *${form.codigo}*\n\nAcompanhe cada etapa do reparo em tempo real pelo link abaixo 👇\nmakerinfo.com.br/pedido`
+        );
+        window.open(`https://api.whatsapp.com/send/?phone=${numero}&text=${msg}`, "_blank");
+      }
       setForm({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo(), telefone: "" });
       setEtapasSelecionadas(TODAS_ETAPAS);
       setTimeout(() => setSucesso(""), 5000);
