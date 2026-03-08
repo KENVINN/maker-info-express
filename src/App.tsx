@@ -10,8 +10,6 @@ import Pedido from "./pages/Pedido";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import CircuitBackground from "./components/CircuitBackground";
-import ExitPopup from "./components/ExitPopup";
-
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -21,7 +19,6 @@ const App = () => (
       <Sonner />
       <div className="relative min-h-screen bg-background">
         <CircuitBackground />
-        <ExitPopup />
         <div className="relative z-10">
           <BrowserRouter>
             <Routes>
