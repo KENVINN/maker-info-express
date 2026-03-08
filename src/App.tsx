@@ -8,8 +8,11 @@ import Servicos from "./pages/Servicos";
 import Localizacao from "./pages/Localizacao";
 import Pedido from "./pages/Pedido";
 import Admin from "./pages/Admin";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import CircuitBackground from "./components/CircuitBackground";
+import ExitPopup from "./components/ExitPopup";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -19,6 +22,7 @@ const App = () => (
       <Sonner />
       <div className="relative min-h-screen bg-background">
         <CircuitBackground />
+        <ExitPopup />
         <div className="relative z-10">
           <BrowserRouter>
             <Routes>
@@ -27,6 +31,7 @@ const App = () => (
               <Route path="/localizacao" element={<Localizacao />} />
               <Route path="/pedido" element={<Pedido />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
