@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase, Pedido, STATUS_CONFIG, StatusPedido } from "@/lib/supabase";
 
-const ADMIN_PASS = "makerinfo2024";
+const ADMIN_PASS = "090923";
 const STATUSES = Object.keys(STATUS_CONFIG) as StatusPedido[];
 
 const gerarCodigo = () => {
@@ -19,6 +19,8 @@ const Admin = () => {
   const [form, setForm] = useState({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo() });
   const [etapasSelecionadas, setEtapasSelecionadas] = useState<StatusPedido[]>(TODAS_ETAPAS);
   const [salvando, setSalvando] = useState(false);
+  const [editando, setEditando] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Pedido>>({});
   const [sucesso, setSucesso] = useState("");
 
   const login = () => {
@@ -72,6 +74,17 @@ const Admin = () => {
   const atualizarObservacao = async (id: string, observacao: string) => {
     setPedidos(prev => prev.map(p => p.id === id ? { ...p, observacao } : p));
     await supabase.from("pedidos").update({ observacao }).eq("id", id);
+  };
+
+  const abrirEdicao = (p: Pedido) => {
+    setEditando(p.id);
+    setEditForm({ cliente_nome: p.cliente_nome, equipamento: p.equipamento, problema: p.problema });
+  };
+
+  const salvarEdicao = async (id: string) => {
+    await supabase.from("pedidos").update(editForm).eq("id", id);
+    setPedidos(prev => prev.map(p => p.id === id ? { ...p, ...editForm } : p));
+    setEditando(null);
   };
 
   const deletarPedido = async (id: string) => {
@@ -192,6 +205,7 @@ const Admin = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={`text-sm font-semibold ${cfg?.color}`}>{cfg?.emoji} {p.status}</span>
+                    <button onClick={() => abrirEdicao(p)} className="text-muted-foreground hover:text-primary transition-colors text-xs">✏️</button>
                     <button onClick={() => deletarPedido(p.id)} className="text-muted-foreground hover:text-destructive transition-colors text-xs">🗑️</button>
                   </div>
                 </div>
@@ -211,7 +225,25 @@ const Admin = () => {
                   ))}
                 </div>
 
-                <div className="flex gap-2">
+                {editando === p.id && (
+                  <div className="mt-3 p-4 rounded-xl bg-background border border-primary/30 space-y-2">
+                    <p className="text-xs text-primary font-semibold mb-2">✏️ Editando pedido</p>
+                    <input value={editForm.cliente_nome || ""} onChange={e => setEditForm(f => ({ ...f, cliente_nome: e.target.value }))}
+                      placeholder="Nome do cliente"
+                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                    <input value={editForm.equipamento || ""} onChange={e => setEditForm(f => ({ ...f, equipamento: e.target.value }))}
+                      placeholder="Equipamento"
+                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                    <input value={editForm.problema || ""} onChange={e => setEditForm(f => ({ ...f, problema: e.target.value }))}
+                      placeholder="Problema"
+                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                    <div className="flex gap-2 pt-1">
+                      <button onClick={() => salvarEdicao(p.id)} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-heading font-bold hover:brightness-110 transition-all">Salvar</button>
+                      <button onClick={() => setEditando(null)} className="px-4 py-1.5 rounded-lg bg-background border border-border text-xs font-heading font-bold hover:border-primary transition-all">Cancelar</button>
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-2 mt-3">
                   <input
                     defaultValue={p.observacao || ""}
                     placeholder="Observação para o cliente..."
