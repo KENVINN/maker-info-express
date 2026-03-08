@@ -62,10 +62,12 @@ const Admin = () => {
   };
 
   const atualizarStatus = async (id: string, status: StatusPedido) => {
+    setPedidos(prev => prev.map(p => p.id === id ? { ...p, status } : p));
     await supabase.from("pedidos").update({ status }).eq("id", id);
   };
 
   const atualizarObservacao = async (id: string, observacao: string) => {
+    setPedidos(prev => prev.map(p => p.id === id ? { ...p, observacao } : p));
     await supabase.from("pedidos").update({ observacao }).eq("id", id);
   };
 
