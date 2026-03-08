@@ -86,22 +86,29 @@ const Dashboard = () => {
   };
 
   // Filtro de período
-  const filtrarPorPeriodo = <T extends { created_at?: string; data?: string }>(items: T[]) => {
-    if (periodo === "tudo") return items;
-    const days = parseInt(periodo);
-    const limite = new Date();
-    limite.setHours(0, 0, 0, 0);
-    limite.setDate(limite.getDate() - days);
-    return items.filter(i => {
-      const raw = i.created_at || i.data || "";
-      // handle date-only strings like "2026-02-18" without timezone shift
-      const d = raw.length === 10 ? new Date(raw + "T00:00:00") : new Date(raw);
-      return d >= limite;
-    });
+  const getLimite = () => {
+    if (periodo === "tudo") return null;
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - parseInt(periodo));
+    return d;
   };
 
-  const pedidosFiltrados = filtrarPorPeriodo(pedidos);
-  const custosFiltrados = filtrarPorPeriodo(custos);
+  const pedidosFiltrados = (() => {
+    const limite = getLimite();
+    if (!limite) return pedidos;
+    return pedidos.filter(p => new Date(p.created_at) >= limite);
+  })();
+
+  const custosFiltrados = (() => {
+    const limite = getLimite();
+    if (!limite) return custos;
+    return custos.filter(c => {
+      const [ano, mes, dia] = c.data.split("-").map(Number);
+      const d = new Date(ano, mes - 1, dia);
+      return d >= limite;
+    });
+  })();
 
   // Métricas
   const faturamento = pedidosFiltrados.reduce((s, p) => s + (p.valor || 0), 0);
