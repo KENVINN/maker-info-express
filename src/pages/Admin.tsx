@@ -21,6 +21,8 @@ const Admin = () => {
   const [salvando, setSalvando] = useState(false);
   const [editando, setEditando] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Pedido>>({});
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [fotos, setFotos] = useState<Record<string, string[]>>({});
   const [sucesso, setSucesso] = useState("");
 
   const login = () => {
@@ -49,7 +51,10 @@ const Admin = () => {
   const carregarPedidos = async () => {
     setLoading(true);
     const { data } = await supabase.from("pedidos").select("*").order("created_at", { ascending: false });
-    if (data) setPedidos(data);
+    if (data) {
+      setPedidos(data);
+      data.forEach(p => carregarFotos(p.id));
+    }
     setLoading(false);
   };
 
@@ -104,6 +109,34 @@ const Admin = () => {
   const atualizarObservacao = async (id: string, observacao: string) => {
     setPedidos(prev => prev.map(p => p.id === id ? { ...p, observacao } : p));
     await supabase.from("pedidos").update({ observacao }).eq("id", id);
+  };
+
+  const carregarFotos = async (pedidoId: string) => {
+    const { data } = await supabase.storage.from("pedidos").list(pedidoId);
+    if (data) {
+      const urls = data.map(f =>
+        supabase.storage.from("pedidos").getPublicUrl(`${pedidoId}/${f.name}`).data.publicUrl
+      );
+      setFotos(prev => ({ ...prev, [pedidoId]: urls }));
+    }
+  };
+
+  const handleUpload = async (pedidoId: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploadingId(pedidoId);
+    for (const file of Array.from(files)) {
+      const ext = file.name.split(".").pop();
+      const nome = `${Date.now()}.${ext}`;
+      await supabase.storage.from("pedidos").upload(`${pedidoId}/${nome}`, file);
+    }
+    await carregarFotos(pedidoId);
+    setUploadingId(null);
+  };
+
+  const deletarFoto = async (pedidoId: string, url: string) => {
+    const nome = url.split(`${pedidoId}/`)[1];
+    await supabase.storage.from("pedidos").remove([`${pedidoId}/${nome}`]);
+    setFotos(prev => ({ ...prev, [pedidoId]: prev[pedidoId].filter(u => u !== url) }));
   };
 
   const abrirEdicao = (p: Pedido) => {
@@ -290,6 +323,38 @@ const Admin = () => {
                     onBlur={e => atualizarObservacao(p.id, e.target.value)}
                     className="flex-1 px-3 py-2 rounded-lg bg-background border border-border text-sm focus:outline-none focus:border-primary"
                   />
+                </div>
+
+                {/* Fotos */}
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs text-muted-foreground font-semibold">📸 Fotos / Vídeos</p>
+                    <label className={`px-3 py-1 rounded-lg text-xs font-heading font-bold cursor-pointer transition-all border ${uploadingId === p.id ? "opacity-50" : "border-primary/40 text-primary hover:bg-primary/10"}`}>
+                      {uploadingId === p.id ? "Enviando..." : "+ Adicionar"}
+                      <input type="file" accept="image/*,video/*" multiple className="hidden"
+                        onChange={e => handleUpload(p.id, e.target.files)}
+                        disabled={uploadingId === p.id} />
+                    </label>
+                  </div>
+                  {fotos[p.id] && fotos[p.id].length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {fotos[p.id].map((url, i) => (
+                        <div key={i} className="relative group">
+                          {url.match(/\.(mp4|mov|webm)$/i) ? (
+                            <video src={url} className="w-20 h-20 object-cover rounded-lg border border-border" controls />
+                          ) : (
+                            <a href={url} target="_blank" rel="noopener noreferrer">
+                              <img src={url} alt="" className="w-20 h-20 object-cover rounded-lg border border-border hover:opacity-80 transition-all" />
+                            </a>
+                          )}
+                          <button onClick={() => deletarFoto(p.id, url)}
+                            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-white text-xs hidden group-hover:flex items-center justify-center">
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-2">
