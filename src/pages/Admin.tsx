@@ -16,7 +16,7 @@ const Admin = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(false);
   const TODAS_ETAPAS = Object.keys(STATUS_CONFIG) as StatusPedido[];
-  const [form, setForm] = useState({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo(), telefone: "", valor: "" });
+  const [form, setForm] = useState({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo(), telefone: "", valor: "", bairro: "" });
   const [etapasSelecionadas, setEtapasSelecionadas] = useState<StatusPedido[]>(TODAS_ETAPAS);
   const [salvando, setSalvando] = useState(false);
   const [editando, setEditando] = useState<string | null>(null);
@@ -147,7 +147,7 @@ const Admin = () => {
 
   const abrirEdicao = (p: Pedido) => {
     setEditando(p.id);
-    setEditForm({ cliente_nome: p.cliente_nome, equipamento: p.equipamento, problema: p.problema, telefone: p.telefone, valor: p.valor?.toString() || "" });
+    setEditForm({ cliente_nome: p.cliente_nome, equipamento: p.equipamento, problema: p.problema, telefone: p.telefone, valor: p.valor?.toString() || "", bairro: (p as any).bairro || "" });
   };
 
   const salvarEdicao = async (id: string) => {
@@ -232,6 +232,12 @@ await supabase.from("pedidos").update({ ...editForm, valor: valorNum }).eq("id",
                 className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
             </div>
             <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Bairro</label>
+              <input value={form.bairro} onChange={e => setForm(f => ({ ...f, bairro: e.target.value }))}
+                placeholder="Ex: Cristo Rei"
+                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+            </div>
+            <div>
               <label className="text-xs text-muted-foreground mb-1 block">Problema *</label>
               <input value={form.problema} onChange={e => setForm(f => ({ ...f, problema: e.target.value }))}
                 placeholder="Ex: Lento, não liga"
@@ -302,6 +308,7 @@ await supabase.from("pedidos").update({ ...editForm, valor: valorNum }).eq("id",
                   <div><span className="text-muted-foreground">Equipamento: </span>{p.equipamento}</div>
                   <div><span className="text-muted-foreground">Problema: </span>{p.problema}</div>
                   {p.telefone && <div><span className="text-muted-foreground">WhatsApp: </span>{p.telefone}</div>}
+                  {(p as any).bairro && <div><span className="text-muted-foreground">Bairro: </span>{(p as any).bairro}</div>}
                 </div>
 
                 {/* Status buttons */}
@@ -331,6 +338,9 @@ await supabase.from("pedidos").update({ ...editForm, valor: valorNum }).eq("id",
                       className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
                     <input value={(editForm as any).valor || ""} onChange={e => setEditForm(f => ({ ...f, valor: e.target.value } as any))}
                       placeholder="Valor do serviço (ex: 120,00)"
+                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                    <input value={(editForm as any).bairro || ""} onChange={e => setEditForm(f => ({ ...f, bairro: e.target.value } as any))}
+                      placeholder="Bairro (ex: Cristo Rei)"
                       className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
                     <div className="flex gap-2 pt-1">
                       <button onClick={() => salvarEdicao(p.id)} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-heading font-bold hover:brightness-110 transition-all">Salvar</button>
