@@ -11,6 +11,23 @@ const Pedido = () => {
   const [pedido, setPedido] = useState<PedidoType | null>(null);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [instalado, setInstalado] = useState(false);
+  useEffect(() => {
+    const handler = (e: any) => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", () => setInstalado(true));
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const instalarApp = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") setInstalado(true);
+    setInstallPrompt(null);
+  };
+
   const pedirPermissaoNotificacao = async () => {
     if ("Notification" in window && Notification.permission === "default") {
       await Notification.requestPermission();
@@ -94,6 +111,20 @@ const Pedido = () => {
             Digite o código que você recebeu via WhatsApp
           </p>
         </div>
+
+        {installPrompt && !instalado && (
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-green-500/10 border border-primary/20 flex items-center gap-4">
+            <div className="text-3xl">📱</div>
+            <div className="flex-1">
+              <p className="font-heading font-black text-sm">Instale o app da Maker Info</p>
+              <p className="text-xs text-muted-foreground">Receba notificações do seu reparo direto no celular</p>
+            </div>
+            <button onClick={instalarApp}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-xs hover:brightness-110 transition-all shrink-0">
+              Instalar
+            </button>
+          </div>
+        )}
 
         <div className="flex gap-3 mb-8">
           <input
