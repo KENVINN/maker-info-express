@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase, Pedido, STATUS_CONFIG, StatusPedido } from "@/lib/supabase";
 
-const ADMIN_PASS = "090923";
+const ADMIN_PASS = "makerinfo2024";
 const STATUSES = Object.keys(STATUS_CONFIG) as StatusPedido[];
 
 const gerarCodigo = () => {
@@ -16,7 +16,7 @@ const Admin = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(false);
   const TODAS_ETAPAS = Object.keys(STATUS_CONFIG) as StatusPedido[];
-  const [form, setForm] = useState({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo() });
+  const [form, setForm] = useState({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo(), telefone: "" });
   const [etapasSelecionadas, setEtapasSelecionadas] = useState<StatusPedido[]>(TODAS_ETAPAS);
   const [salvando, setSalvando] = useState(false);
   const [editando, setEditando] = useState<string | null>(null);
@@ -59,16 +59,38 @@ const Admin = () => {
     const { error } = await supabase.from("pedidos").insert({ ...form, status: "Em Diagnóstico", etapas: etapasSelecionadas });
     if (!error) {
       setSucesso(`Pedido ${form.codigo} criado! Envie o código pro cliente via WhatsApp.`);
-      setForm({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo() });
+      setForm({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo(), telefone: "" });
       setEtapasSelecionadas(TODAS_ETAPAS);
       setTimeout(() => setSucesso(""), 5000);
     }
     setSalvando(false);
   };
 
-  const atualizarStatus = async (id: string, status: StatusPedido) => {
+  const notificarCliente = (telefone: string, codigo: string, status: string) => {
+    if (!telefone) return;
+    const tel = telefone.replace(/\D/g, "");
+    const numero = tel.startsWith("55") ? tel : `55${tel}`;
+    const emoji: Record<string, string> = {
+      "Em Diagnóstico": "🔍",
+      "Limpeza / Formatação": "🧹",
+      "Peça Solicitada": "📦",
+      "Em Reparo": "🔧",
+      "Testes Finais": "🧪",
+      "Pronto para Retirada": "✅",
+      "Saída para Entrega": "🛵",
+      "Entregue": "🎉",
+    };
+    const msg = encodeURIComponent(
+      `${emoji[status] || "🔧"} *Maker Info — Atualização do seu pedido*\n\nCódigo: *${codigo}*\nStatus: *${status}*\n\nAcompanhe em tempo real:\nmakerinfo.com.br/pedido`
+    );
+    window.open(`https://api.whatsapp.com/send/?phone=${numero}&text=${msg}`, "_blank");
+  };
+
+    const atualizarStatus = async (id: string, status: StatusPedido) => {
     setPedidos(prev => prev.map(p => p.id === id ? { ...p, status } : p));
     await supabase.from("pedidos").update({ status }).eq("id", id);
+    const pedido = pedidos.find(p => p.id === id);
+    if (pedido?.telefone) notificarCliente(pedido.telefone, pedido.codigo, status);
   };
 
   const atualizarObservacao = async (id: string, observacao: string) => {
@@ -78,7 +100,7 @@ const Admin = () => {
 
   const abrirEdicao = (p: Pedido) => {
     setEditando(p.id);
-    setEditForm({ cliente_nome: p.cliente_nome, equipamento: p.equipamento, problema: p.problema });
+    setEditForm({ cliente_nome: p.cliente_nome, equipamento: p.equipamento, problema: p.problema, telefone: p.telefone });
   };
 
   const salvarEdicao = async (id: string) => {
@@ -141,6 +163,12 @@ const Admin = () => {
               <label className="text-xs text-muted-foreground mb-1 block">Nome do cliente *</label>
               <input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))}
                 placeholder="Ex: João Silva"
+                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Telefone (WhatsApp)</label>
+              <input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))}
+                placeholder="Ex: 65999999999"
                 className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
             </div>
             <div>
@@ -213,6 +241,7 @@ const Admin = () => {
                 <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
                   <div><span className="text-muted-foreground">Equipamento: </span>{p.equipamento}</div>
                   <div><span className="text-muted-foreground">Problema: </span>{p.problema}</div>
+                  {p.telefone && <div><span className="text-muted-foreground">WhatsApp: </span>{p.telefone}</div>}
                 </div>
 
                 {/* Status buttons */}
@@ -236,6 +265,9 @@ const Admin = () => {
                       className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
                     <input value={editForm.problema || ""} onChange={e => setEditForm(f => ({ ...f, problema: e.target.value }))}
                       placeholder="Problema"
+                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                    <input value={editForm.telefone || ""} onChange={e => setEditForm(f => ({ ...f, telefone: e.target.value }))}
+                      placeholder="WhatsApp (ex: 65999999999)"
                       className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
                     <div className="flex gap-2 pt-1">
                       <button onClick={() => salvarEdicao(p.id)} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-heading font-bold hover:brightness-110 transition-all">Salvar</button>
