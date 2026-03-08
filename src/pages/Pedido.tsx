@@ -11,12 +11,14 @@ const Pedido = () => {
   const [pedido, setPedido] = useState<PedidoType | null>(null);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
+  const [fotos, setFotos] = useState<string[]>([]);
 
   const buscar = async () => {
     if (!codigo.trim()) return;
     setLoading(true);
     setErro("");
     setPedido(null);
+    setFotos([]);
 
     const { data, error } = await supabase
       .from("pedidos")
@@ -28,6 +30,13 @@ const Pedido = () => {
       setErro("Código não encontrado. Verifique e tente novamente.");
     } else {
       setPedido(data);
+      const { data: arquivos } = await supabase.storage.from("pedidos").list(data.id);
+      if (arquivos) {
+        const urls = arquivos.map(f =>
+          supabase.storage.from("pedidos").getPublicUrl(`${data.id}/${f.name}`).data.publicUrl
+        );
+        setFotos(urls);
+      }
     }
     setLoading(false);
   };
@@ -121,13 +130,11 @@ const Pedido = () => {
             <div>
               <p className="text-xs text-muted-foreground mb-4">Progresso do reparo</p>
               <div className="relative">
-                {/* Linha de progresso */}
                 <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-border" />
                 <div
                   className="absolute left-4 top-4 w-0.5 bg-primary transition-all duration-700"
                   style={{ height: `${((currentStep - 1) / (STATUSES.length - 1)) * 100}%` }}
                 />
-
                 <div className="space-y-3">
                   {etapasVisiveis.map((s) => {
                     const cfg = STATUS_CONFIG[s];
@@ -135,7 +142,6 @@ const Pedido = () => {
                     const active = cfg.step === currentStep;
                     return (
                       <div key={s} className={`relative flex items-center gap-4 pl-10 py-2.5 rounded-xl transition-all ${active ? "bg-primary/10 border border-primary/30" : done ? "opacity-60" : "opacity-30"}`}>
-                        {/* Dot */}
                         <div className={`absolute left-2.5 w-3 h-3 rounded-full border-2 transition-all ${done ? "bg-primary border-primary" : active ? "bg-primary border-primary scale-125" : "bg-background border-border"}`} />
                         <span className="text-lg">{cfg.emoji}</span>
                         <div className="flex-1">
@@ -154,6 +160,23 @@ const Pedido = () => {
               <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                 <p className="text-xs text-muted-foreground mb-1">💬 Observação do técnico</p>
                 <p className="text-sm">{pedido.observacao}</p>
+              </div>
+            )}
+
+            {fotos.length > 0 && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-3">📸 Fotos do reparo</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {fotos.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                      {url.match(/\.(mp4|mov|webm)$/i) ? (
+                        <video src={url} className="w-full aspect-square object-cover rounded-xl border border-border" />
+                      ) : (
+                        <img src={url} alt={`Foto ${i + 1}`} className="w-full aspect-square object-cover rounded-xl border border-border hover:opacity-80 transition-all" />
+                      )}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
 
