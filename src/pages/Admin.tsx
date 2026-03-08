@@ -191,10 +191,16 @@ const Admin = () => {
             <h1 className="font-heading text-3xl font-black">Painel <span className="text-gradient-neon">Maker Info</span></h1>
             <p className="text-muted-foreground text-sm">{pedidos.length} pedido{pedidos.length !== 1 ? "s" : ""} no sistema</p>
           </div>
-          <button onClick={() => { setLogado(false); sessionStorage.removeItem("admin"); }}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Sair
-          </button>
+          <div className="flex gap-3">
+            <button onClick={() => window.location.href = "/dashboard"}
+              className="text-sm text-primary hover:brightness-110 transition-colors px-4 py-2 rounded-lg border border-primary/30">
+              📊 Dashboard
+            </button>
+            <button onClick={() => { setLogado(false); sessionStorage.removeItem("admin"); }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors px-4 py-2 rounded-lg border border-border">
+              Sair
+            </button>
+          </div>
         </div>
 
         {/* Novo pedido */}
