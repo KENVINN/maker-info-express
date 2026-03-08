@@ -2,33 +2,36 @@
 <html lang="pt-BR">
   <head>
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-17997609434"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'AW-17997609434');
-</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17997609434"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17997609434');
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Maker Info | Conserto de PC e Notebook em Cuiabá e VG</title>
     <meta name="description" content="Consertamos seu PC e Notebook com rapidez. Buscamos e entregamos na sua porta em Cuiabá e Várzea Grande." />
     <meta name="author" content="Maker Info" />
-
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#00d4ff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Maker Info" />
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-
+    <!-- OG -->
     <meta property="og:title" content="Maker Info | Conserto de PC e Notebook" />
     <meta property="og:description" content="Consertamos seu PC e Notebook com rapidez. Buscamos na sua porta!" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/maker_info_logo.png" />
-
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="/maker_info_logo.png" />
-
     <!-- Google Analytics (GA4) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-RK4SMH266D"></script>
     <script>
@@ -37,8 +40,15 @@
       gtag('js', new Date());
       gtag('config', 'G-RK4SMH266D');
     </script>
+    <!-- Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js');
+        });
+      }
+    </script>
   </head>
-
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
