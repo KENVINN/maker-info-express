@@ -113,28 +113,25 @@ const Admin = () => {
   };
 
   const carregarFotos = async (pedidoId: string) => {
-    const { data } = await supabase.storage.from("pedidos").list(pedidoId, { sortBy: { column: "created_at", order: "desc" } });
-    if (data && data.length > 0) {
-      const ts = Date.now();
-      const urls = data.map(f =>
-        supabase.storage.from("pedidos").getPublicUrl(`${pedidoId}/${f.name}`).data.publicUrl + `?t=${ts}`
-      );
-      setFotos(prev => ({ ...prev, [pedidoId]: urls }));
-    } else {
-      setFotos(prev => ({ ...prev, [pedidoId]: [] }));
-    }
+    const { data } = await supabase.from("pedidos").select("fotos_urls").eq("id", pedidoId).single();
+    setFotos(prev => ({ ...prev, [pedidoId]: data?.fotos_urls || [] }));
   };
 
   const handleUpload = async (pedidoId: string, files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploadingId(pedidoId);
+    const novasUrls: string[] = [];
     for (const file of Array.from(files)) {
       const ext = file.name.split(".").pop();
       const nome = `${Date.now()}.${ext}`;
       await supabase.storage.from("pedidos").upload(`${pedidoId}/${nome}`, file);
+      const url = supabase.storage.from("pedidos").getPublicUrl(`${pedidoId}/${nome}`).data.publicUrl;
+      novasUrls.push(url);
     }
-    await carregarFotos(pedidoId);
-    await supabase.from("pedidos").update({ fotos_updated_at: new Date().toISOString() }).eq("id", pedidoId);
+    const atuais = fotos[pedidoId] || [];
+    const todas = [...atuais, ...novasUrls];
+    await supabase.from("pedidos").update({ fotos_urls: todas, fotos_updated_at: new Date().toISOString() }).eq("id", pedidoId);
+    setFotos(prev => ({ ...prev, [pedidoId]: todas }));
     setUploadingId(null);
   };
 
@@ -143,8 +140,9 @@ const Admin = () => {
     const nome = partes[1]?.split("?")[0];
     if (!nome) return;
     await supabase.storage.from("pedidos").remove([`${pedidoId}/${nome}`]);
-    setFotos(prev => ({ ...prev, [pedidoId]: prev[pedidoId].filter(u => u !== url) }));
-    await supabase.from("pedidos").update({ fotos_updated_at: new Date().toISOString() }).eq("id", pedidoId);
+    const novas = (fotos[pedidoId] || []).filter(u => u !== url);
+    setFotos(prev => ({ ...prev, [pedidoId]: novas }));
+    await supabase.from("pedidos").update({ fotos_urls: novas, fotos_updated_at: new Date().toISOString() }).eq("id", pedidoId);
   };
 
   const abrirEdicao = (p: Pedido) => {
