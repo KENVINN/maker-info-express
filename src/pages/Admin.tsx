@@ -43,7 +43,8 @@ const Admin = () => {
     carregarPedidos();
     const channel = supabase
       .channel("admin-pedidos")
-      .on("postgres_changes", { event: "*", schema: "public", table: "pedidos" }, () => carregarPedidos())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "pedidos" }, () => carregarPedidos())
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "pedidos" }, () => carregarPedidos())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [logado]);
