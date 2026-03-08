@@ -14,6 +14,7 @@ const stats = [
   { valor: "100%", label: "Garantia nos serviços" },
   { valor: "10min", label: "Orçamento no WhatsApp" },
   { valor: "VG+CBA", label: "Busca na sua porta" },
+  { valor: "⚡ Ao vivo", label: "Rastreamento em tempo real" },
 ];
 
 const frases = [
@@ -33,7 +34,6 @@ const TypingText = () => {
   useEffect(() => {
     const current = frases[index];
     let timeout: ReturnType<typeof setTimeout>;
-
     if (!deleting && displayed.length < current.length) {
       timeout = setTimeout(() => setDisplayed(current.slice(0, displayed.length + 1)), 60);
     } else if (!deleting && displayed.length === current.length) {
@@ -44,7 +44,6 @@ const TypingText = () => {
       setDeleting(false);
       setIndex((prev) => (prev + 1) % frases.length);
     }
-
     return () => clearTimeout(timeout);
   }, [displayed, deleting, index]);
 
@@ -63,9 +62,15 @@ const HeroSection = () => {
 
       <div className="container px-4 max-w-5xl mx-auto text-center">
         <ScrollReveal>
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold mb-8">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            Várzea Grande e Cuiabá · Busca na sua porta
+          <div className="flex flex-wrap justify-center gap-2 mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              Várzea Grande e Cuiabá · Busca na sua porta
+            </div>
+            <a href="/pedido" className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 text-sm font-semibold hover:bg-green-500/20 transition-all">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              Rastreamento em tempo real ⚡
+            </a>
           </div>
 
           <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] mb-4">
@@ -79,17 +84,19 @@ const HeroSection = () => {
             A gente conserta rápido e ainda busca na sua porta. Orçamento grátis em menos de 10 minutos.
           </p>
 
-          <a
-            href={WHATSAPP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 px-10 py-5 rounded-xl bg-primary text-primary-foreground font-heading text-lg font-black animate-pulse-neon hover:brightness-110 transition-all shadow-2xl shadow-primary/30 mb-14"
-          >
-            <WhatsAppIcon />
-            FAZER ORÇAMENTO AGORA
-          </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 px-10 py-5 rounded-xl bg-primary text-primary-foreground font-heading text-lg font-black animate-pulse-neon hover:brightness-110 transition-all shadow-2xl shadow-primary/30">
+              <WhatsAppIcon />
+              FAZER ORÇAMENTO AGORA
+            </a>
+            <a href="/pedido"
+              className="inline-flex items-center gap-2 px-8 py-5 rounded-xl border border-green-500/40 text-green-500 font-heading text-base font-bold hover:bg-green-500/10 transition-all">
+              📦 Acompanhar meu pedido
+            </a>
+          </div>
 
-          <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
             {stats.map((s, i) => (
               <div key={i} className="flex flex-col items-center p-4 rounded-2xl bg-card/60 backdrop-blur border border-border">
                 <span className="font-heading text-2xl font-black text-primary mb-1">{s.valor}</span>
