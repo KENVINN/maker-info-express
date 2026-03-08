@@ -23,6 +23,8 @@ export type Pedido = {
   problema: string;
   status: StatusPedido;
   observacao?: string;
+  telefone?: string;
+  etapas?: string[];
   created_at: string;
   updated_at: string;
 };
