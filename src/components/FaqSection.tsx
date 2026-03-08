@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     q: "Qual o prazo de entrega?",
-    a: "Depende do serviço. Formatações e limpezas costumam ser entregues no mesmo dia ou em até 24h. Serviços mais complexos como recuperação de dados ou reparo de placa podem levar mais tempo — mas sempre avisamos o prazo antes de começar.",
+    a: "Depende do serviço. Formatações e limpezas costumam ser entregues no mesmo dia ou em até 24h. Serviços mais complexos como recuperação de dados ou reparo de placa podem levar mais tempo mas sempre avisamos o prazo antes de começar.",
   },
   {
     q: "Os serviços têm garantia?",
