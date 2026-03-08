@@ -13,6 +13,16 @@ const Pedido = () => {
   const [erro, setErro] = useState("");
   const [fotos, setFotos] = useState<string[]>([]);
 
+  const carregarFotos = async (pedidoId: string) => {
+    const { data: arquivos } = await supabase.storage.from("pedidos").list(pedidoId);
+    if (arquivos) {
+      const urls = arquivos.map(f =>
+        supabase.storage.from("pedidos").getPublicUrl(`${pedidoId}/${f.name}`).data.publicUrl
+      );
+      setFotos(urls);
+    }
+  };
+
   const buscar = async () => {
     if (!codigo.trim()) return;
     setLoading(true);
@@ -30,13 +40,7 @@ const Pedido = () => {
       setErro("Código não encontrado. Verifique e tente novamente.");
     } else {
       setPedido(data);
-      const { data: arquivos } = await supabase.storage.from("pedidos").list(data.id);
-      if (arquivos) {
-        const urls = arquivos.map(f =>
-          supabase.storage.from("pedidos").getPublicUrl(`${data.id}/${f.name}`).data.publicUrl
-        );
-        setFotos(urls);
-      }
+      await carregarFotos(data.id);
     }
     setLoading(false);
   };
@@ -52,6 +56,7 @@ const Pedido = () => {
         filter: `id=eq.${pedido.id}`,
       }, (payload) => {
         setPedido(payload.new as PedidoType);
+        carregarFotos((payload.new as PedidoType).id);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
