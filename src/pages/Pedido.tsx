@@ -55,8 +55,9 @@ const Pedido = () => {
         table: "pedidos",
         filter: `id=eq.${pedido.id}`,
       }, (payload) => {
-        setPedido(payload.new as PedidoType);
-        carregarFotos((payload.new as PedidoType).id);
+        const novo = payload.new as PedidoType;
+        setPedido(novo);
+        carregarFotos(novo.id);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
