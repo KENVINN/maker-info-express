@@ -1,6 +1,14 @@
 const WhatsAppFab = () => {
   const whatsappUrl = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
+  const handleWhatsAppClick = () => {
+    if (typeof window !== "undefined" && (window as any).gtag) {
+      (window as any).gtag("event", "conversion", {
+        send_to: "AW-17997609434/Kv8YCPm3voQcENrz9oVD",
+      });
+    }
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
       {/* Mensagem sempre visível */}
@@ -9,11 +17,12 @@ const WhatsAppFab = () => {
         <div className="absolute bottom-0 right-[-8px] w-0 h-0 border-t-[8px] border-t-[#25D366] border-r-[8px] border-r-transparent" />
       </div>
 
-      {/* Botão */}
+      {/* Botão com o evento onClick adicionado */}
       <a
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={handleWhatsAppClick}
         className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl transition-all duration-300 hover:scale-110 active:scale-95 shadow-[#25D366]/30 hover:shadow-[#25D366]/60"
         aria-label="Contato via WhatsApp"
       >
