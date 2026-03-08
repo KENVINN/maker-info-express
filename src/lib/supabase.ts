@@ -5,10 +5,14 @@ const SUPABASE_KEY = "sb_publishable_E0VOuQf0llfE5ZAPKVtcwA_vuAP2KrJ";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-export type StatusPedido = 
-  | "Aguardando Aprovação"
+export type StatusPedido =
+  | "Em Diagnóstico"
+  | "Limpeza / Formatação"
+  | "Peça Solicitada"
   | "Em Reparo"
+  | "Testes Finais"
   | "Pronto para Retirada"
+  | "Saída para Entrega"
   | "Entregue";
 
 export type Pedido = {
@@ -24,8 +28,12 @@ export type Pedido = {
 };
 
 export const STATUS_CONFIG: Record<StatusPedido, { label: string; emoji: string; color: string; step: number }> = {
-  "Aguardando Aprovação": { label: "Aguardando Aprovação", emoji: "⏳", color: "text-highlight-amber", step: 1 },
-  "Em Reparo":            { label: "Em Reparo",            emoji: "🔧", color: "text-primary",         step: 2 },
-  "Pronto para Retirada": { label: "Pronto para Retirada", emoji: "✅", color: "text-green-500",        step: 3 },
-  "Entregue":             { label: "Entregue",             emoji: "🎉", color: "text-secondary",        step: 4 },
+  "Em Diagnóstico":        { label: "Em Diagnóstico",        emoji: "🔍", color: "text-highlight-amber", step: 1 },
+  "Limpeza / Formatação":  { label: "Limpeza / Formatação",  emoji: "🧹", color: "text-highlight-amber", step: 2 },
+  "Peça Solicitada":       { label: "Peça Solicitada",       emoji: "📦", color: "text-highlight-amber", step: 3 },
+  "Em Reparo":             { label: "Em Reparo",             emoji: "🔧", color: "text-primary",         step: 4 },
+  "Testes Finais":         { label: "Testes Finais",         emoji: "🧪", color: "text-primary",         step: 5 },
+  "Pronto para Retirada":  { label: "Pronto para Retirada",  emoji: "✅", color: "text-green-500",        step: 6 },
+  "Saída para Entrega":    { label: "Saída para Entrega",    emoji: "🛵", color: "text-green-500",        step: 7 },
+  "Entregue":              { label: "Entregue",              emoji: "🎉", color: "text-secondary",        step: 8 },
 };
