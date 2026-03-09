@@ -1,22 +1,20 @@
-import { lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
+import BeforeAfterSection from "@/components/BeforeAfterSection";
+import HowItWorksSection from "@/components/HowItWorksSection";
+import LocationSection from "@/components/locationsection";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import FaqSection from "@/components/FaqSection";
 import StatsBar from "@/components/StatsBar";
+import TrackingSection from "@/components/TrackingSection";
+import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
+import ScrollReveal from "@/components/ScrollReveal";
 
-// Lazy load everything below the fold
-const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
-const TrackingSection = lazy(() => import("@/components/TrackingSection"));
-const BeforeAfterSection = lazy(() => import("@/components/BeforeAfterSection"));
-const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
-const FaqSection = lazy(() => import("@/components/FaqSection"));
-const LocationSection = lazy(() => import("@/components/locationsection"));
-const Footer = lazy(() => import("@/components/Footer"));
-
-const ServicosPreview = lazy(() => Promise.resolve({
-  default: () => (
-    <section className="py-16 bg-card/60 backdrop-blur">
-      <div className="container px-4 text-center">
+const ServicosPreview = () => (
+  <section className="py-16 bg-card/60 backdrop-blur">
+    <div className="container px-4 text-center">
+      <ScrollReveal>
         <h2 className="font-heading text-3xl md:text-4xl font-black mb-4">
           O que a gente <span className="text-secondary">conserta</span>
         </h2>
@@ -27,10 +25,10 @@ const ServicosPreview = lazy(() => Promise.resolve({
           className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-primary text-primary font-heading font-bold text-base hover:bg-primary hover:text-primary-foreground transition-all duration-200">
           Ver todos os serviços →
         </a>
-      </div>
-    </section>
-  )
-}));
+      </ScrollReveal>
+    </div>
+  </section>
+);
 
 const Index = () => {
   return (
@@ -38,16 +36,14 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <StatsBar />
-      <Suspense fallback={<div className="h-20" />}>
-        <HowItWorksSection />
-        <TrackingSection />
-        <ServicosPreview />
-        <BeforeAfterSection />
-        <TestimonialsSection />
-        <FaqSection />
-        <LocationSection />
-        <Footer />
-      </Suspense>
+      <HowItWorksSection />
+      <TrackingSection />
+      <ServicosPreview />
+      <BeforeAfterSection />
+      <TestimonialsSection />
+      <FaqSection />
+      <LocationSection />
+      <Footer />
       <WhatsAppFab />
     </div>
   );
