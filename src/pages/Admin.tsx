@@ -101,9 +101,11 @@ const Admin = () => {
   };
 
     const atualizarStatus = async (id: string, status: StatusPedido) => {
-    setPedidos(prev => prev.map(p => p.id === id ? { ...p, status } : p));
-    await supabase.from("pedidos").update({ status }).eq("id", id);
     const pedido = pedidos.find(p => p.id === id);
+    const historico = (pedido as any)?.historico || [];
+    const novoHistorico = [...historico, { status, data: new Date().toISOString() }];
+    setPedidos(prev => prev.map(p => p.id === id ? { ...p, status, historico: novoHistorico } : p));
+    await supabase.from("pedidos").update({ status, historico: novoHistorico }).eq("id", id);
     if (pedido?.telefone) notificarCliente(pedido.telefone, pedido.codigo, status);
   };
 
