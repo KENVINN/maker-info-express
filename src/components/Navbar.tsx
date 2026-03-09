@@ -48,7 +48,10 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
       <div className="container flex items-center justify-between h-16">
         <a href="/" className="flex items-center gap-2">
-          <img src="/maker_info_logo.png" alt="Maker Info" className="h-9 w-auto object-contain" />
+          <picture>
+            <source srcSet="/maker_info_logo.webp" type="image/webp" />
+            <img src="/maker_info_logo.png" alt="Maker Info" className="h-9 w-auto object-contain" width="36" height="36" />
+          </picture>
         </a>
 
         <div className="hidden md:flex items-center gap-6">
