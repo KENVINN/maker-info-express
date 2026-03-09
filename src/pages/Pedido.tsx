@@ -252,6 +252,29 @@ const Pedido = () => {
               </div>
             )}
 
+            {pedido.historico && pedido.historico.length > 0 && (
+              <div className="mb-8">
+                <h3 className="font-heading font-black text-sm mb-4 text-muted-foreground uppercase tracking-wider">📋 Histórico</h3>
+                <div className="space-y-2">
+                  {[...pedido.historico].reverse().map((h, i) => {
+                    const cfg = STATUS_CONFIG[h.status as StatusPedido];
+                    return (
+                      <div key={i} className={`flex items-center gap-3 p-3 rounded-xl bg-card border ${i === 0 ? "border-primary/30" : "border-border/50"}`}>
+                        <span className="text-lg">{cfg?.emoji || "🔧"}</span>
+                        <div className="flex-1">
+                          <p className={`text-sm font-semibold ${cfg?.color || "text-foreground"}`}>{h.status}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(h.data).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                        {i === 0 && <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold">Atual</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {(pedido as any).fotos_urls?.length > 0 && (
               <div>
                 <p className="text-xs text-muted-foreground mb-3">📸 Fotos do reparo</p>
