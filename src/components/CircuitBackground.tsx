@@ -12,20 +12,16 @@ const CircuitBackground = () => {
     let animFrameId: number;
     let width = window.innerWidth;
     let height = window.innerHeight;
-
     canvas.width = width;
     canvas.height = height;
 
-    // Nodes
-    const NODE_COUNT = 40;
-    const SPEED = 0.3;
-    const LINE_DIST = 180;
+    // Menos nós no mobile
+    const isMobile = width < 768;
+    const NODE_COUNT = isMobile ? 18 : 40;
+    const SPEED = isMobile ? 0.2 : 0.3;
+    const LINE_DIST = isMobile ? 140 : 180;
 
-    type Node = {
-      x: number; y: number;
-      vx: number; vy: number;
-      radius: number;
-    };
+    type Node = { x: number; y: number; vx: number; vy: number; radius: number; };
 
     const nodes: Node[] = Array.from({ length: NODE_COUNT }, () => ({
       x: Math.random() * width,
@@ -43,10 +39,17 @@ const CircuitBackground = () => {
     };
     window.addEventListener("resize", resize);
 
+    // Pausar quando aba não estiver visível
+    let paused = false;
+    const handleVisibility = () => { paused = document.hidden; };
+    document.addEventListener("visibilitychange", handleVisibility);
+
     const draw = () => {
+      animFrameId = requestAnimationFrame(draw);
+      if (paused) return;
+
       ctx.clearRect(0, 0, width, height);
 
-      // Move nodes
       nodes.forEach((n) => {
         n.x += n.vx;
         n.y += n.vy;
@@ -54,7 +57,6 @@ const CircuitBackground = () => {
         if (n.y < 0 || n.y > height) n.vy *= -1;
       });
 
-      // Draw connections (circuit style - only horizontal/vertical segments)
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const a = nodes[i];
@@ -62,19 +64,15 @@ const CircuitBackground = () => {
           const dx = b.x - a.x;
           const dy = b.y - a.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-
           if (dist < LINE_DIST) {
             const alpha = (1 - dist / LINE_DIST) * 0.15;
             ctx.strokeStyle = `rgba(0, 212, 255, ${alpha})`;
             ctx.lineWidth = 0.8;
             ctx.beginPath();
-            // Circuit style: go horizontal then vertical
             ctx.moveTo(a.x, a.y);
-            ctx.lineTo(b.x, a.y); // horizontal
-            ctx.lineTo(b.x, b.y); // vertical
+            ctx.lineTo(b.x, a.y);
+            ctx.lineTo(b.x, b.y);
             ctx.stroke();
-
-            // Draw corner dot
             ctx.fillStyle = `rgba(0, 212, 255, ${alpha * 2})`;
             ctx.beginPath();
             ctx.arc(b.x, a.y, 1.5, 0, Math.PI * 2);
@@ -83,15 +81,12 @@ const CircuitBackground = () => {
         }
       }
 
-      // Draw nodes
       nodes.forEach((n) => {
         ctx.fillStyle = "rgba(0, 212, 255, 0.25)";
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
         ctx.fill();
       });
-
-      animFrameId = requestAnimationFrame(draw);
     };
 
     draw();
@@ -99,6 +94,7 @@ const CircuitBackground = () => {
     return () => {
       cancelAnimationFrame(animFrameId);
       window.removeEventListener("resize", resize);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 
