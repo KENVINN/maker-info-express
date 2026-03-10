@@ -23,8 +23,9 @@ const servicos = [
     beneficios: ["Temperatura reduzida", "Desempenho restaurado", "Vida útil prolongada"],
     tag: "Mais pedido",
     tagColor: "bg-primary/20 text-primary",
-    preco: "R$ 120",
-    tipoPreco: "fixo",
+    preco: "R$ 100",
+    precoGamer: "R$ 140",
+    tipoPreco: "duplo",
   },
   {
     emoji: "💻",
@@ -123,7 +124,21 @@ const diferenciais = [
   },
 ];
 
-const PrecoTag = ({ preco, tipoPreco }: { preco: string | null; tipoPreco: string }) => {
+const PrecoTag = ({ preco, precoGamer, tipoPreco }: { preco: string | null; precoGamer?: string; tipoPreco: string }) => {
+  if (tipoPreco === "duplo") {
+    return (
+      <div className="mt-4 mb-2 flex flex-col gap-1">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">PC comum</span>
+          <span className="font-heading font-black text-xl text-primary">{preco}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">PC Gamer</span>
+          <span className="font-heading font-black text-xl text-secondary">{precoGamer}</span>
+        </div>
+      </div>
+    );
+  }
   if (tipoPreco === "orcamento") {
     return (
       <div className="mt-4 mb-2">
@@ -201,7 +216,7 @@ const Servicos = () => {
                       </li>
                     ))}
                   </ul>
-                  <PrecoTag preco={s.preco} tipoPreco={s.tipoPreco} />
+                  <PrecoTag preco={s.preco} precoGamer={(s as any).precoGamer} tipoPreco={s.tipoPreco} />
                   <a
                     href={WHATSAPP_URL}
                     target="_blank"
