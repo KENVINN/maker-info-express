@@ -1238,8 +1238,8 @@ function PhotoEditor({ onSwitch, onHome }) {
                   onClick={()=>setSelLayerId("ov_"+ov.id)}>
                   <span style={{ fontSize:12 }}>🖼</span>
                   <span style={{ flex:1, fontSize:10, color:"#aaa" }}>Imagem {arr.length - i}</span>
-                  <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↑</button>
-                  <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↓</button>
+                  <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx<=0)return p;const n=[...p];const _t=n[idx-1];n[idx-1]=n[idx];n[idx]=_t;return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↑</button>
+                  <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx>=p.length-1)return p;const n=[...p];const _t=n[idx];n[idx]=n[idx+1];n[idx+1]=_t;return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↓</button>
                   <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>p.filter(x=>x.id!==ov.id));}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,60,60,.15)", border:"none", color:"#ff6060", cursor:"pointer" }}>✕</button>
                 </div>
               ))}
@@ -1249,8 +1249,8 @@ function PhotoEditor({ onSwitch, onHome }) {
                   onClick={()=>{setSelLayerId("t_"+el.id);setSelTextId(el.id);setTab("text");}}>
                   <span style={{ fontSize:12 }}>T</span>
                   <span style={{ flex:1, fontSize:10, color:"#aaa", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{el.text||"(texto)"}</span>
-                  <button onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↑</button>
-                  <button onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↓</button>
+                  <button onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx<=0)return p;const n=[...p];const _t=n[idx-1];n[idx-1]=n[idx];n[idx]=_t;return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↑</button>
+                  <button onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx>=p.length-1)return p;const n=[...p];const _t=n[idx];n[idx]=n[idx+1];n[idx+1]=_t;return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↓</button>
                   <button onClick={e=>{e.stopPropagation();setTexts(p=>p.filter(x=>x.id!==el.id));}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,60,60,.15)", border:"none", color:"#ff6060", cursor:"pointer" }}>✕</button>
                 </div>
               ))}
@@ -1276,7 +1276,6 @@ function PhotoEditor({ onSwitch, onHome }) {
           ))}
         </div>
       </div>
-    </div>
     </div>
   );
 
@@ -1663,8 +1662,8 @@ function PhotoEditor({ onSwitch, onHome }) {
                   onClick={()=>setSelLayerId("ov_"+ov.id)}>
                   <img src={ov.src} style={{ width:28, height:28, objectFit:"cover", borderRadius:4 }}/>
                   <span style={{ flex:1, fontSize:10, color:"#aaa" }}>Imagem {arr.length - i}</span>
-                  <button title="Subir" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↑</button>
-                  <button title="Descer" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↓</button>
+                  <button title="Subir" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx<=0)return p;const n=[...p];const _t=n[idx-1];n[idx-1]=n[idx];n[idx]=_t;return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↑</button>
+                  <button title="Descer" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx>=p.length-1)return p;const n=[...p];const _t=n[idx];n[idx]=n[idx+1];n[idx+1]=_t;return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↓</button>
                   <button title="Apagar" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>p.filter(x=>x.id!==ov.id));}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,60,60,.15)", border:"1px solid rgba(255,60,60,.2)", color:"#ff6060", cursor:"pointer", fontSize:11 }}>✕</button>
                 </div>
               ))}
@@ -1673,8 +1672,8 @@ function PhotoEditor({ onSwitch, onHome }) {
                   onClick={()=>{setSelLayerId("t_"+el.id);setSelTextId(el.id);setTab("text");}}>
                   <span style={{ fontSize:16, color:"#c87cff" }}>T</span>
                   <span style={{ flex:1, fontSize:10, color:"#aaa", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{el.text||"(texto vazio)"}</span>
-                  <button title="Subir" onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↑</button>
-                  <button title="Descer" onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↓</button>
+                  <button title="Subir" onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx<=0)return p;const n=[...p];const _t=n[idx-1];n[idx-1]=n[idx];n[idx]=_t;return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↑</button>
+                  <button title="Descer" onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx>=p.length-1)return p;const n=[...p];const _t=n[idx];n[idx]=n[idx+1];n[idx+1]=_t;return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↓</button>
                   <button title="Apagar" onClick={e=>{e.stopPropagation();setTexts(p=>p.filter(x=>x.id!==el.id));}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,60,60,.15)", border:"1px solid rgba(255,60,60,.2)", color:"#ff6060", cursor:"pointer", fontSize:11 }}>✕</button>
                 </div>
               ))}
