@@ -35,7 +35,7 @@ const PRECOS = [
   {
     categoria: "SERVIÇOS FIXOS",
     items: [
-      { nome: "Limpeza e Manutenção Preventiva", tipo: "FIXO", preco: 120, peca: null, incluido: "Limpeza interna, pasta térmica, verificação geral, diagnóstico", obs: "Inclui busca e entrega em VG até 5km. Prazo: 1 dia útil.", tag: "🔥 Mais pedido" },
+      { nome: "Limpeza e Manutenção Preventiva", tipo: "DUPLO", preco: 100, precoGamer: 140, peca: null, incluido: "Limpeza interna, pasta térmica, verificação geral, diagnóstico", obs: "PC comum R$ 100 · PC Gamer R$ 140 · Inclui busca em VG até 5km.", tag: "🔥 Mais pedido" },
       { nome: "Formatação e Reinstalação de Sistema", tipo: "FIXO", preco: 120, peca: null, incluido: "Windows limpo, drivers atualizados, programas essenciais instalados", obs: "Backup de dados cobrado à parte (R$ 40). Prazo: 1 dia útil.", tag: null },
       { nome: "COMBO: Limpeza + Formatação", tipo: "FIXO", preco: 200, peca: null, incluido: "Limpeza completa + formatação + drivers + programas. Tudo junto.", obs: "Economia de R$ 40 vs contratar separado.", tag: "⭐ Melhor custo-benefício" },
       { nome: "Remoção de Vírus e Malware", tipo: "FIXO", preco: 100, peca: null, incluido: "Remoção completa, antivírus configurado, orientação de segurança", obs: "Se não resolver, não cobra. Prazo: mesmo dia.", tag: null },
@@ -546,6 +546,11 @@ const Dashboard = () => {
                             }`}>{item.tipo}</span>
                             {item.tipo === "GRÁTIS" ? (
                               <span className="font-heading font-black text-xl text-green-500">GRÁTIS</span>
+                            ) : item.tipo === "DUPLO" ? (
+                              <div className="flex flex-col items-end gap-0.5">
+                                <div className="flex items-center gap-1.5"><span className="text-xs text-muted-foreground">comum</span><span className="font-heading font-black text-lg text-primary">{fmt((item as any).preco)}</span></div>
+                                <div className="flex items-center gap-1.5"><span className="text-xs text-muted-foreground">gamer</span><span className="font-heading font-black text-lg text-secondary">{fmt((item as any).precoGamer)}</span></div>
+                              </div>
                             ) : (
                               <span className="font-heading font-black text-xl text-primary">
                                 {item.tipo === "A PARTIR DE" && <span className="text-xs font-normal text-muted-foreground mr-1">a partir de</span>}
