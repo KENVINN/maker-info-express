@@ -1996,13 +1996,12 @@ function PostEditor({ onSwitch, onHome }) {
             </div>
           )}
         </div>
-      </div>
       {isMobile&&<div style={{position:"fixed",bottom:0,left:0,right:0,padding:"10px 12px",background:"rgba(6,10,20,.97)",backdropFilter:"blur(12px)",borderTop:"1px solid rgba(255,255,255,.06)",zIndex:200}}>
         <button onClick={handleSave} disabled={saving} style={{width:"100%",padding:"13px",borderRadius:10,cursor:saving?"wait":"pointer",background:saving?"#1a2030":"linear-gradient(135deg,#00d4ff,#0088cc)",border:"none",color:saving?"#444":"#000",fontSize:14,fontWeight:900,boxShadow:saving?"none":"0 0 20px rgba(0,212,255,.3)"}}>
           {saving?"Gerando imagem...":"⬇️ BAIXAR PNG"}
         </button>
       </div>}
-    </div>
+      </div>
   );
 }
 
