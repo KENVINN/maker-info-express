@@ -1237,7 +1237,7 @@ function PhotoEditor({ onSwitch, onHome }) {
                 <div key={ov.id} style={{ display:"flex", gap:5, alignItems:"center", padding:"6px 8px", borderRadius:7, background:selLayerId==="ov_"+ov.id?"rgba(0,212,255,.1)":"rgba(255,255,255,.03)", border:selLayerId==="ov_"+ov.id?"1px solid rgba(0,212,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:4, cursor:"pointer" }}
                   onClick={()=>setSelLayerId("ov_"+ov.id)}>
                   <span style={{ fontSize:12 }}>🖼</span>
-                  <span style={{ flex:1, fontSize:10, color:"#aaa" }}>Imagem {arr.length-i}</span>
+                  <span style={{ flex:1, fontSize:10, color:"#aaa" }}>Imagem {arr.length - i}</span>
                   <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↑</button>
                   <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↓</button>
                   <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>p.filter(x=>x.id!==ov.id));}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,60,60,.15)", border:"none", color:"#ff6060", cursor:"pointer" }}>✕</button>
@@ -1662,7 +1662,7 @@ function PhotoEditor({ onSwitch, onHome }) {
                 <div key={ov.id} style={{ display:"flex", gap:6, alignItems:"center", padding:"8px 10px", borderRadius:8, background:selLayerId==="ov_"+ov.id?"rgba(0,212,255,.1)":"rgba(255,255,255,.03)", border:selLayerId==="ov_"+ov.id?"1px solid rgba(0,212,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:6, cursor:"pointer" }}
                   onClick={()=>setSelLayerId("ov_"+ov.id)}>
                   <img src={ov.src} style={{ width:28, height:28, objectFit:"cover", borderRadius:4 }}/>
-                  <span style={{ flex:1, fontSize:10, color:"#aaa" }}>Imagem {arr.length-i}</span>
+                  <span style={{ flex:1, fontSize:10, color:"#aaa" }}>Imagem {arr.length - i}</span>
                   <button title="Subir" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↑</button>
                   <button title="Descer" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↓</button>
                   <button title="Apagar" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>p.filter(x=>x.id!==ov.id));}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,60,60,.15)", border:"1px solid rgba(255,60,60,.2)", color:"#ff6060", cursor:"pointer", fontSize:11 }}>✕</button>
