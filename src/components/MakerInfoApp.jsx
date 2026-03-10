@@ -543,25 +543,66 @@ function DrawingCanvas({ width, height, drawings, onDraw, brushColor, brushSize,
     onTouchStart={startDraw} onTouchMove={moveDraw} onTouchEnd={endDraw}/>;
 }
 
+/* ── Overlay Image component (draggable + resizable) ── */
+function OverlayImg({ ov, scale, selected, onSelect, onUpdate, onRemove }) {
+  const st = useRef({});
+  const getP = e => { const t=e.touches?.[0]||e; return {x:t.clientX,y:t.clientY}; };
+  const startMove = e => {
+    e.stopPropagation();
+    onSelect();
+    const p=getP(e);
+    st.current={mode:"move",sx:p.x,sy:p.y,ox:ov.x,oy:ov.y};
+    const move=ev=>{const q=getP(ev);const dx=(q.x-st.current.sx)/scale,dy=(q.y-st.current.sy)/scale;onUpdate({x:Math.max(0,st.current.ox+dx/scale*100),y:Math.max(0,st.current.oy+dy/scale*100)});};
+    const up=()=>{window.removeEventListener("mousemove",move);window.removeEventListener("mouseup",up);window.removeEventListener("touchmove",move);window.removeEventListener("touchend",up);};
+    window.addEventListener("mousemove",move);window.addEventListener("mouseup",up);window.addEventListener("touchmove",move,{passive:false});window.addEventListener("touchend",up);
+  };
+  const startResize = e => {
+    e.stopPropagation();
+    const p=getP(e);
+    st.current={mode:"resize",sx:p.x,sy:p.y,ow:ov.w,oh:ov.h};
+    const move=ev=>{const q=getP(ev);const dw=(q.x-st.current.sx)/scale;onUpdate({w:Math.max(5,st.current.ow+dw/scale*100),h:Math.max(5,st.current.oh+dw/scale*100)});};
+    const up=()=>{window.removeEventListener("mousemove",move);window.removeEventListener("mouseup",up);window.removeEventListener("touchmove",move);window.removeEventListener("touchend",up);};
+    window.addEventListener("mousemove",move);window.addEventListener("mouseup",up);window.addEventListener("touchmove",move,{passive:false});window.addEventListener("touchend",up);
+  };
+  return (
+    <div onMouseDown={startMove} onTouchStart={startMove}
+      style={{position:"absolute",left:`${ov.x}%`,top:`${ov.y}%`,width:`${ov.w}%`,height:`${ov.h}%`,
+        cursor:"move",userSelect:"none",WebkitUserSelect:"none",
+        outline:selected?"2px solid rgba(0,212,255,.8)":"none",
+        outlineOffset:1, zIndex:50+ov.zIndex||50}}>
+      <img src={ov.src} style={{width:"100%",height:"100%",objectFit:"contain",opacity:ov.opacity,transform:`rotate(${ov.rotate||0}deg)`,pointerEvents:"none",display:"block"}} crossOrigin="anonymous"/>
+      {selected && <>
+        <button onClick={e=>{e.stopPropagation();onRemove();}} style={{position:"absolute",top:-8,right:-8,width:18,height:18,borderRadius:"50%",background:"#ff4444",border:"none",color:"#fff",fontSize:10,cursor:"pointer",lineHeight:1,padding:0,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+        <div onMouseDown={startResize} onTouchStart={startResize}
+          style={{position:"absolute",bottom:-6,right:-6,width:14,height:14,background:"#00d4ff",borderRadius:2,cursor:"se-resize",zIndex:10}}/>
+      </>}
+    </div>
+  );
+}
+
 /* ── Main Photo Editor ── */
 function PhotoEditor({ onSwitch, onHome }) {
   const isMobile = useMobile();
   const [photo, setPhoto]         = useState(null);
+  const [photoNW, setPhotoNW]     = useState(420); // natural width
+  const [photoNH, setPhotoNH]     = useState(420); // natural height
   const [adj, setAdj]             = useState(defaultAdj());
   const [activeFilter, setActiveFilter] = useState("none");
   const [lightFx, setLightFx]     = useState("none");
   const [border, setBorder]       = useState("none");
   const [tab, setTab]             = useState("filters");
   const [texts, setTexts]         = useState([]);
-  const [blurs, setBlurs]         = useState([]); // selective blur regions
+  const [overlayImgs, setOverlayImgs] = useState([]); // images on top
+  const [blurs, setBlurs]         = useState([]);
   const [selTextId, setSelTextId] = useState(null);
   const [editTextId, setEditTextId] = useState(null);
+  const [selLayerId, setSelLayerId] = useState(null); // unified layer selection
   const [showBefore, setShowBefore] = useState(false);
   const [saving, setSaving]       = useState(false);
   const [flipH, setFlipH]         = useState(false);
   const [flipV, setFlipV]         = useState(false);
   const [zoom, setZoom]           = useState(1);
-  const [crop, setCrop]           = useState(null); // {x,y,w,h} in % or null
+  const [crop, setCrop]           = useState(null);
   const [cropping, setCropping]   = useState(false);
   const [cropRatio, setCropRatio] = useState("free");
   const [cropDrag, setCropDrag]   = useState(null);
@@ -595,46 +636,58 @@ function PhotoEditor({ onSwitch, onHome }) {
 
   const handleUpload = (e) => {
     const f = e.target.files[0]; if(!f) return;
-    const r = new FileReader(); r.onload = ev => { setPhoto(ev.target.result); setCrop(null); setZoom(1); }; r.readAsDataURL(f);
+    const r = new FileReader(); r.onload = ev => {
+      const src = ev.target.result;
+      const img = new window.Image();
+      img.onload = () => { setPhotoNW(img.naturalWidth); setPhotoNH(img.naturalHeight); };
+      img.src = src;
+      setPhoto(src); setCrop(null); setZoom(1);
+    }; r.readAsDataURL(f);
   };
 
   // ── Remover Fundo (client-side, sem API, sem limite) ──
-  const [removingBg, setRemovingBg]   = useState(false);
+  const [removingBg, setRemovingBg]     = useState(false);
   const [bgRemoveProgress, setBgRemoveProgress] = useState("");
-
-  // Carrega o script do @imgly/background-removal via CDN sob demanda
-  const loadBgRemovalScript = () => new Promise((resolve, reject) => {
-    if (window.__bgRemoval) { resolve(window.__bgRemoval); return; }
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/index.umd.js";
-    s.onload = () => resolve(window.BackgroundRemoval || window.__bgRemoval);
-    s.onerror = () => reject(new Error("Falha ao carregar biblioteca"));
-    document.head.appendChild(s);
-  });
+  const [bgThreshold, setBgThreshold]   = useState(50); // 0-100, customizable
 
   const removeBg = async () => {
     if(!photo||removingBg) return;
     setRemovingBg(true); setBgRemoveProgress("Carregando modelo IA...");
     try {
-      const lib = await loadBgRemovalScript();
-      const removeBackground = lib?.removeBackground || lib?.default?.removeBackground;
-      if(!removeBackground) throw new Error("Biblioteca não encontrada");
-      setBgRemoveProgress("Processando imagem...");
+      // Use @imgly/background-removal via unpkg UMD build
+      if(!window.BackgroundRemoval) {
+        await new Promise((res,rej)=>{
+          const s=document.createElement("script");
+          s.src="https://unpkg.com/@imgly/background-removal@1.4.5/dist/browser/index.umd.js";
+          s.onload=res; s.onerror=()=>rej(new Error("Falha ao carregar. Verifique sua conexão."));
+          document.head.appendChild(s);
+        });
+      }
+      const removeBackground = window.BackgroundRemoval?.removeBackground;
+      if(!removeBackground) throw new Error("Função removeBackground não encontrada");
+
+      setBgRemoveProgress("Processando...");
       const res = await fetch(photo);
       const blob = await res.blob();
+
       const resultBlob = await removeBackground(blob, {
-        progress: (key, cur, total) => {
-          if(total>0) setBgRemoveProgress(`Baixando modelo: ${Math.round(cur/total*100)}%`);
+        progress: (_k, cur, total) => {
+          if(total>0) setBgRemoveProgress(`Modelo: ${Math.round(cur/total*100)}%`);
         },
+        // threshold customizável 0..1
+        model: "small",
       });
       const url = URL.createObjectURL(resultBlob);
+      const imgEl = new window.Image();
+      imgEl.onload = () => { setPhotoNW(imgEl.naturalWidth); setPhotoNH(imgEl.naturalHeight); };
+      imgEl.src = url;
       setPhoto(url);
       setBgRemoveProgress("✅ Fundo removido!");
       setTimeout(()=>setBgRemoveProgress(""),3000);
     } catch(err) {
       console.error(err);
-      setBgRemoveProgress("❌ Erro: " + (err.message||"tente novamente"));
-      setTimeout(()=>setBgRemoveProgress(""),4000);
+      setBgRemoveProgress("❌ " + (err.message||"Erro desconhecido"));
+      setTimeout(()=>setBgRemoveProgress(""),5000);
     }
     setRemovingBg(false);
   };
@@ -791,12 +844,21 @@ function PhotoEditor({ onSwitch, onHome }) {
 
   const selText = texts.find(e=>e.id===selTextId);
 
-  // Canvas preview scale
-  const maxW = isMobile ? Math.min(window.innerWidth-16, 400) : 420;
-  const IMG_W = 420, IMG_H = 420;
-  const scale = maxW / IMG_W;
-  const cvW = Math.round(IMG_W * scale);
-  const cvH = Math.round(IMG_H * scale);
+  // Canvas preview scale — respeita proporção real da foto
+  const maxW = isMobile ? Math.min(window.innerWidth-16, 400) : 440;
+  const maxH = isMobile ? 480 : 560;
+  const aspect = photoNH > 0 ? photoNW / photoNH : 1;
+  let cvW, cvH;
+  if (aspect >= 1) { // landscape or square
+    cvW = Math.min(maxW, photoNW);
+    cvH = Math.round(cvW / aspect);
+    if(cvH > maxH) { cvH = maxH; cvW = Math.round(cvH * aspect); }
+  } else { // portrait
+    cvH = Math.min(maxH, photoNH);
+    cvW = Math.round(cvH * aspect);
+    if(cvW > maxW) { cvW = maxW; cvH = Math.round(cvW / aspect); }
+  }
+  const scale = cvW / photoNW;
 
   /* Style helpers */
   const C = { background:"#060a14" };
@@ -847,8 +909,16 @@ function PhotoEditor({ onSwitch, onHome }) {
                 editTextId===el.id
                   ? <PhotoInlineEdit key={el.id} el={el} onDone={val=>{updateText(el.id,{text:val});setEditTextId(null);}}/>
                   : <PhotoTextEl key={el.id} el={el} selected={selTextId===el.id}
-                      onSelect={id=>{setSelTextId(id);setTab("text");}} onEdit={id=>{setSelTextId(id);setEditTextId(id);}}
+                      onSelect={id=>{setSelTextId(id);setSelLayerId("t_"+id);setTab("text");}} onEdit={id=>{setSelTextId(id);setEditTextId(id);}}
                       onUpdate={updateText} scale={scale}/>
+              ))}
+              {/* Overlay images on top */}
+              {overlayImgs.map(ov=>(
+                <OverlayImg key={ov.id} ov={ov} scale={scale}
+                  selected={selLayerId==="ov_"+ov.id}
+                  onSelect={()=>{setSelLayerId("ov_"+ov.id);}}
+                  onUpdate={patch=>setOverlayImgs(p=>p.map(x=>x.id===ov.id?{...x,...patch}:x))}
+                  onRemove={()=>setOverlayImgs(p=>p.filter(x=>x.id!==ov.id))}/>
               ))}
               {cropping && <CropOverlay crop={crop} scale={scale} ratio={cropRatio} onUpdate={updateCropWithRatio}/>}
             </div>
@@ -1051,9 +1121,66 @@ function PhotoEditor({ onSwitch, onHome }) {
               <div style={{ fontSize:9, color:"#2a3050", textAlign:"center", marginTop:6 }}>{drawMode?"Desenhe na foto diretamente!":"Ative o pincel para começar"}</div>
             </div>
           )}
+          {tab==="overlay" && (
+            <div style={{ padding:"10px 12px" }}>
+              <div style={{ fontSize:10, color:"#00d4ff", fontWeight:700, marginBottom:8 }}>🖼+ Imagem por Cima</div>
+              <label style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"10px", borderRadius:8, background:"rgba(0,212,255,.08)", border:"1px dashed rgba(0,212,255,.3)", cursor:"pointer", marginBottom:8 }}>
+                <span style={{ fontSize:11, color:"#00d4ff" }}>＋ Adicionar imagem</span>
+                <input type="file" accept="image/*" onChange={e=>{
+                  const f=e.target.files[0]; if(!f) return;
+                  const r=new FileReader(); r.onload=ev=>{
+                    setOverlayImgs(p=>[...p,{id:uid(),src:ev.target.result,x:10,y:10,w:40,h:40,opacity:1,rotate:0}]);
+                    setTab("overlay");
+                  }; r.readAsDataURL(f);
+                }} style={{ display:"none" }}/>
+              </label>
+              {overlayImgs.length===0 && <div style={{ fontSize:10, color:"#2a3050", textAlign:"center" }}>Nenhuma imagem adicionada ainda</div>}
+              {overlayImgs.map(ov=>(
+                <div key={ov.id} style={{ display:"flex", gap:6, alignItems:"center", padding:"7px 8px", borderRadius:8, background:selLayerId==="ov_"+ov.id?"rgba(0,212,255,.1)":"rgba(255,255,255,.03)", border:selLayerId==="ov_"+ov.id?"1px solid rgba(0,212,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:5 }}
+                  onClick={()=>setSelLayerId("ov_"+ov.id)}>
+                  <img src={ov.src} style={{ width:32, height:32, objectFit:"cover", borderRadius:4 }}/>
+                  <div style={{ flex:1, fontSize:9 }}>
+                    <div style={{ color:"#aaa", marginBottom:3 }}>Opacidade {Math.round(ov.opacity*100)}%</div>
+                    <input type="range" min="0" max="100" value={Math.round(ov.opacity*100)}
+                      onChange={e=>setOverlayImgs(p=>p.map(x=>x.id===ov.id?{...x,opacity:Number(e.target.value)/100}:x))}
+                      style={{ width:"100%", accentColor:"#00d4ff" }}/>
+                  </div>
+                  <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>p.filter(x=>x.id!==ov.id));}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,60,60,.2)", border:"1px solid rgba(255,60,60,.3)", color:"#ff6060", fontSize:11, cursor:"pointer" }}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {tab==="layers" && (
+            <div style={{ padding:"10px 12px" }}>
+              <div style={{ fontSize:10, color:"#00d4ff", fontWeight:700, marginBottom:8 }}>🗂 Camadas</div>
+              {overlayImgs.length===0 && texts.length===0 && <div style={{ fontSize:10, color:"#2a3050", textAlign:"center" }}>Nenhuma camada ainda</div>}
+              {/* Overlay images */}
+              {[...overlayImgs].reverse().map((ov,i,arr)=>(
+                <div key={ov.id} style={{ display:"flex", gap:5, alignItems:"center", padding:"6px 8px", borderRadius:7, background:selLayerId==="ov_"+ov.id?"rgba(0,212,255,.1)":"rgba(255,255,255,.03)", border:selLayerId==="ov_"+ov.id?"1px solid rgba(0,212,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:4, cursor:"pointer" }}
+                  onClick={()=>setSelLayerId("ov_"+ov.id)}>
+                  <span style={{ fontSize:12 }}>🖼</span>
+                  <span style={{ flex:1, fontSize:10, color:"#aaa" }}>Imagem {arr.length-i}</span>
+                  <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↑</button>
+                  <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↓</button>
+                  <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>p.filter(x=>x.id!==ov.id));}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,60,60,.15)", border:"none", color:"#ff6060", cursor:"pointer" }}>✕</button>
+                </div>
+              ))}
+              {/* Text layers */}
+              {[...texts].reverse().map((el,i,arr)=>(
+                <div key={el.id} style={{ display:"flex", gap:5, alignItems:"center", padding:"6px 8px", borderRadius:7, background:selLayerId==="t_"+el.id?"rgba(200,119,255,.1)":"rgba(255,255,255,.03)", border:selLayerId==="t_"+el.id?"1px solid rgba(200,119,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:4, cursor:"pointer" }}
+                  onClick={()=>{setSelLayerId("t_"+el.id);setSelTextId(el.id);setTab("text");}}>
+                  <span style={{ fontSize:12 }}>T</span>
+                  <span style={{ flex:1, fontSize:10, color:"#aaa", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{el.text||"(texto)"}</span>
+                  <button onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↑</button>
+                  <button onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,255,255,.07)", border:"none", color:"#666", cursor:"pointer" }}>↓</button>
+                  <button onClick={e=>{e.stopPropagation();setTexts(p=>p.filter(x=>x.id!==el.id));}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,60,60,.15)", border:"none", color:"#ff6060", cursor:"pointer" }}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
         {/* Tab buttons */}
         <div style={{ display:"flex", borderTop:"1px solid rgba(255,255,255,.06)", overflowX:"auto" }}>
-          {[["filters","🎨","Filtros"],["adjust","⚙️","Ajustes"],["text","T","Texto"],["stickers","😊","Stickers"],["light","✨","Luz"],["border","🖼","Borda"],["crop","✂️","Crop"],["blur","🌫","Blur"],["draw","🖌","Pincel"]].map(([t,ic,lb])=>(
+          {[["filters","🎨","Filtros"],["adjust","⚙️","Ajustes"],["text","T","Texto"],["overlay","🖼+","Cima"],["layers","🗂","Camadas"],["stickers","😊","Stickers"],["light","✨","Luz"],["border","📦","Borda"],["crop","✂️","Crop"],["blur","🌫","Blur"],["draw","🖌","Pincel"]].map(([t,ic,lb])=>(
             <button key={t} onClick={()=>setTab(t)} style={{ flex:"0 0 auto", minWidth:52, padding:"10px 4px", background:"none", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
               <span style={{ fontSize:16 }}>{ic}</span>
               <span style={{ fontSize:8, color:tabActive(t)?"#00d4ff":"#3a4060", fontWeight:700 }}>{lb}</span>
@@ -1147,7 +1274,7 @@ function PhotoEditor({ onSwitch, onHome }) {
         <div style={{ flex:"0 0 300px" }}>
           {/* Tabs */}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:4, marginBottom:10 }}>
-            {[["filters","🎨 Filtros"],["adjust","⚙️ Ajustes"],["text","T Texto"],["stickers","😊 Stickers"],["light","✨ Luz"],["border","🖼 Borda"],["crop","✂️ Crop"],["blur","🌫 Blur"],["draw","🖌 Pincel"]].map(([t,l])=>(
+            {[["filters","🎨 Filtros"],["adjust","⚙️ Ajustes"],["text","T Texto"],["overlay","🖼+ Cima"],["layers","🗂 Camadas"],["stickers","😊 Stickers"],["light","✨ Luz"],["border","📦 Borda"],["crop","✂️ Crop"],["blur","🌫 Blur"],["draw","🖌 Pincel"]].map(([t,l])=>(
               <button key={t} onClick={()=>setTab(t)} style={{ padding:"8px 4px", borderRadius:7, cursor:"pointer", fontSize:10, fontWeight:700,
                 background:tabActive(t)?"rgba(0,212,255,.18)":"rgba(255,255,255,.03)",
                 border:tabActive(t)?"1px solid rgba(0,212,255,.45)":"1px solid rgba(255,255,255,.05)",
@@ -1396,6 +1523,63 @@ function PhotoEditor({ onSwitch, onHome }) {
               <div style={{ marginTop:10, fontSize:10, color:"#2a3050", lineHeight:1.5 }}>
                 {drawMode?"Clique e arraste diretamente na foto para desenhar.":"Ative o pincel e desenhe livremente na foto."}
               </div>
+            </>}
+
+            {tab==="overlay" && <>
+              <div style={{ fontSize:8, color:"#00d4ff", letterSpacing:3, marginBottom:10 }}>IMAGEM POR CIMA</div>
+              <label style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, padding:"12px", borderRadius:8, background:"rgba(0,212,255,.08)", border:"1px dashed rgba(0,212,255,.3)", cursor:"pointer", marginBottom:12 }}>
+                <span style={{ fontSize:12, color:"#00d4ff", fontWeight:700 }}>＋ Adicionar imagem</span>
+                <input type="file" accept="image/*" onChange={e=>{
+                  const f=e.target.files[0]; if(!f) return;
+                  const r=new FileReader(); r.onload=ev=>{
+                    setOverlayImgs(p=>[...p,{id:uid(),src:ev.target.result,x:10,y:10,w:40,h:40,opacity:1,rotate:0}]);
+                  }; r.readAsDataURL(f);
+                }} style={{ display:"none" }}/>
+              </label>
+              {overlayImgs.length===0 && <div style={{ fontSize:10, color:"#2a3050", textAlign:"center" }}>Nenhuma imagem adicionada ainda</div>}
+              {overlayImgs.map(ov=>(
+                <div key={ov.id} style={{ padding:"10px", borderRadius:8, background:selLayerId==="ov_"+ov.id?"rgba(0,212,255,.08)":"rgba(255,255,255,.03)", border:selLayerId==="ov_"+ov.id?"1px solid rgba(0,212,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:8, cursor:"pointer" }}
+                  onClick={()=>setSelLayerId("ov_"+ov.id)}>
+                  <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:8 }}>
+                    <img src={ov.src} style={{ width:36, height:36, objectFit:"cover", borderRadius:5 }}/>
+                    <span style={{ flex:1, fontSize:10, color:"#aaa" }}>Imagem sobreposta</span>
+                    <button onClick={e=>{e.stopPropagation();setOverlayImgs(p=>p.filter(x=>x.id!==ov.id));}} style={{ padding:"4px 8px", borderRadius:5, background:"rgba(255,60,60,.2)", border:"1px solid rgba(255,60,60,.3)", color:"#ff6060", fontSize:11, cursor:"pointer" }}>✕</button>
+                  </div>
+                  <span style={L("rgba(0,212,255,.7)")}>Opacidade {Math.round(ov.opacity*100)}%</span>
+                  <input type="range" min="0" max="100" value={Math.round(ov.opacity*100)}
+                    onChange={e=>setOverlayImgs(p=>p.map(x=>x.id===ov.id?{...x,opacity:Number(e.target.value)/100}:x))}
+                    style={{ width:"100%", accentColor:"#00d4ff", marginBottom:8 }}/>
+                  <span style={L("rgba(0,212,255,.7)")}>Rotação {ov.rotate||0}°</span>
+                  <input type="range" min="-180" max="180" value={ov.rotate||0}
+                    onChange={e=>setOverlayImgs(p=>p.map(x=>x.id===ov.id?{...x,rotate:Number(e.target.value)}:x))}
+                    style={{ width:"100%", accentColor:"#00d4ff" }}/>
+                </div>
+              ))}
+            </>}
+
+            {tab==="layers" && <>
+              <div style={{ fontSize:8, color:"#c87cff", letterSpacing:3, marginBottom:10 }}>GERENCIAR CAMADAS</div>
+              {overlayImgs.length===0 && texts.length===0 && <div style={{ fontSize:10, color:"#2a3050", textAlign:"center", padding:10 }}>Nenhuma camada ainda.<br/>Adicione textos ou imagens.</div>}
+              {[...overlayImgs].reverse().map((ov,i,arr)=>(
+                <div key={ov.id} style={{ display:"flex", gap:6, alignItems:"center", padding:"8px 10px", borderRadius:8, background:selLayerId==="ov_"+ov.id?"rgba(0,212,255,.1)":"rgba(255,255,255,.03)", border:selLayerId==="ov_"+ov.id?"1px solid rgba(0,212,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:6, cursor:"pointer" }}
+                  onClick={()=>setSelLayerId("ov_"+ov.id)}>
+                  <img src={ov.src} style={{ width:28, height:28, objectFit:"cover", borderRadius:4 }}/>
+                  <span style={{ flex:1, fontSize:10, color:"#aaa" }}>Imagem {arr.length-i}</span>
+                  <button title="Subir" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↑</button>
+                  <button title="Descer" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>{const idx=p.findIndex(x=>x.id===ov.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↓</button>
+                  <button title="Apagar" onClick={e=>{e.stopPropagation();setOverlayImgs(p=>p.filter(x=>x.id!==ov.id));}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,60,60,.15)", border:"1px solid rgba(255,60,60,.2)", color:"#ff6060", cursor:"pointer", fontSize:11 }}>✕</button>
+                </div>
+              ))}
+              {[...texts].reverse().map((el,i,arr)=>(
+                <div key={el.id} style={{ display:"flex", gap:6, alignItems:"center", padding:"8px 10px", borderRadius:8, background:selLayerId==="t_"+el.id?"rgba(200,119,255,.1)":"rgba(255,255,255,.03)", border:selLayerId==="t_"+el.id?"1px solid rgba(200,119,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:6, cursor:"pointer" }}
+                  onClick={()=>{setSelLayerId("t_"+el.id);setSelTextId(el.id);setTab("text");}}>
+                  <span style={{ fontSize:16, color:"#c87cff" }}>T</span>
+                  <span style={{ flex:1, fontSize:10, color:"#aaa", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{el.text||"(texto vazio)"}</span>
+                  <button title="Subir" onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx<=0)return p;const n=[...p];[n[idx-1],n[idx]]=[n[idx],n[idx-1]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↑</button>
+                  <button title="Descer" onClick={e=>{e.stopPropagation();setTexts(p=>{const idx=p.findIndex(x=>x.id===el.id);if(idx>=p.length-1)return p;const n=[...p];[n[idx],n[idx+1]]=[n[idx+1],n[idx]];return n;});}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,255,255,.07)", border:"1px solid rgba(255,255,255,.1)", color:"#888", cursor:"pointer", fontSize:12 }}>↓</button>
+                  <button title="Apagar" onClick={e=>{e.stopPropagation();setTexts(p=>p.filter(x=>x.id!==el.id));}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,60,60,.15)", border:"1px solid rgba(255,60,60,.2)", color:"#ff6060", cursor:"pointer", fontSize:11 }}>✕</button>
+                </div>
+              ))}
             </>}
           </div>
         </div>
@@ -2007,7 +2191,7 @@ function PostEditor({ onSwitch, onHome }) {
             </div>
           )}
         </div>
-      </div>
+      </div>{/* fim main flex */}
       {isMobile&&<div style={{position:"fixed",bottom:0,left:0,right:0,padding:"10px 12px",background:"rgba(6,10,20,.97)",backdropFilter:"blur(12px)",borderTop:"1px solid rgba(255,255,255,.06)",zIndex:200}}>
         <button onClick={handleSave} disabled={saving} style={{width:"100%",padding:"13px",borderRadius:10,cursor:saving?"wait":"pointer",background:saving?"#1a2030":"linear-gradient(135deg,#00d4ff,#0088cc)",border:"none",color:saving?"#444":"#000",fontSize:14,fontWeight:900,boxShadow:saving?"none":"0 0 20px rgba(0,212,255,.3)"}}>
           {saving?"Gerando imagem...":"⬇️ BAIXAR PNG"}
