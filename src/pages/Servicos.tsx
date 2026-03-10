@@ -23,6 +23,8 @@ const servicos = [
     beneficios: ["Temperatura reduzida", "Desempenho restaurado", "Vida útil prolongada"],
     tag: "Mais pedido",
     tagColor: "bg-primary/20 text-primary",
+    preco: "R$ 120",
+    tipoPreco: "fixo",
   },
   {
     emoji: "💻",
@@ -32,24 +34,19 @@ const servicos = [
     beneficios: ["Sistema limpo e otimizado", "Drivers atualizados", "Programas essenciais instalados"],
     tag: null,
     tagColor: "",
+    preco: "R$ 120",
+    tipoPreco: "fixo",
   },
   {
-    emoji: "⚡",
-    titulo: "Upgrade de Memória RAM e SSD",
-    problema: "Computador trava ao abrir vários programas?",
-    descricao: "Trocar o HD por um SSD é a atualização mais impactante que existe. O PC pode ficar até 5x mais rápido. Também fazemos upgrade de RAM para multitarefa sem travar.",
-    beneficios: ["Boot em segundos", "Programas abrindo na hora", "Sem travamentos"],
+    emoji: "🔥",
+    titulo: "Combo: Limpeza + Formatação",
+    problema: "Quer resolver tudo de uma vez e economizar?",
+    descricao: "Limpeza completa interna + formatação + drivers + programas essenciais. Tudo junto, num preço especial. A solução mais completa para um PC novo de novo.",
+    beneficios: ["Tudo resolvido de uma vez", "Economia de R$ 40", "Prazo: 1 dia útil"],
     tag: "Melhor custo-benefício",
     tagColor: "bg-secondary/20 text-secondary",
-  },
-  {
-    emoji: "💾",
-    titulo: "Recuperação de Dados",
-    problema: "Perdeu fotos, documentos ou arquivos importantes?",
-    descricao: "HD com defeito, acidente ou formatação acidental. Tentamos recuperar seus dados antes de qualquer outro procedimento. Avaliamos e só cobramos se recuperar.",
-    beneficios: ["Avaliação gratuita", "Sem recuperação = sem custo", "Sigilo garantido"],
-    tag: "Avaliação grátis",
-    tagColor: "bg-highlight-amber/20 text-highlight-amber",
+    preco: "R$ 200",
+    tipoPreco: "fixo",
   },
   {
     emoji: "🛡️",
@@ -59,6 +56,8 @@ const servicos = [
     beneficios: ["Remoção completa", "Antivírus configurado", "Orientação de segurança"],
     tag: null,
     tagColor: "",
+    preco: "R$ 100",
+    tipoPreco: "fixo",
   },
   {
     emoji: "📡",
@@ -68,6 +67,41 @@ const servicos = [
     beneficios: ["Sinal estável", "Rede segura", "Configuração de todos os dispositivos"],
     tag: null,
     tagColor: "",
+    preco: "R$ 100",
+    tipoPreco: "fixo",
+  },
+  {
+    emoji: "⚡",
+    titulo: "Upgrade de Memória RAM e SSD",
+    problema: "Computador trava ao abrir vários programas?",
+    descricao: "Trocar o HD por um SSD é a atualização mais impactante que existe. O PC pode ficar até 5x mais rápido. Também fazemos upgrade de RAM para multitarefa sem travar.",
+    beneficios: ["Boot em segundos", "Programas abrindo na hora", "Sem travamentos"],
+    tag: null,
+    tagColor: "",
+    preco: null,
+    tipoPreco: "orcamento",
+  },
+  {
+    emoji: "🖥️",
+    titulo: "Troca de Tela de Notebook",
+    problema: "Tela quebrada, manchada ou sem imagem?",
+    descricao: "Substituímos a tela do seu notebook com peça de qualidade. Fazemos a desmontagem completa, troca e teste antes de entregar. Orçamento confirmado antes de qualquer serviço.",
+    beneficios: ["Peça com garantia", "Orçamento antes do serviço", "Todos os modelos"],
+    tag: null,
+    tagColor: "",
+    preco: null,
+    tipoPreco: "orcamento",
+  },
+  {
+    emoji: "💾",
+    titulo: "Recuperação de Dados",
+    problema: "Perdeu fotos, documentos ou arquivos importantes?",
+    descricao: "HD com defeito, acidente ou formatação acidental. Tentamos recuperar seus dados antes de qualquer outro procedimento. Avaliamos e só cobramos se recuperar.",
+    beneficios: ["Avaliação gratuita", "Sem recuperação = sem custo", "Sigilo garantido"],
+    tag: "Avaliação grátis",
+    tagColor: "bg-highlight-amber/20 text-highlight-amber",
+    preco: "R$ 150",
+    tipoPreco: "apartir",
   },
 ];
 
@@ -88,6 +122,32 @@ const diferenciais = [
     texto: "Manda uma mensagem agora e já te passamos o valor. Sem enrolação, sem surpresa.",
   },
 ];
+
+const PrecoTag = ({ preco, tipoPreco }: { preco: string | null; tipoPreco: string }) => {
+  if (tipoPreco === "orcamento") {
+    return (
+      <div className="mt-4 mb-2">
+        <span className="text-xs font-semibold text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-full">
+          💬 Preço sob orçamento
+        </span>
+      </div>
+    );
+  }
+  if (tipoPreco === "apartir") {
+    return (
+      <div className="mt-4 mb-2 flex items-baseline gap-1.5">
+        <span className="text-xs text-muted-foreground">a partir de</span>
+        <span className="font-heading font-black text-2xl text-highlight-amber">{preco}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-4 mb-2 flex items-baseline gap-1.5">
+      <span className="font-heading font-black text-2xl text-primary">{preco}</span>
+      <span className="text-xs text-muted-foreground font-medium">fixo</span>
+    </div>
+  );
+};
 
 const Servicos = () => {
   return (
@@ -132,8 +192,8 @@ const Servicos = () => {
                   <div className="text-4xl mb-4 group-hover:animate-float">{s.emoji}</div>
                   <h2 className="font-heading font-black text-lg mb-2 text-foreground">{s.titulo}</h2>
                   <p className="text-primary text-sm font-semibold mb-3 italic">"{s.problema}"</p>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-5 flex-1">{s.descricao}</p>
-                  <ul className="space-y-1.5 mb-6">
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-1">{s.descricao}</p>
+                  <ul className="space-y-1.5 mb-2">
                     {s.beneficios.map((b, j) => (
                       <li key={j} className="flex items-center gap-2 text-sm text-foreground">
                         <span className="text-primary font-bold">✓</span>
@@ -141,11 +201,12 @@ const Servicos = () => {
                       </li>
                     ))}
                   </ul>
+                  <PrecoTag preco={s.preco} tipoPreco={s.tipoPreco} />
                   <a
                     href={WHATSAPP_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary/10 text-primary font-heading font-bold text-sm hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary/10 text-primary font-heading font-bold text-sm hover:bg-primary hover:text-primary-foreground transition-all duration-200 mt-2"
                   >
                     <WhatsAppIcon />
                     Pedir orçamento
