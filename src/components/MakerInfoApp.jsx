@@ -131,13 +131,28 @@ function adjToCSS(adj) {
     else filter += ` hue-rotate(${t * 0.2}deg)`;
   }
   if (sh > 0) filter += ` contrast(${1 + sh*0.003})`;
+  // highlights: lighten or darken highlights via brightness tweak on bright areas
+  if ((adj.highlights||0) !== 0) {
+    const h = adj.highlights / 100;
+    filter += h > 0 ? ` brightness(${1 + h * 0.25})` : ` brightness(${1 + h * 0.15})`;
+  }
   return filter;
 }
 
 function adjToOverlays(adj, w, h) {
   const layers = [];
-  if (adj.fade > 0) layers.push({ background:`rgba(255,255,255,${adj.fade/300})`, mixBlendMode:"normal" });
-  if (adj.vignette > 0) layers.push({ background:`radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,${adj.vignette/150}) 100%)`, mixBlendMode:"multiply" });
+  if ((adj.fade||0) > 0) layers.push({ background:`rgba(255,255,255,${adj.fade/300})`, mixBlendMode:"normal" });
+  if ((adj.vignette||0) > 0) layers.push({ background:`radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,${adj.vignette/150}) 100%)`, mixBlendMode:"multiply" });
+  // Grain — CSS noise via repeating pseudo-random SVG
+  if ((adj.grain||0) > 0) {
+    const g = adj.grain;
+    layers.push({
+      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+      opacity: g / 280,
+      mixBlendMode: "overlay",
+      backgroundSize: `${Math.max(80, 200 - g)}px`,
+    });
+  }
   return layers;
 }
 
@@ -538,7 +553,7 @@ function DrawingCanvas({ width, height, drawings, onDraw, brushColor, brushSize,
   const endDraw=()=>{ drawing.current=false; onDraw("end"); };
 
   return <canvas ref={canvasRef} width={width} height={height}
-    style={{ position:"absolute", inset:0, zIndex:15, cursor:isEraser?"cell":"crosshair", touchAction:"none" }}
+    style={{ position:"absolute", inset:0, zIndex:15, cursor:isEraser?"cell":"crosshair", touchAction:"none", background:"transparent" }}
     onMouseDown={startDraw} onMouseMove={moveDraw} onMouseUp={endDraw} onMouseLeave={endDraw}
     onTouchStart={startDraw} onTouchMove={moveDraw} onTouchEnd={endDraw}/>;
 }
@@ -584,19 +599,19 @@ function OverlayImg({ ov, scale, selected, onSelect, onUpdate, onRemove }) {
 function PhotoEditor({ onSwitch, onHome }) {
   const isMobile = useMobile();
   const [photo, setPhoto]         = useState(null);
-  const [photoNW, setPhotoNW]     = useState(420); // natural width
-  const [photoNH, setPhotoNH]     = useState(420); // natural height
+  const [photoNW, setPhotoNW]     = useState(420);
+  const [photoNH, setPhotoNH]     = useState(420);
   const [adj, setAdj]             = useState(defaultAdj());
   const [activeFilter, setActiveFilter] = useState("none");
   const [lightFx, setLightFx]     = useState("none");
   const [border, setBorder]       = useState("none");
   const [tab, setTab]             = useState("filters");
   const [texts, setTexts]         = useState([]);
-  const [overlayImgs, setOverlayImgs] = useState([]); // images on top
+  const [overlayImgs, setOverlayImgs] = useState([]);
   const [blurs, setBlurs]         = useState([]);
   const [selTextId, setSelTextId] = useState(null);
   const [editTextId, setEditTextId] = useState(null);
-  const [selLayerId, setSelLayerId] = useState(null); // unified layer selection
+  const [selLayerId, setSelLayerId] = useState(null);
   const [showBefore, setShowBefore] = useState(false);
   const [saving, setSaving]       = useState(false);
   const [flipH, setFlipH]         = useState(false);
@@ -611,13 +626,44 @@ function PhotoEditor({ onSwitch, onHome }) {
   const [showSavePreset, setShowSavePreset] = useState(false);
   const [activeAdj, setActiveAdj] = useState(null);
   const [drawMode, setDrawMode]   = useState(false);
-  const [drawings, setDrawings]   = useState([]); // strokes
+  const [drawings, setDrawings]   = useState([]);
   const [brushColor, setBrushColor] = useState("#ff0066");
   const [brushSize, setBrushSize]   = useState(8);
   const [isEraser, setIsEraser]     = useState(false);
   const canvasRef = useRef(null);
   const photoRef  = useRef(null);
   const cropRef   = useRef(null);
+
+  // ── Ctrl+Z history for Photo Editor ──
+  const photoHistory = useRef([]);
+  const photoFuture  = useRef([]);
+  const captureSnap = useCallback(() => {
+    photoHistory.current = [...photoHistory.current, { photo, adj:{...adj}, activeFilter, lightFx, border, texts:[...texts], overlayImgs:[...overlayImgs], blurs:[...blurs], flipH, flipV, drawings:[...drawings] }].slice(-20);
+    photoFuture.current = [];
+  }, [photo, adj, activeFilter, lightFx, border, texts, overlayImgs, blurs, flipH, flipV, drawings]);
+
+  const photoUndo = useCallback(() => {
+    if(!photoHistory.current.length) return;
+    const snaps = [...photoHistory.current];
+    const snap = snaps.pop();
+    photoFuture.current = [{ photo, adj:{...adj}, activeFilter, lightFx, border, texts:[...texts], overlayImgs:[...overlayImgs], blurs:[...blurs], flipH, flipV, drawings:[...drawings] }, ...photoFuture.current].slice(0,20);
+    photoHistory.current = snaps;
+    if(snap.photo !== undefined) setPhoto(snap.photo);
+    setAdj(snap.adj); setActiveFilter(snap.activeFilter); setLightFx(snap.lightFx);
+    setBorder(snap.border); setTexts(snap.texts); setOverlayImgs(snap.overlayImgs);
+    setBlurs(snap.blurs); setFlipH(snap.flipH); setFlipV(snap.flipV); setDrawings(snap.drawings);
+  }, [photo, adj, activeFilter, lightFx, border, texts, overlayImgs, blurs, flipH, flipV, drawings]);
+
+  const photoRedo = useCallback(() => {
+    if(!photoFuture.current.length) return;
+    const [snap, ...rest] = photoFuture.current;
+    photoHistory.current = [...photoHistory.current, { photo, adj:{...adj}, activeFilter, lightFx, border, texts:[...texts], overlayImgs:[...overlayImgs], blurs:[...blurs], flipH, flipV, drawings:[...drawings] }];
+    photoFuture.current = rest;
+    if(snap.photo !== undefined) setPhoto(snap.photo);
+    setAdj(snap.adj); setActiveFilter(snap.activeFilter); setLightFx(snap.lightFx);
+    setBorder(snap.border); setTexts(snap.texts); setOverlayImgs(snap.overlayImgs);
+    setBlurs(snap.blurs); setFlipH(snap.flipH); setFlipV(snap.flipV); setDrawings(snap.drawings);
+  }, [photo, adj, activeFilter, lightFx, border, texts, overlayImgs, blurs, flipH, flipV, drawings]);
 
   useScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
 
@@ -633,6 +679,25 @@ function PhotoEditor({ onSwitch, onHome }) {
     document.addEventListener("touchmove",p,{passive:false});
     return()=>document.removeEventListener("touchmove",p);
   },[]);
+
+  // Keyboard shortcuts — Ctrl+Z, Ctrl+Y, ESC, Delete
+  useEffect(()=>{
+    const h=e=>{
+      const tag=e.target.tagName;
+      if(tag==="INPUT"||tag==="TEXTAREA") return;
+      if((e.metaKey||e.ctrlKey)&&e.key==="z"&&!e.shiftKey){ e.preventDefault(); photoUndo(); }
+      if((e.metaKey||e.ctrlKey)&&(e.key==="y"||(e.key==="z"&&e.shiftKey))){ e.preventDefault(); photoRedo(); }
+      if(e.key==="Escape"){
+        setSelTextId(null); setEditTextId(null); setSelLayerId(null);
+        if(cropping){ setCropping(false); setCrop(null); }
+      }
+      if((e.key==="Delete"||e.key==="Backspace")&&selTextId&&!editTextId){
+        captureSnap(); setTexts(p=>p.filter(x=>x.id!==selTextId)); setSelTextId(null); setSelLayerId(null);
+      }
+    };
+    window.addEventListener("keydown",h);
+    return()=>window.removeEventListener("keydown",h);
+  },[photoUndo, photoRedo, selTextId, editTextId, cropping, captureSnap]);
 
   const handleUpload = (e) => {
     const f = e.target.files[0]; if(!f) return;
@@ -668,6 +733,7 @@ function PhotoEditor({ onSwitch, onHome }) {
 
       setBgRemoveProgress("Processando...");
       const res = await fetch(photo);
+      captureSnap();
       const blob = await res.blob();
 
       const resultBlob = await removeBackground(blob, {
@@ -714,8 +780,15 @@ function PhotoEditor({ onSwitch, onHome }) {
     setCrop({ x:10, y:10, w:80, h:80 });
     setTab("crop");
   };
+  // Safe tab switcher — cancels any pending crop, clears selection
+  const changeTab = (t) => {
+    if(t !== "crop" && cropping) { setCropping(false); setCrop(null); }
+    setSelTextId(null); setEditTextId(null);
+    setTab(t);
+  };
   const applyCrop = () => {
     if(!crop||!photo) return;
+    captureSnap();
     const img = new window.Image(); img.crossOrigin="anonymous";
     img.onload = () => {
       const canvas = document.createElement("canvas");
@@ -781,14 +854,28 @@ function PhotoEditor({ onSwitch, onHome }) {
   };
 
   const addText = () => {
+    captureSnap();
     const el = mkPhotoText({ x:40, y:photo?150:100 });
-    setTexts(p=>[...p,el]); setSelTextId(el.id); setTab("text");
+    setTexts(p=>[...p,el]); setSelTextId(el.id); changeTab("text");
   };
   const addSticker = (s) => {
+    captureSnap();
     const el = mkPhotoText({ text:s, fontSize:64, shadowBlur:0, x:120, y:120, w:120, h:80, align:"center" });
     setTexts(p=>[...p,el]); setSelTextId(el.id);
   };
-  const updateText = useCallback((id,patch)=>setTexts(p=>p.map(e=>e.id===id?{...e,...patch}:e)),[]);
+  // Bring all out-of-bounds elements back into canvas
+  const bringAllBack = () => {
+    setTexts(p=>p.map(e=>({...e, x:Math.max(0, Math.min(cvW-60, e.x)), y:Math.max(0, Math.min(cvH-30, e.y))})));
+    setOverlayImgs(p=>p.map(o=>({...o, x:Math.max(0, Math.min(80, o.x)), y:Math.max(0, Math.min(80, o.y))})));
+  };
+  const updateText = useCallback((id,patch)=>setTexts(p=>p.map(e=>{
+    if(e.id!==id) return e;
+    const next={...e,...patch};
+    // Clamp to canvas so text can't go fully outside
+    if(patch.x!==undefined) next.x = Math.max(-10, Math.min(cvW - 20, patch.x));
+    if(patch.y!==undefined) next.y = Math.max(-10, Math.min(cvH - 20, patch.y));
+    return next;
+  })),[cvW, cvH]);
   const deleteText = () => { if(!selTextId) return; setTexts(p=>p.filter(e=>e.id!==selTextId)); setSelTextId(null); };
 
   // ✨ Auto-enhance — aplica ajustes inteligentes
@@ -874,6 +961,8 @@ function PhotoEditor({ onSwitch, onHome }) {
       <div style={{ background:"rgba(0,0,0,.95)", backdropFilter:"blur(12px)", padding:"10px 14px", display:"flex", alignItems:"center", gap:8, borderBottom:"1px solid rgba(255,255,255,.06)", flexShrink:0 }}>
         <button onClick={onHome} style={{ padding:"6px 10px", borderRadius:7, background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", color:"#aaa", fontSize:10, fontWeight:700, cursor:"pointer" }}>🏠</button>
         <button onClick={onSwitch} style={{ padding:"6px 10px", borderRadius:7, background:"rgba(0,212,255,.1)", border:"1px solid rgba(0,212,255,.3)", color:"#00d4ff", fontSize:10, fontWeight:700, cursor:"pointer" }}>⚡ Posts</button>
+        {photo && <button onClick={photoUndo} style={{ padding:"6px 8px", borderRadius:7, background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.08)", color:"#aaa", fontSize:13, cursor:"pointer" }} title="Desfazer (Ctrl+Z)">↩</button>}
+        {photo && <button onClick={photoRedo} style={{ padding:"6px 8px", borderRadius:7, background:"rgba(255,255,255,.05)", border:"1px solid rgba(255,255,255,.08)", color:"#aaa", fontSize:13, cursor:"pointer" }} title="Refazer (Ctrl+Y)">↪</button>}
         <div style={{ flex:1, textAlign:"center" }}>
           <div style={{ fontSize:13, fontWeight:900 }}>📷 Editor de Fotos</div>
         </div>
@@ -890,7 +979,7 @@ function PhotoEditor({ onSwitch, onHome }) {
           <label style={{ width:cvW, height:220, borderRadius:16, border:"2px dashed rgba(255,255,255,.12)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"pointer", gap:10, background:"rgba(255,255,255,.02)" }}>
             <div style={{ fontSize:48 }}>📷</div>
             <div style={{ fontSize:14, color:"#3a5070", fontWeight:700 }}>Toque para escolher uma foto</div>
-            <input type="file" accept="image/*" onChange={handleUpload} style={{ display:"none" }} capture="environment"/>
+            <input type="file" accept="image/*" onChange={handleUpload} style={{ display:"none" }}/>
           </label>
         ) : (
           <div style={{ position:"relative" }}>
@@ -899,7 +988,7 @@ function PhotoEditor({ onSwitch, onHome }) {
               <img src={photo} alt="" style={{ width:cvW, height:cvH, objectFit:"cover", display:"block" }} crossOrigin="anonymous"/>
               <div style={{ position:"absolute", top:8, left:8, fontSize:10, color:"#fff", background:"rgba(0,0,0,.7)", padding:"4px 10px", borderRadius:6, fontWeight:700 }}>ORIGINAL</div>
             </div>
-            <div ref={photoRef} data-canvas="1" style={{ width:cvW, height:cvH, position:"relative", borderRadius:12, overflow:"hidden", ...borderStyle, transform:`scale(${zoom})`, transformOrigin:"center center", transition:"transform .15s" }}>
+            <div ref={photoRef} data-canvas="1" onClick={e=>{ if(e.target===e.currentTarget||e.target.tagName==="IMG"){ setSelTextId(null); setSelLayerId(null); setEditTextId(null); }}} style={{ width:cvW, height:cvH, position:"relative", borderRadius:12, overflow:"hidden", ...borderStyle, transform:`scale(${zoom})`, transformOrigin:"center center", transition:"transform .15s" }}>
               <img src={photo} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", filter:cssFilter, transform:`scaleX(${flipH?-1:1}) scaleY(${flipV?-1:1})` }} crossOrigin="anonymous"/>
               {overlays.map((o,i)=><div key={i} style={{ position:"absolute", inset:0, ...o }}/>)}
               <div style={{ position:"absolute", inset:0, ...lightStyle, pointerEvents:"none" }}/>
@@ -1067,7 +1156,7 @@ function PhotoEditor({ onSwitch, onHome }) {
               <div style={{ fontSize:9, color:"#f5c518", fontWeight:700, marginBottom:8 }}>RECORTAR FOTO</div>
               <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginBottom:8 }}>
                 {CROP_RATIOS.map(r=>(
-                  <button key={r.id} onClick={()=>{setCropRatio(r.id);}} style={{ padding:"6px 10px", borderRadius:7, cursor:"pointer", fontSize:11, fontWeight:700,
+                  <button key={r.id} onClick={()=>{ setCropRatio(r.id); if(!cropping && photo) startCrop(); }} style={{ padding:"6px 10px", borderRadius:7, cursor:"pointer", fontSize:11, fontWeight:700,
                     background:cropRatio===r.id?"rgba(245,197,24,.2)":"rgba(255,255,255,.05)",
                     border:cropRatio===r.id?"1px solid rgba(245,197,24,.5)":"1px solid rgba(255,255,255,.07)",
                     color:cropRatio===r.id?"#f5c518":"#555" }}>{r.label}</button>
@@ -1181,7 +1270,7 @@ function PhotoEditor({ onSwitch, onHome }) {
         {/* Tab buttons */}
         <div style={{ display:"flex", borderTop:"1px solid rgba(255,255,255,.06)", overflowX:"auto" }}>
           {[["filters","🎨","Filtros"],["adjust","⚙️","Ajustes"],["text","T","Texto"],["overlay","🖼+","Cima"],["layers","🗂","Camadas"],["stickers","😊","Stickers"],["light","✨","Luz"],["border","📦","Borda"],["crop","✂️","Crop"],["blur","🌫","Blur"],["draw","🖌","Pincel"]].map(([t,ic,lb])=>(
-            <button key={t} onClick={()=>setTab(t)} style={{ flex:"0 0 auto", minWidth:52, padding:"10px 4px", background:"none", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
+            <button key={t} onClick={()=>changeTab(t)} style={{ flex:"0 0 auto", minWidth:52, padding:"10px 4px", background:"none", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
               <span style={{ fontSize:16 }}>{ic}</span>
               <span style={{ fontSize:8, color:tabActive(t)?"#00d4ff":"#3a4060", fontWeight:700 }}>{lb}</span>
               {tabActive(t) && <div style={{ width:20, height:2, background:"#00d4ff", borderRadius:1 }}/>}
@@ -1275,7 +1364,7 @@ function PhotoEditor({ onSwitch, onHome }) {
           {/* Tabs */}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:4, marginBottom:10 }}>
             {[["filters","🎨 Filtros"],["adjust","⚙️ Ajustes"],["text","T Texto"],["overlay","🖼+ Cima"],["layers","🗂 Camadas"],["stickers","😊 Stickers"],["light","✨ Luz"],["border","📦 Borda"],["crop","✂️ Crop"],["blur","🌫 Blur"],["draw","🖌 Pincel"]].map(([t,l])=>(
-              <button key={t} onClick={()=>setTab(t)} style={{ padding:"8px 4px", borderRadius:7, cursor:"pointer", fontSize:10, fontWeight:700,
+              <button key={t} onClick={()=>changeTab(t)} style={{ padding:"8px 4px", borderRadius:7, cursor:"pointer", fontSize:10, fontWeight:700,
                 background:tabActive(t)?"rgba(0,212,255,.18)":"rgba(255,255,255,.03)",
                 border:tabActive(t)?"1px solid rgba(0,212,255,.45)":"1px solid rgba(255,255,255,.05)",
                 color:tabActive(t)?"#00d4ff":"#3a4060" }}>{l}</button>
@@ -1357,7 +1446,10 @@ function PhotoEditor({ onSwitch, onHome }) {
             {/* TEXT */}
             {tab==="text" && <>
               <div style={{ fontSize:8, color:"#00d4ff", letterSpacing:3, marginBottom:10 }}>TEXTO NA FOTO</div>
-              <button onClick={addText} style={{ ...iB(true,"#00d4ff"), width:"100%", padding:"10px", marginBottom:10 }}>＋ Adicionar texto</button>
+              <div style={{ display:"flex", gap:6, marginBottom:10 }}>
+                <button onClick={addText} style={{ ...iB(true,"#00d4ff"), flex:1, padding:"10px" }}>＋ Adicionar texto</button>
+                <button onClick={bringAllBack} title="Trazer elementos para dentro da foto" style={{ ...iB(false,"#f5c518"), padding:"10px 8px", fontSize:11 }}>⤵ Trazer tudo</button>
+              </div>
               {selText && <>
                 <div style={{ marginBottom:8 }}>
                   <span style={L()}>Texto <span style={{ color:"#2a3050", textTransform:"none" }}>(ou 2× clique)</span></span>
@@ -1459,7 +1551,7 @@ function PhotoEditor({ onSwitch, onHome }) {
                 <span style={L("rgba(245,197,24,.8)")}>Proporção</span>
                 <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
                   {CROP_RATIOS.map(r=>(
-                    <button key={r.id} onClick={()=>setCropRatio(r.id)} style={{ padding:"7px 12px", borderRadius:7, cursor:"pointer", fontSize:11, fontWeight:700,
+                    <button key={r.id} onClick={()=>{ setCropRatio(r.id); if(!cropping && photo) startCrop(); }} style={{ padding:"7px 12px", borderRadius:7, cursor:"pointer", fontSize:11, fontWeight:700,
                       background:cropRatio===r.id?"rgba(245,197,24,.2)":"rgba(255,255,255,.04)",
                       border:cropRatio===r.id?"1px solid rgba(245,197,24,.5)":"1px solid rgba(255,255,255,.06)",
                       color:cropRatio===r.id?"#f5c518":"#555" }}>{r.label}</button>
@@ -1506,8 +1598,9 @@ function PhotoEditor({ onSwitch, onHome }) {
                   color:isEraser?"#f5c518":"#555" }}>⬜ Borracha</button>
               </div>
               <div style={{ marginBottom:10 }}>
-                <span style={L("rgba(255,0,102,.8)")}>Cor do pincel</span>
-                <input type="color" value={brushColor} onChange={e=>setBrushColor(e.target.value)} style={{ width:"100%", height:40, border:"none", borderRadius:7, cursor:"pointer" }}/>
+                <span style={L("rgba(255,0,102,.8)")}>{isEraser ? "Borracha ativa" : "Cor do pincel"}</span>
+                {!isEraser && <input type="color" value={brushColor} onChange={e=>setBrushColor(e.target.value)} style={{ width:"100%", height:40, border:"none", borderRadius:7, cursor:"pointer" }}/>}
+                {isEraser && <div style={{ padding:"8px 10px", borderRadius:7, background:"rgba(245,197,24,.1)", border:"1px solid rgba(245,197,24,.2)", fontSize:10, color:"#f5c518" }}>A borracha apaga pixels do desenho. Não tem cor.</div>}
               </div>
               <div style={{ marginBottom:10 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
@@ -1695,7 +1788,10 @@ const P_CURSORS={nw:"nw-resize",n:"n-resize",ne:"ne-resize",e:"e-resize",se:"se-
 function PInteractEl({ el, selected, multiSelected, onSelect, onUpdate, onEdit, scale, onSnapMove }) {
   const st=useRef({mode:null}); const wrapRef=useRef(null); const lastTap=useRef(0); const HS=16;
   const startDrag=(e)=>{ if(el.locked){onSelect(el.id,e);return;} e.stopPropagation();e.preventDefault();
-    const now=Date.now(); if(el.kind==="text"&&now-lastTap.current<380){onEdit(el.id);return;} lastTap.current=now;
+    const now=Date.now();
+    // Double-tap/click on text = edit mode
+    if(el.kind==="text"&&now-lastTap.current<380){onEdit(el.id);lastTap.current=0;return;}
+    lastTap.current=now;
     onSelect(el.id,e);const p=getPoint(e);st.current={mode:"drag",sx:p.x,sy:p.y,ox:el.x,oy:el.y};bind(); };
   const startRes=(e,h)=>{e.stopPropagation();e.preventDefault();const p=getPoint(e);st.current={mode:"resize",h,sx:p.x,sy:p.y,ox:el.x,oy:el.y,ow:el.w,oh:el.h};bind();};
   const startRot=(e)=>{e.stopPropagation();e.preventDefault();const r=wrapRef.current?.getBoundingClientRect();if(!r)return;const cx=r.left+r.width/2,cy=r.top+r.height/2;const p=getPoint(e);st.current={mode:"rotate",cx,cy,sa:Math.atan2(p.y-cy,p.x-cx)*180/Math.PI,or:el.rotation||0};bind();};
@@ -1714,7 +1810,7 @@ function PInteractEl({ el, selected, multiSelected, onSelect, onUpdate, onEdit, 
   useEffect(()=>()=>unbind(),[]);
   const rot=el.rotation||0;
   const isAnySelected = selected||multiSelected;
-  return <div ref={wrapRef} style={{position:"absolute",left:el.x,top:el.y,width:el.w,height:el.h||60,cursor:el.locked?"default":el.kind==="text"?"text":"move",outline:selected?"2px dashed rgba(0,212,255,.9)":multiSelected?"2px dashed rgba(200,119,255,.8)":"2px solid transparent",boxSizing:"border-box",transform:rot?`rotate(${rot}deg)`:"none",transformOrigin:"center center",touchAction:"none"}} onMouseDown={startDrag} onTouchStart={startDrag}>
+  return <div ref={wrapRef} style={{position:"absolute",left:el.x,top:el.y,width:el.w,height:el.h||60,cursor:el.locked?"default":el.kind==="text"?"text":"move",outline:selected?"2px dashed rgba(0,212,255,.9)":multiSelected?"2px dashed rgba(200,119,255,.8)":"2px solid transparent",boxSizing:"border-box",transform:rot?`rotate(${rot}deg)`:"none",transformOrigin:"center center",touchAction:"none"}} onMouseDown={startDrag} onTouchStart={startDrag} onDoubleClick={e=>{e.stopPropagation();if(el.kind==="text") onEdit(el.id);}}>
     <PElView el={{...el,x:0,y:0}}/>
     {selected&&!el.locked&&<>{P_HANDLES.map(h=><div key={h.id} onMouseDown={e=>startRes(e,h.id)} onTouchStart={e=>startRes(e,h.id)} style={{position:"absolute",width:HS,height:HS,background:"#00d4ff",border:"2px solid #fff",borderRadius:3,zIndex:10,boxShadow:"0 0 8px rgba(0,212,255,.9)",left:`calc(${h.cx*100}% - ${HS/2}px)`,top:`calc(${h.cy*100}% - ${HS/2}px)`,cursor:P_CURSORS[h.id],touchAction:"none"}}/>)}
       <div onMouseDown={startRot} onTouchStart={startRot} style={{position:"absolute",width:22,height:22,background:"#f5c518",border:"2px solid #fff",borderRadius:"50%",top:-36,left:"50%",transform:"translateX(-50%)",cursor:"crosshair",zIndex:11,boxShadow:"0 0 10px rgba(245,197,24,.8)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,touchAction:"none"}}>↻</div>
@@ -1849,7 +1945,14 @@ function PostEditor({ onSwitch, onHome }) {
     setMultiSelIds([]);
   };
 
-  const loadTemplate=tpl=>{const result=tpl.mk(s,FH);setBgId(result.bg||"transparent");setEls(result.els.map(e=>({...e,id:uid()})));setSelId(null);setEditId(null);setActiveTplId(tpl.id);setPanel("layers");};
+  const loadTemplate=useCallback(tpl=>{
+    const fmt=FORMATS_P.find(f=>f.id===fmtId); const h=fmt?fmt.h:600;
+    const sv=SERVICOS_P[si];
+    const result=tpl.mk(sv,h);
+    setBgId(result.bg||"transparent");
+    setEls(result.els.map(e=>({...e,id:uid()})));
+    setSelId(null); setEditId(null); setActiveTplId(tpl.id); setPanel("layers");
+  },[fmtId, si]);
   const addText=()=>{const e=mkPText({x:60,y:120});setEls(p=>[...p,e]);setSelId(e.id);setPanel("props");};
   const addShape=sh=>{const d=sh==="circle"?{w:120,h:120}:sh==="line"?{w:200,h:4}:sh==="triangle"?{w:100,h:86}:{};const e=mkPShape(sh,{x:80,y:80,...d});setEls(p=>[...p,e]);setSelId(e.id);setPanel("props");};
   const addImg=src=>{const e=mkPImage(src);setEls(p=>[...p,e]);setSelId(e.id);setPanel("props");};
@@ -2286,12 +2389,12 @@ function CollageEditor({ onHome }) {
                     : <label style={{width:"100%",height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",gap:4,background:"rgba(255,255,255,.04)"}}>
                         <div style={{fontSize:Math.min(w,h)*0.3,opacity:.4}}>+</div>
                         <div style={{fontSize:Math.min(w*0.08,10),color:"rgba(255,255,255,.35)",textAlign:"center",padding:"0 4px"}}>Foto {idx+1}</div>
-                        <input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}} capture="environment"/>
+                        <input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}}/>
                       </label>
                   }
                   {photo && (
                     <label style={{position:"absolute",bottom:4,right:4,width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,.6)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:12}}>
-                      🔄<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}} capture="environment"/>
+                      🔄<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}}/>
                     </label>
                   )}
                 </div>
@@ -2350,7 +2453,7 @@ function CollageEditor({ onHome }) {
                   <span style={{fontSize:11,color:photos[idx]?"#00e676":"#3a4060",flex:1}}>Foto {idx+1}</span>
                   {photos[idx]&&<button onClick={()=>setPhotos(p=>{const a=[...p];a[idx]=null;return a;})} style={{fontSize:11,color:"#ff4444",background:"none",border:"none",cursor:"pointer"}}>✕</button>}
                   <label style={{fontSize:10,color:"#00e676",cursor:"pointer",padding:"4px 8px",borderRadius:5,border:"1px solid rgba(0,230,118,.3)",background:"rgba(0,230,118,.07)"}}>
-                    {photos[idx]?"Trocar":"Adicionar"}<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}} capture="environment"/>
+                    {photos[idx]?"Trocar":"Adicionar"}<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}}/>
                   </label>
                 </div>
               ))}
