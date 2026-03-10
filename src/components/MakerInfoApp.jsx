@@ -856,6 +856,8 @@ function PhotoEditor({ onSwitch, onHome }) {
                 🔄 Trocar<input type="file" accept="image/*" onChange={handleUpload} style={{ display:"none" }}/>
               </label>
             </>}
+          </div>
+        )}
       </div>
 
       {/* Active adjustment slider (mobile) */}
