@@ -600,22 +600,32 @@ function PhotoEditor({ onSwitch, onHome }) {
 
   // ── Remover Fundo (client-side, sem API, sem limite) ──
   const [removingBg, setRemovingBg]   = useState(false);
-  const [bgRemoveProgress, setBgRemoveProgress] = useState(""); // status text
+  const [bgRemoveProgress, setBgRemoveProgress] = useState("");
+
+  // Carrega o script do @imgly/background-removal via CDN sob demanda
+  const loadBgRemovalScript = () => new Promise((resolve, reject) => {
+    if (window.__bgRemoval) { resolve(window.__bgRemoval); return; }
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/index.umd.js";
+    s.onload = () => resolve(window.BackgroundRemoval || window.__bgRemoval);
+    s.onerror = () => reject(new Error("Falha ao carregar biblioteca"));
+    document.head.appendChild(s);
+  });
+
   const removeBg = async () => {
     if(!photo||removingBg) return;
     setRemovingBg(true); setBgRemoveProgress("Carregando modelo IA...");
     try {
-      // Dynamic import via esm.sh CDN — cached após 1ª vez
-      const { removeBackground } = await import("https://esm.sh/@imgly/background-removal@1.4.5");
+      const lib = await loadBgRemovalScript();
+      const removeBackground = lib?.removeBackground || lib?.default?.removeBackground;
+      if(!removeBackground) throw new Error("Biblioteca não encontrada");
       setBgRemoveProgress("Processando imagem...");
-      // Convert dataURL → Blob
       const res = await fetch(photo);
       const blob = await res.blob();
       const resultBlob = await removeBackground(blob, {
         progress: (key, cur, total) => {
           if(total>0) setBgRemoveProgress(`Baixando modelo: ${Math.round(cur/total*100)}%`);
         },
-        publicPath: "https://esm.sh/@imgly/background-removal@1.4.5/dist/",
       });
       const url = URL.createObjectURL(resultBlob);
       setPhoto(url);
