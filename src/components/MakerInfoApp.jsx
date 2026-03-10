@@ -380,14 +380,6 @@ const BORDERS = [
   { id:"cream",  label:"Creme",      style:{ padding:16, background:"#f5f0e8" } },
 ];
 
-/* ── Undo/Redo ── */
-function histReducer(s, a) {
-  if (a.type==="SET")  return { past:[...s.past,s.present].slice(-60), present:a.p, future:[] };
-  if (a.type==="UNDO" && s.past.length)   { const past=[...s.past]; const p=past.pop(); return { past, present:p, future:[s.present,...s.future] }; }
-  if (a.type==="REDO" && s.future.length) { const [p,...future]=s.future; return { past:[...s.past,s.present], present:p, future }; }
-  return s;
-}
-
 /* ── Default adj state ── */
 const defaultAdj = () => Object.fromEntries(ADJUSTMENTS.map(a=>[a.id, a.def]));
 
@@ -422,27 +414,29 @@ function LightThumb({ fx, selected, onClick, img }) {
 }
 
 /* ── Crop Overlay ─────────────────────────────────────────────────────────── */
-function CropOverlay({ crop, scale, onUpdate, ratio }) {
+function CropOverlay({ crop, cvW, cvH, onUpdate, ratio }) {
   const st = useRef({mode:null});
+  // Convert screen-pixel delta to percentage of canvas
+  const toP = (dx, total) => dx / total * 100;
   const startMove = (e) => { e.stopPropagation(); e.preventDefault(); const p=getPoint(e); st.current={mode:"move",sx:p.x,sy:p.y,ox:crop.x,oy:crop.y}; bind(); };
   const startRes  = (e,h) => { e.stopPropagation(); e.preventDefault(); const p=getPoint(e); st.current={mode:"resize",h,sx:p.x,sy:p.y,ox:crop.x,oy:crop.y,ow:crop.w,oh:crop.h}; bind(); };
   const onMove = useCallback((e)=>{
     const d=st.current; if(!d.mode) return;
-    const p=getPoint(e); const dx=(p.x-d.sx)/scale, dy=(p.y-d.sy)/scale;
-    const toP = v => v; // values already in %
+    const p=getPoint(e);
+    const dx=toP(p.x-d.sx, cvW), dy=toP(p.y-d.sy, cvH);
     if(d.mode==="move") {
-      onUpdate({ x:Math.min(100-crop.w,Math.max(0,d.ox+dx/4.2)), y:Math.min(100-crop.h,Math.max(0,d.oy+dy/4.2)) });
+      onUpdate({ x:Math.min(100-crop.w,Math.max(0,d.ox+dx)), y:Math.min(100-crop.h,Math.max(0,d.oy+dy)) });
     }
     if(d.mode==="resize") {
       const h=d.h; let nw=d.ow,nh=d.oh,nx=d.ox,ny=d.oy;
-      if(h.includes("e"))nw=Math.max(5,d.ow+dx/4.2);
-      if(h.includes("s"))nh=Math.max(5,d.oh+dy/4.2);
-      if(h.includes("w")){nw=Math.max(5,d.ow-dx/4.2);nx=d.ox+(d.ow-nw);}
-      if(h.includes("n")){nh=Math.max(5,d.oh-dy/4.2);ny=d.oy+(d.oh-nh);}
+      if(h.includes("e"))nw=Math.max(5,d.ow+dx);
+      if(h.includes("s"))nh=Math.max(5,d.oh+dy);
+      if(h.includes("w")){nw=Math.max(5,d.ow-dx);nx=d.ox+(d.ow-nw);}
+      if(h.includes("n")){nh=Math.max(5,d.oh-dy);ny=d.oy+(d.oh-nh);}
       if(ratio!=="free"){ const[rw,rh]=ratio.split(":").map(Number); nh=nw/(rw/rh); }
       onUpdate({x:Math.max(0,nx),y:Math.max(0,ny),w:Math.min(100-Math.max(0,nx),nw),h:Math.min(100-Math.max(0,ny),nh)});
     }
-  },[crop,scale,ratio,onUpdate]);
+  },[crop,cvW,cvH,ratio,onUpdate]);
   const onUp=useCallback(()=>{st.current.mode=null;unbind();},[]);
   const bind=()=>{window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);window.addEventListener("touchmove",onMove,{passive:false});window.addEventListener("touchend",onUp);};
   const unbind=()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);window.removeEventListener("touchmove",onMove);window.removeEventListener("touchend",onUp);};
@@ -559,7 +553,7 @@ function DrawingCanvas({ width, height, drawings, onDraw, brushColor, brushSize,
 }
 
 /* ── Overlay Image component (draggable + resizable) ── */
-function OverlayImg({ ov, scale, selected, onSelect, onUpdate, onRemove }) {
+function OverlayImg({ ov, cvW, cvH, selected, onSelect, onUpdate, onRemove }) {
   const st = useRef({});
   const getP = e => { const t=e.touches?.[0]||e; return {x:t.clientX,y:t.clientY}; };
   const startMove = e => {
@@ -567,7 +561,7 @@ function OverlayImg({ ov, scale, selected, onSelect, onUpdate, onRemove }) {
     onSelect();
     const p=getP(e);
     st.current={mode:"move",sx:p.x,sy:p.y,ox:ov.x,oy:ov.y};
-    const move=ev=>{const q=getP(ev);const dx=(q.x-st.current.sx)/scale,dy=(q.y-st.current.sy)/scale;onUpdate({x:Math.max(0,st.current.ox+dx/scale*100),y:Math.max(0,st.current.oy+dy/scale*100)});};
+    const move=ev=>{const q=getP(ev);onUpdate({x:Math.max(0,Math.min(90,st.current.ox+(q.x-st.current.sx)/cvW*100)),y:Math.max(0,Math.min(90,st.current.oy+(q.y-st.current.sy)/cvH*100))});};
     const up=()=>{window.removeEventListener("mousemove",move);window.removeEventListener("mouseup",up);window.removeEventListener("touchmove",move);window.removeEventListener("touchend",up);};
     window.addEventListener("mousemove",move);window.addEventListener("mouseup",up);window.addEventListener("touchmove",move,{passive:false});window.addEventListener("touchend",up);
   };
@@ -575,7 +569,7 @@ function OverlayImg({ ov, scale, selected, onSelect, onUpdate, onRemove }) {
     e.stopPropagation();
     const p=getP(e);
     st.current={mode:"resize",sx:p.x,sy:p.y,ow:ov.w,oh:ov.h};
-    const move=ev=>{const q=getP(ev);const dw=(q.x-st.current.sx)/scale;onUpdate({w:Math.max(5,st.current.ow+dw/scale*100),h:Math.max(5,st.current.oh+dw/scale*100)});};
+    const move=ev=>{const q=getP(ev);const dw=(q.x-st.current.sx)/cvW*100;onUpdate({w:Math.max(5,st.current.ow+dw),h:Math.max(5,st.current.oh+dw)});};
     const up=()=>{window.removeEventListener("mousemove",move);window.removeEventListener("mouseup",up);window.removeEventListener("touchmove",move);window.removeEventListener("touchend",up);};
     window.addEventListener("mousemove",move);window.addEventListener("mouseup",up);window.addEventListener("touchmove",move,{passive:false});window.addEventListener("touchend",up);
   };
@@ -863,19 +857,7 @@ function PhotoEditor({ onSwitch, onHome }) {
     const el = mkPhotoText({ text:s, fontSize:64, shadowBlur:0, x:120, y:120, w:120, h:80, align:"center" });
     setTexts(p=>[...p,el]); setSelTextId(el.id);
   };
-  // Bring all out-of-bounds elements back into canvas
-  const bringAllBack = () => {
-    setTexts(p=>p.map(e=>({...e, x:Math.max(0, Math.min(cvW-60, e.x)), y:Math.max(0, Math.min(cvH-30, e.y))})));
-    setOverlayImgs(p=>p.map(o=>({...o, x:Math.max(0, Math.min(80, o.x)), y:Math.max(0, Math.min(80, o.y))})));
-  };
-  const updateText = useCallback((id,patch)=>setTexts(p=>p.map(e=>{
-    if(e.id!==id) return e;
-    const next={...e,...patch};
-    // Clamp to canvas so text can't go fully outside
-    if(patch.x!==undefined) next.x = Math.max(-10, Math.min(cvW - 20, patch.x));
-    if(patch.y!==undefined) next.y = Math.max(-10, Math.min(cvH - 20, patch.y));
-    return next;
-  })),[cvW, cvH]);
+  const updateText = useCallback((id,patch)=>setTexts(p=>p.map(e=>e.id===id?{...e,...patch}:e)),[]);
   const deleteText = () => { if(!selTextId) return; setTexts(p=>p.filter(e=>e.id!==selTextId)); setSelTextId(null); };
 
   // ✨ Auto-enhance — aplica ajustes inteligentes
@@ -947,6 +929,12 @@ function PhotoEditor({ onSwitch, onHome }) {
   }
   const scale = cvW / photoNW;
 
+  // Bring all out-of-bounds elements back into canvas (needs cvW/cvH)
+  const bringAllBack = () => {
+    setTexts(p=>p.map(e=>({...e, x:Math.max(0, Math.min(cvW-60, e.x)), y:Math.max(0, Math.min(cvH-30, e.y))})));
+    setOverlayImgs(p=>p.map(o=>({...o, x:Math.max(0, Math.min(80, o.x)), y:Math.max(0, Math.min(80, o.y))})));
+  };
+
   /* Style helpers */
   const C = { background:"#060a14" };
   const I = { width:"100%", padding:"9px 11px", borderRadius:7, fontSize:12, background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.09)", color:"#fff", outline:"none", boxSizing:"border-box" };
@@ -1003,13 +991,13 @@ function PhotoEditor({ onSwitch, onHome }) {
               ))}
               {/* Overlay images on top */}
               {overlayImgs.map(ov=>(
-                <OverlayImg key={ov.id} ov={ov} scale={scale}
+                <OverlayImg key={ov.id} ov={ov} cvW={cvW} cvH={cvH}
                   selected={selLayerId==="ov_"+ov.id}
                   onSelect={()=>{setSelLayerId("ov_"+ov.id);}}
                   onUpdate={patch=>setOverlayImgs(p=>p.map(x=>x.id===ov.id?{...x,...patch}:x))}
                   onRemove={()=>setOverlayImgs(p=>p.filter(x=>x.id!==ov.id))}/>
               ))}
-              {cropping && <CropOverlay crop={crop} scale={scale} ratio={cropRatio} onUpdate={updateCropWithRatio}/>}
+              {cropping && <CropOverlay crop={crop} cvW={cvW} cvH={cvH} ratio={cropRatio} onUpdate={updateCropWithRatio}/>}
             </div>
             {/* Buttons overlay */}
             {cropping ? <>
@@ -1267,8 +1255,9 @@ function PhotoEditor({ onSwitch, onHome }) {
               ))}
             </div>
           )}
-        {/* Tab buttons */}
-        <div style={{ display:"flex", borderTop:"1px solid rgba(255,255,255,.06)", overflowX:"auto" }}>
+        </div>{/* fim tab content scroll */}
+        {/* Tab buttons — fora do scroll para nunca sumir */}
+        <div style={{ display:"flex", borderTop:"1px solid rgba(255,255,255,.06)", overflowX:"auto", flexShrink:0 }}>
           {[["filters","🎨","Filtros"],["adjust","⚙️","Ajustes"],["text","T","Texto"],["overlay","🖼+","Cima"],["layers","🗂","Camadas"],["stickers","😊","Stickers"],["light","✨","Luz"],["border","📦","Borda"],["crop","✂️","Crop"],["blur","🌫","Blur"],["draw","🖌","Pincel"]].map(([t,ic,lb])=>(
             <button key={t} onClick={()=>changeTab(t)} style={{ flex:"0 0 auto", minWidth:52, padding:"10px 4px", background:"none", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
               <span style={{ fontSize:16 }}>{ic}</span>
@@ -1277,8 +1266,8 @@ function PhotoEditor({ onSwitch, onHome }) {
             </button>
           ))}
         </div>
-        </div>
       </div>
+    </div>
     </div>
   );
 
@@ -1312,7 +1301,7 @@ function PhotoEditor({ onSwitch, onHome }) {
         {/* Canvas */}
         <div style={{ flex:"0 0 auto", display:"flex", flexDirection:"column", alignItems:"center", gap:10 }}>
           {!photo ? (
-            <label style={{ width:440, height:440, borderRadius:16, border:"2px dashed rgba(255,255,255,.1)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"pointer", gap:12, background:"rgba(255,255,255,.02)", transition:"border-color .2s" }}
+            <label style={{ width:cvW, height:Math.max(cvH,300), borderRadius:16, border:"2px dashed rgba(255,255,255,.1)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"pointer", gap:12, background:"rgba(255,255,255,.02)", transition:"border-color .2s" }}
               onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(0,212,255,.3)"} onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,.1)"}>
               <div style={{ fontSize:56 }}>📷</div>
               <div style={{ fontSize:15, color:"#3a5070", fontWeight:700 }}>Clique para escolher uma foto</div>
@@ -1323,23 +1312,30 @@ function PhotoEditor({ onSwitch, onHome }) {
             <div style={{ position:"relative" }}>
               {/* Before/After — always in DOM, opacity toggle, pointerEvents none so it never blocks */}
               <div style={{ position:"absolute", inset:0, zIndex:20, borderRadius:14, overflow:"hidden", opacity:showBefore?1:0, pointerEvents:"none", transition:"opacity .1s" }}>
-                <img src={photo} alt="" style={{ width:440, height:440, objectFit:"cover" }} crossOrigin="anonymous"/>
+                <img src={photo} alt="" style={{ width:cvW, height:cvH, objectFit:"cover" }} crossOrigin="anonymous"/>
                 <div style={{ position:"absolute", top:10, left:10, fontSize:11, color:"#fff", background:"rgba(0,0,0,.7)", padding:"5px 12px", borderRadius:6, fontWeight:700 }}>ORIGINAL</div>
               </div>
-              <div ref={photoRef} data-canvas="1" data-photocanvas="1" style={{ width:440, height:440, position:"relative", borderRadius:14, overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.8)", ...borderStyle, transform:`scale(${zoom})`, transformOrigin:"center center", transition:"transform .15s" }}>
+              <div ref={photoRef} data-canvas="1" data-photocanvas="1" onClick={e=>{ if(e.target===e.currentTarget||e.target.tagName==="IMG"){ setSelTextId(null); setSelLayerId(null); setEditTextId(null); }}} style={{ width:cvW, height:cvH, position:"relative", borderRadius:14, overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.8)", ...borderStyle, transform:`scale(${zoom})`, transformOrigin:"center center", transition:"transform .15s" }}>
                 <img src={photo} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", filter:cssFilter, transform:`scaleX(${flipH?-1:1}) scaleY(${flipV?-1:1})` }} crossOrigin="anonymous"/>
                 {overlays.map((o,i)=><div key={i} style={{ position:"absolute", inset:0, ...o }}/>)}
                 <div style={{ position:"absolute", inset:0, ...lightStyle, pointerEvents:"none" }}/>
-                {blurs.map(b=><BlurRegion key={b.id} b={b} scale={1} onUpdate={updateBlur} onRemove={removeBlur}/>)}
-                {drawMode && <DrawingCanvas width={440} height={440} drawings={drawings} onDraw={handleDraw} brushColor={brushColor} brushSize={brushSize} isEraser={isEraser}/>}
+                {blurs.map(b=><BlurRegion key={b.id} b={b} scale={scale} onUpdate={updateBlur} onRemove={removeBlur}/>)}
+                {drawMode && <DrawingCanvas width={cvW} height={cvH} drawings={drawings} onDraw={handleDraw} brushColor={brushColor} brushSize={brushSize} isEraser={isEraser}/>}
                 {texts.map(el=>(
                   editTextId===el.id
                     ? <PhotoInlineEdit key={el.id} el={el} onDone={val=>{updateText(el.id,{text:val});setEditTextId(null);}}/>
                     : <PhotoTextEl key={el.id} el={el} selected={selTextId===el.id}
                         onSelect={id=>{setSelTextId(id);setTab("text");}} onEdit={id=>{setSelTextId(id);setEditTextId(id);}}
-                        onUpdate={updateText} scale={1}/>
+                        onUpdate={updateText} scale={scale}/>
                 ))}
-                {cropping && <CropOverlay crop={crop} scale={1} ratio={cropRatio} onUpdate={updateCropWithRatio}/>}
+                {overlayImgs.map(ov=>(
+                  <OverlayImg key={ov.id} ov={ov} cvW={cvW} cvH={cvH}
+                    selected={selLayerId==="ov_"+ov.id}
+                    onSelect={()=>setSelLayerId("ov_"+ov.id)}
+                    onUpdate={patch=>setOverlayImgs(p=>p.map(x=>x.id===ov.id?{...x,...patch}:x))}
+                    onRemove={()=>setOverlayImgs(p=>p.filter(x=>x.id!==ov.id))}/>
+                ))}
+                {cropping && <CropOverlay crop={crop} cvW={cvW} cvH={cvH} ratio={cropRatio} onUpdate={updateCropWithRatio}/>}
               </div>
               {/* Crop confirm bar */}
               {cropping && (
@@ -1925,6 +1921,7 @@ function PostEditor({ onSwitch, onHome }) {
     }
   };
 
+  const snapTimeout = useRef(null);
   // Snap guides — snaps to canvas edges, center, and other elements
   const SNAP_DIST = 8;
   const handleSnapMove=(id,nx,ny,nw,nh)=>{
@@ -1951,7 +1948,8 @@ function PostEditor({ onSwitch, onHome }) {
       const dx=Math.round(fx)-nx, dy=Math.round(fy)-ny;
       multiSelIds.forEach(mid=>setEls(p=>p.map(e=>e.id===mid?{...e,x:e.x+dx,y:e.y+dy}:e)));
     }
-    setTimeout(()=>setSnapGuides([]),600);
+    if(snapTimeout.current) clearTimeout(snapTimeout.current);
+    snapTimeout.current = setTimeout(()=>setSnapGuides([]),600);
   };
 
   // Move multiSel elements together
@@ -2029,23 +2027,18 @@ function PostEditor({ onSwitch, onHome }) {
     }; r.readAsText(f);
   };
 
-  // 📦 Exportar todos os formatos de uma vez
+  // 📦 Exportar PNG no formato atual
   const exportAll = async () => {
     const h2c=window.html2canvas; if(!h2c){alert("Aguarde.");return;}
     setExportingAll(true); setSelId(null); setEditId(null);
     await new Promise(r=>setTimeout(r,150));
-    for (const fmt of FORMATS_P) {
-      // Temporarily rescale
-      const origFmt = fmtId;
-      const label = fmt.label.replace(/[^a-z0-9]/gi,"-").toLowerCase();
-      // Export current format
-      try {
-        const canvas = await h2c(posterRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});
-        const link=document.createElement("a"); link.download=`maker-info-${s.label.toLowerCase()}-${label}.png`;
-        link.href=canvas.toDataURL("image/png"); link.click();
-        await new Promise(r=>setTimeout(r,300));
-      } catch(err){console.error(err);}
-    }
+    try {
+      const canvas = await h2c(posterRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});
+      const label = FORMATS_P.find(f=>f.id===fmtId)?.label||fmtId;
+      const link=document.createElement("a");
+      link.download=`maker-info-${s.label.toLowerCase().replace(/ /g,"-")}-${label}.png`;
+      link.href=canvas.toDataURL("image/png"); link.click();
+    } catch(err){console.error(err);alert("Erro ao exportar.");}
     setExportingAll(false);
   };
 
@@ -2075,7 +2068,7 @@ function PostEditor({ onSwitch, onHome }) {
         <button onClick={redo} disabled={!hist.future.length} style={{...iB(hist.future.length>0), padding:"8px 12px",fontSize:15}} title="Ctrl+Y">↪</button>
         <button onClick={saveProjectJSON} style={{padding:"8px 12px",borderRadius:7,cursor:"pointer",fontSize:11,fontWeight:700,background:"rgba(245,197,24,.1)",border:"1px solid rgba(245,197,24,.3)",color:"#f5c518"}} title="Salvar projeto">💾</button>
         <label style={{padding:"8px 12px",borderRadius:7,cursor:"pointer",fontSize:11,fontWeight:700,background:"rgba(255,255,255,.04)",border:"1px solid rgba(255,255,255,.08)",color:"#888"}} title="Carregar projeto">📂<input type="file" accept=".json" onChange={loadProjectJSON} style={{display:"none"}}/></label>
-        {!isMobile && <button onClick={exportAll} disabled={exportingAll} style={{padding:"8px 14px",borderRadius:7,cursor:exportingAll?"wait":"pointer",fontSize:11,fontWeight:700,background:exportingAll?"#1a2030":"rgba(0,230,118,.12)",border:"1px solid rgba(0,230,118,.3)",color:exportingAll?"#444":"#00e676"}}>{exportingAll?"⏳ Exportando...":"📦 Todos formatos"}</button>}
+        {!isMobile && <button onClick={exportAll} disabled={exportingAll} style={{padding:"8px 14px",borderRadius:7,cursor:exportingAll?"wait":"pointer",fontSize:11,fontWeight:700,background:exportingAll?"#1a2030":"rgba(0,230,118,.12)",border:"1px solid rgba(0,230,118,.3)",color:exportingAll?"#444":"#00e676"}}>{exportingAll?"⏳ Exportando...":"📦 Exportar PNG"}</button>}
         <button onClick={handleSave} disabled={saving} style={{padding:"9px 16px",borderRadius:8,cursor:saving?"wait":"pointer",fontSize:12,fontWeight:900,background:saving?"#1a2030":"linear-gradient(135deg,#00d4ff,#0088cc)",border:"none",color:saving?"#444":"#000",boxShadow:saving?"none":"0 0 18px rgba(0,212,255,.3)"}}>
           {saving?"⏳":"⬇️"} PNG
         </button>
@@ -2385,8 +2378,8 @@ function CollageEditor({ onHome }) {
   };
 
   const iB=(on,c="#00e676")=>({padding:"8px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontWeight:700,
-    background:on?`rgba(${c==="on"?"0,230,118":"0,230,118"},.15)`:"rgba(255,255,255,.04)",
-    border:on?`1px solid rgba(0,230,118,.5)`:"1px solid rgba(255,255,255,.06)",color:on?"#00e676":"#3a4060"});
+    background:on?`rgba(0,230,118,.15)`:"rgba(255,255,255,.04)",
+    border:on?`1px solid rgba(0,230,118,.5)`:"1px solid rgba(255,255,255,.06)",color:on?c:"#3a4060"});
 
   return (
     <div style={{minHeight:"100vh",background:"#060a14",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff"}}>
