@@ -1812,6 +1812,7 @@ function PostEditor({ onSwitch, onHome }) {
               <span style={{fontSize:9,color:"#3a4060",marginLeft:"auto"}}>Shift+clique para adicionar/remover</span>
             </div>
           )}
+          <div style={{display:"flex",gap:5,flexWrap:"wrap",justifyContent:"center"}}>
             <button onClick={addText} style={{...iB(false,"#00d4ff")}}>＋ Texto</button>
             <button onClick={()=>addShape("rect")}     style={{...iB(false,"#c87cff")}}>▭</button>
             <button onClick={()=>addShape("circle")}   style={{...iB(false,"#00e676")}}>◯</button>
