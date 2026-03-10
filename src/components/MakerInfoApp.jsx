@@ -956,7 +956,7 @@ function PhotoEditor({ onSwitch, onHome }) {
 
   /* ── MOBILE LAYOUT ── */
   if (isMobile) return (
-    <div style={{ minHeight:"100vh", background:"#000", fontFamily:"'Segoe UI',system-ui,sans-serif", color:"#fff", display:"flex", flexDirection:"column", WebkitTapHighlightColor:"transparent", overscrollBehavior:"none" }}>
+    <div style={{ height:"100dvh", maxHeight:"-webkit-fill-available", background:"#000", fontFamily:"'Segoe UI',system-ui,sans-serif", color:"#fff", display:"flex", flexDirection:"column", WebkitTapHighlightColor:"transparent", overscrollBehavior:"none", overflow:"hidden" }}>
       {/* Top bar */}
       <div style={{ background:"rgba(0,0,0,.95)", backdropFilter:"blur(12px)", padding:"10px 14px", display:"flex", alignItems:"center", gap:8, borderBottom:"1px solid rgba(255,255,255,.06)", flexShrink:0 }}>
         <button onClick={onHome} style={{ padding:"6px 10px", borderRadius:7, background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", color:"#aaa", fontSize:10, fontWeight:700, cursor:"pointer" }}>🏠</button>
@@ -1771,8 +1771,16 @@ function PElView({ el }) {
   if(el.kind==="text"){
     const shadow=`${el.shadowX||0}px ${el.shadowY||0}px ${el.shadowBlur||0}px ${el.shadowColor||"transparent"}`;
     const outline=el.outline?{WebkitTextStroke:`${el.outlineWidth||2}px ${el.outlineColor||"#000"}`}:{};
-    if(el.useGradient) return <div style={{...base,fontSize:el.fontSize,fontFamily:el.fontFamily,fontWeight:el.fontWeight,textAlign:el.align,letterSpacing:el.letterSpacing,lineHeight:1.08,whiteSpace:"pre-wrap",wordBreak:"break-word",background:gradCSSP(el),WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",backgroundClip:"text",filter:`drop-shadow(${shadow})`,...outline}}>{el.text}</div>;
-    return <div style={{...base,fontSize:el.fontSize,color:el.color,fontFamily:el.fontFamily,fontWeight:el.fontWeight,textAlign:el.align,letterSpacing:el.letterSpacing,lineHeight:1.08,whiteSpace:"pre-wrap",wordBreak:"break-word",textShadow:shadow,...outline}}>{el.text}</div>;
+    const textStyle={fontSize:el.fontSize,fontFamily:el.fontFamily,fontWeight:el.fontWeight,textAlign:el.align,letterSpacing:el.letterSpacing,lineHeight:1.08,whiteSpace:"pre-wrap",wordBreak:"break-word"};
+    if(el.useGradient) {
+      // Shadow rendered as a separate pseudo-layer below to avoid drop-shadow deforming the gradient clip
+      const hasShadow = el.shadowBlur > 0 || el.shadowX !== 0 || el.shadowY !== 0;
+      return <div style={{...base, ...textStyle}}>
+        {hasShadow && <div style={{...textStyle, position:"absolute", inset:0, color:el.shadowColor||"#000", textShadow:shadow, opacity:0.85, pointerEvents:"none", userSelect:"none"}}>{el.text}</div>}
+        <div style={{...textStyle, position:"relative", background:gradCSSP(el), WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text", ...outline}}>{el.text}</div>
+      </div>;
+    }
+    return <div style={{...base,...textStyle,color:el.color,textShadow:shadow,...outline}}>{el.text}</div>;
   }
   return null;
 }
@@ -1785,7 +1793,7 @@ function PInlineEdit({ el, onDone }) {
 const P_HANDLES=[{id:"nw",cx:0,cy:0},{id:"n",cx:.5,cy:0},{id:"ne",cx:1,cy:0},{id:"e",cx:1,cy:.5},{id:"se",cx:1,cy:1},{id:"s",cx:.5,cy:1},{id:"sw",cx:0,cy:1},{id:"w",cx:0,cy:.5}];
 const P_CURSORS={nw:"nw-resize",n:"n-resize",ne:"ne-resize",e:"e-resize",se:"se-resize",s:"s-resize",sw:"sw-resize",w:"w-resize"};
 
-function PInteractEl({ el, selected, multiSelected, onSelect, onUpdate, onEdit, scale, onSnapMove }) {
+function PInteractEl({ el, selected, multiSelected, onSelect, onUpdate, onEdit, onCommit, scale, onSnapMove }) {
   const st=useRef({mode:null}); const wrapRef=useRef(null); const lastTap=useRef(0); const HS=16;
   const startDrag=(e)=>{ if(el.locked){onSelect(el.id,e);return;} e.stopPropagation();e.preventDefault();
     const now=Date.now();
@@ -1804,7 +1812,7 @@ function PInteractEl({ el, selected, multiSelected, onSelect, onUpdate, onEdit, 
       if(h.includes("w")){nw=Math.max(20,d.ow-dx);nx=d.ox+(d.ow-nw);}if(h.includes("n")){nh=Math.max(8,d.oh-dy);ny=d.oy+(d.oh-nh);}
       onUpdate(el.id,{x:Math.round(nx),y:Math.round(ny),w:Math.round(nw),h:Math.round(nh)});}
   },[el.id,el.w,el.h,scale,onUpdate,onSnapMove]);
-  const onUp=useCallback(()=>{st.current.mode=null;unbind();},[]);
+  const onUp=useCallback(()=>{st.current.mode=null;unbind();if(onCommit)onCommit();},[onCommit]);
   const bind=()=>{window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);window.addEventListener("touchmove",onMove,{passive:false});window.addEventListener("touchend",onUp);};
   const unbind=()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);window.removeEventListener("touchmove",onMove);window.removeEventListener("touchend",onUp);};
   useEffect(()=>()=>unbind(),[]);
@@ -1822,9 +1830,14 @@ function PInteractEl({ el, selected, multiSelected, onSelect, onUpdate, onEdit, 
 }
 
 function pHistReducer(s,a){
-  if(a.type==="SET") return{past:[...s.past,s.present].slice(-60),present:a.p,future:[]};
-  if(a.type==="UNDO"&&s.past.length){const past=[...s.past];const p=past.pop();return{past,present:p,future:[s.present,...s.future]};}
-  if(a.type==="REDO"&&s.future.length){const[p,...future]=s.future;return{past:[...s.past,s.present],present:p,future};}
+  // SET: live update — no history (for drag, resize, rotate continuos moves)
+  if(a.type==="SET")  return{...s, present:a.p, future:[]};
+  // PUSH: save checkpoint BEFORE a structural change (add/delete/template)
+  if(a.type==="PUSH") return{past:[...s.past,s.present].slice(-30),present:a.p,future:[]};
+  // COMMIT: save current state as a checkpoint after drag ends
+  if(a.type==="COMMIT"){ if(!s.past.length||s.past[s.past.length-1]===s.present) return s; return{past:[...s.past,s.present].slice(-30),present:s.present,future:[]}; }
+  if(a.type==="UNDO"&&s.past.length){const past=[...s.past];const p=past.pop();return{past,present:p,future:[s.present,...s.future].slice(0,30)};}
+  if(a.type==="REDO"&&s.future.length){const[p,...future]=s.future;return{past:[...s.past,s.present].slice(-30),present:p,future};}
   return s;
 }
 
@@ -1871,14 +1884,19 @@ function PostEditor({ onSwitch, onHome }) {
 
   const [hist,dispatch]=useReducer(pHistReducer,{past:[],present:[],future:[]});
   const els=hist.present;
+  // setEls = live update without creating a history checkpoint (for drag/resize/rotate)
   const setEls=useCallback((fn)=>{const next=typeof fn==="function"?fn(hist.present):fn;dispatch({type:"SET",p:next});},[hist.present]);
+  // pushEls = saves a history checkpoint BEFORE the change (for add/delete/paste/template)
+  const pushEls=useCallback((fn)=>{dispatch({type:"PUSH",p:typeof fn==="function"?fn(hist.present):fn});},[hist.present]);
   const undo=()=>dispatch({type:"UNDO"}); const redo=()=>dispatch({type:"REDO"});
+  // Commit current state as a checkpoint after drag ends (call on mouseup)
+  const commitSnap=useCallback(()=>dispatch({type:"COMMIT"}),[]);
 
   useEffect(()=>{
     const h=e=>{const tag=e.target.tagName;if(tag==="INPUT"||tag==="TEXTAREA")return;
       if((e.metaKey||e.ctrlKey)&&e.key==="z"&&!e.shiftKey){e.preventDefault();undo();}
       if((e.metaKey||e.ctrlKey)&&(e.key==="y"||(e.key==="z"&&e.shiftKey))){e.preventDefault();redo();}
-      if((e.key==="Delete"||e.key==="Backspace")&&selId&&!editId){setEls(p=>p.filter(e=>e.id!==selId));setSelId(null);}
+      if((e.key==="Delete"||e.key==="Backspace")&&selId&&!editId){pushEls(p=>p.filter(e=>e.id!==selId));setSelId(null);}
       if((e.key==="Delete"||e.key==="Backspace")&&multiSelIds.length>0&&!editId){deleteMultiSel();}
       if((e.metaKey||e.ctrlKey)&&e.key==="d"&&selId){e.preventDefault();duplicate();}
       if(e.key==="Escape"&&editId)setEditId(null);
@@ -1941,7 +1959,7 @@ function PostEditor({ onSwitch, onHome }) {
     setEls(p=>p.map(e=>multiSelIds.includes(e.id)?{...e,x:e.x+dx,y:e.y+dy}:e));
   };
   const deleteMultiSel=()=>{
-    setEls(p=>p.filter(e=>!multiSelIds.includes(e.id)));
+    pushEls(p=>p.filter(e=>!multiSelIds.includes(e.id)));
     setMultiSelIds([]);
   };
 
@@ -1950,26 +1968,33 @@ function PostEditor({ onSwitch, onHome }) {
     const sv=SERVICOS_P[si];
     const result=tpl.mk(sv,h);
     setBgId(result.bg||"transparent");
-    setEls(result.els.map(e=>({...e,id:uid()})));
+    pushEls(result.els.map(e=>({...e,id:uid()})));
     setSelId(null); setEditId(null); setActiveTplId(tpl.id); setPanel("layers");
-  },[fmtId, si]);
-  const addText=()=>{const e=mkPText({x:60,y:120});setEls(p=>[...p,e]);setSelId(e.id);setPanel("props");};
-  const addShape=sh=>{const d=sh==="circle"?{w:120,h:120}:sh==="line"?{w:200,h:4}:sh==="triangle"?{w:100,h:86}:{};const e=mkPShape(sh,{x:80,y:80,...d});setEls(p=>[...p,e]);setSelId(e.id);setPanel("props");};
-  const addImg=src=>{const e=mkPImage(src);setEls(p=>[...p,e]);setSelId(e.id);setPanel("props");};
-  const duplicate=()=>{if(!sel)return;const c={...sel,id:uid(),x:sel.x+16,y:sel.y+16};setEls(p=>[...p,c]);setSelId(c.id);};
-  const deleteEl=()=>{if(!selId)return;setEls(p=>p.filter(e=>e.id!==selId));setSelId(null);setPanel("layers");};
-  const toggleLock=()=>{if(!sel)return;onUpdate(selId,{locked:!sel.locked});};
-  const moveLayer=dir=>{setEls(p=>{const i=p.findIndex(e=>e.id===selId);if(i<0)return p;const a=[...p];if(dir==="up"&&i<a.length-1)[a[i],a[i+1]]=[a[i+1],a[i]];if(dir==="down"&&i>0)[a[i],a[i-1]]=[a[i-1],a[i]];return a;});};
-  const doAlign=mode=>{if(!sel)return;const h=sel.h||60;const patch=mode==="left"?{x:0}:mode==="right"?{x:FW-sel.w}:mode==="centerH"?{x:Math.round((FW-sel.w)/2)}:mode==="top"?{y:0}:mode==="bottom"?{y:FH-h}:{y:Math.round((FH-h)/2)};onUpdate(selId,patch);};
+  },[fmtId, si, pushEls]);
+  const addText=()=>{const e=mkPText({x:60,y:120});pushEls(p=>[...p,e]);setSelId(e.id);setPanel("props");};
+  const addShape=sh=>{const d=sh==="circle"?{w:120,h:120}:sh==="line"?{w:200,h:4}:sh==="triangle"?{w:100,h:86}:{};const e=mkPShape(sh,{x:80,y:80,...d});pushEls(p=>[...p,e]);setSelId(e.id);setPanel("props");};
+  const addImg=src=>{const e=mkPImage(src);pushEls(p=>[...p,e]);setSelId(e.id);setPanel("props");};
+  const duplicate=()=>{if(!sel)return;const c={...sel,id:uid(),x:sel.x+16,y:sel.y+16};pushEls(p=>[...p,c]);setSelId(c.id);};
+  const deleteEl=()=>{if(!selId)return;pushEls(p=>p.filter(e=>e.id!==selId));setSelId(null);setPanel("layers");};
+  const toggleLock=()=>{if(!sel)return;setEls(p=>p.map(e=>e.id===selId?{...e,locked:!e.locked}:e));};
+  const moveLayer=dir=>{commitSnap();setEls(p=>{const i=p.findIndex(e=>e.id===selId);if(i<0)return p;const a=[...p];if(dir==="up"&&i<a.length-1)[a[i],a[i+1]]=[a[i+1],a[i]];if(dir==="down"&&i>0)[a[i],a[i-1]]=[a[i-1],a[i]];return a;});};
+  const doAlign=mode=>{if(!sel)return;const h=sel.h||60;const patch=mode==="left"?{x:0}:mode==="right"?{x:FW-sel.w}:mode==="centerH"?{x:Math.round((FW-sel.w)/2)}:mode==="top"?{y:0}:mode==="bottom"?{y:FH-h}:{y:Math.round((FH-h)/2)};setEls(p=>p.map(e=>e.id===selId?{...e,...patch}:e));};
   const changeFmt=id=>{const nf=FORMATS_P.find(f=>f.id===id);const r=nf.h/FH;setFmtId(id);setEls(p=>p.map(e=>({...e,y:Math.round(e.y*r)})));};
   const saveTpl=()=>{if(!saveName.trim())return;const t={id:uid(),name:saveName.trim(),bgId,fmtId,els:JSON.parse(JSON.stringify(els))};setSavedTpls(p=>[...p,t]);setSaveName("");setShowSave(false);};
-  const loadTpl=t=>{setBgId(t.bgId);setFmtId(t.fmtId);setEls(t.els.map(e=>({...e,id:uid()})));setSelId(null);};
+  const loadTpl=t=>{setBgId(t.bgId);setFmtId(t.fmtId);pushEls(t.els.map(e=>({...e,id:uid()})));setSelId(null);};
   // 🎨 Add SVG Icon as image element via inline SVG data URL
   const addIcon=(icon,color="#ffffff")=>{
     const svgStr=icon.svg.replace(/currentColor/g,color);
     const blob=`data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" ${svgStr.slice(4)}`)))}`;
-    const e=mkPImage(blob,{w:80,h:80,x:Math.round(FW/2-40),y:Math.round(FH/2-40)});
-    setEls(p=>[...p,e]);setSelId(e.id);setPanel("props");
+    const e=mkPImage(blob,{w:80,h:80,x:Math.round(FW/2-40),y:Math.round(FH/2-40),iconSvg:icon.svg,iconColor:color});
+    pushEls(p=>[...p,e]);setSelId(e.id);setPanel("props");
+  };
+  // Re-color a previously added SVG icon
+  const retintIcon=(id,el,color)=>{
+    if(!el.iconSvg) return;
+    const svgStr=el.iconSvg.replace(/currentColor/g,color);
+    const blob=`data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" ${svgStr.slice(4)}`)))}`;
+    setEls(p=>p.map(e=>e.id===id?{...e,src:blob,iconColor:color}:e));
   };
   const handleBgPhoto=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setBgPhoto(ev.target.result);r.readAsDataURL(f);};
   const handleImgEl=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>addImg(ev.target.result);r.readAsDataURL(f);};
@@ -2026,8 +2051,8 @@ function PostEditor({ onSwitch, onHome }) {
 
   const handleSave=async()=>{if(!posterRef.current)return;setSaving(true);try{const h2c=window.html2canvas;if(!h2c){alert("Aguarde.");setSaving(false);return;}setSelId(null);setEditId(null);await new Promise(r=>setTimeout(r,150));const canvas=await h2c(posterRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});const link=document.createElement("a");link.download=`maker-info-${s.label.toLowerCase().replace(/ /g,"-")}.png`;link.href=canvas.toDataURL("image/png");link.click();}catch(err){console.error(err);alert("Erro ao exportar.");}setSaving(false);};
 
-  const maxW=typeof window!=="undefined"?Math.min(window.innerWidth-(isMobile?16:20),isMobile?600:520):400;
-  const viewScale=Math.min(maxW/FW,(isMobile?300:520)/FH);
+  const maxW=typeof window!=="undefined"?Math.min(window.innerWidth-(isMobile?20:40),isMobile?Math.min(window.innerWidth-20, 560):520):400;
+  const viewScale=Math.min(maxW/FW,(isMobile?Math.min(window.innerHeight*0.45,360):520)/FH);
   const cvW=Math.round(FW*viewScale),cvH=Math.round(FH*viewScale);
 
   const I={width:"100%",padding:"9px 11px",borderRadius:7,fontSize:12,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.09)",color:"#fff",outline:"none",boxSizing:"border-box"};
@@ -2037,7 +2062,7 @@ function PostEditor({ onSwitch, onHome }) {
   const bgStyle=bgId==="transparent"?{backgroundImage:"linear-gradient(45deg,#141428 25%,transparent 25%),linear-gradient(-45deg,#141428 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#141428 75%),linear-gradient(-45deg,transparent 75%,#141428 75%)",backgroundSize:"20px 20px",backgroundPosition:"0 0,0 10px,10px -10px,-10px 0",backgroundColor:"#0d0d20"}:{background:bg?.bg||"#030b18",...(bg?.extra||{})};
 
   return (
-    <div style={{minHeight:"100vh",background:"#060a14",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff",WebkitTapHighlightColor:"transparent",overscrollBehavior:"none",paddingBottom:isMobile?100:20}}>
+    <div style={{minHeight:"100dvh",background:"#060a14",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff",WebkitTapHighlightColor:"transparent",overscrollBehavior:"none",paddingBottom:isMobile?90:20}}>
       {/* Top bar */}
       <div style={{position:"sticky",top:0,zIndex:200,background:"rgba(6,10,20,.97)",backdropFilter:"blur(12px)",borderBottom:"1px solid rgba(255,255,255,.06)",padding:"10px 14px",display:"flex",alignItems:"center",gap:8}}>
         <button onClick={onHome} style={{padding:"7px 12px",borderRadius:7,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",color:"#aaa",fontSize:11,fontWeight:700,cursor:"pointer"}}>🏠 Home</button>
@@ -2070,14 +2095,14 @@ function PostEditor({ onSwitch, onHome }) {
           <div style={{position:"relative"}}>
             <div data-canvas="1" style={{width:cvW,height:cvH,position:"relative",borderRadius:10,overflow:"hidden",border:"1px solid rgba(255,255,255,.1)",boxShadow:"0 8px 40px rgba(0,0,0,.8)",touchAction:"none",WebkitUserSelect:"none"}}>
               <div style={{transform:`scale(${viewScale})`,transformOrigin:"top left",width:FW,height:FH,position:"absolute"}}>
-                <div ref={posterRef} onClick={()=>{setSelId(null);setEditId(null);setMultiSelIds([]);}} style={{width:FW,height:FH,position:"relative",overflow:"hidden",...bgStyle}}>
+                <div ref={posterRef} onMouseDown={e=>{if(e.target===e.currentTarget){setSelId(null);setEditId(null);setMultiSelIds([]);}}} onTouchStart={e=>{if(e.target===e.currentTarget){setSelId(null);setEditId(null);setMultiSelIds([]);}}} style={{width:FW,height:FH,position:"relative",overflow:"hidden",...bgStyle}}>
                   {bgPhoto&&<div style={{position:"absolute",inset:0,backgroundImage:`url(${bgPhoto})`,backgroundSize:"cover",backgroundPosition:"center",opacity:bgOpacity,pointerEvents:"none"}}/>}
                   {/* Snap guides */}
                   {snapGuides.map((g,i)=>(g.x!==undefined
                     ?<div key={i} style={{position:"absolute",left:g.x,top:0,width:1,height:"100%",background:"rgba(0,212,255,.85)",pointerEvents:"none",zIndex:999}}/>
                     :<div key={i} style={{position:"absolute",top:g.y,left:0,height:1,width:"100%",background:"rgba(0,212,255,.85)",pointerEvents:"none",zIndex:999}}/>
                   ))}
-                  {els.map(el=>(editId===el.id&&el.kind==="text"?<PInlineEdit key={el.id} el={el} onDone={val=>{onUpdate(el.id,{text:val});setEditId(null);}}/>:<PInteractEl key={el.id} el={el} selected={selId===el.id} multiSelected={multiSelIds.includes(el.id)} onSelect={handleSelect} onEdit={id=>{setSelId(id);setEditId(id);setMultiSelIds([]);}} onUpdate={onUpdate} scale={viewScale} onSnapMove={handleSnapMove}/>))}
+                  {els.map(el=>(editId===el.id&&el.kind==="text"?<PInlineEdit key={el.id} el={el} onDone={val=>{onUpdate(el.id,{text:val});setEditId(null);}}/>:<PInteractEl key={el.id} el={el} selected={selId===el.id} multiSelected={multiSelIds.includes(el.id)} onSelect={handleSelect} onEdit={id=>{setSelId(id);setEditId(id);setMultiSelIds([]);}} onUpdate={onUpdate} onCommit={commitSnap} scale={viewScale} onSnapMove={handleSnapMove}/>))}
                   {els.length===0&&<div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><div style={{fontSize:40,opacity:.25,marginBottom:10}}>✦</div><div style={{fontSize:12,color:"rgba(255,255,255,.2)",textAlign:"center"}}>Canvas em branco<br/><span style={{fontSize:10}}>Escolha um template ou adicione elementos</span></div></div>}
                 </div>
               </div>
@@ -2172,9 +2197,9 @@ function PostEditor({ onSwitch, onHome }) {
             <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:10}}>
               {!sel?<div style={{textAlign:"center",padding:"30px 0",color:"#2a3050",fontSize:12}}>Selecione um elemento no canvas</div>:<>
                 <div style={{fontSize:8,color:"#00d4ff",letterSpacing:3,marginBottom:10}}>✏️ {sel.kind.toUpperCase()}</div>
-                <div style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={L()}>Rotação</span><span style={{fontSize:10,color:"#00d4ff"}}>{sel.rotation||0}°</span></div><input type="range" min="0" max="359" value={sel.rotation||0} onChange={e=>onUpdate(selId,{rotation:Number(e.target.value)})} style={{width:"100%"}}/></div>
+                <div style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={L()}>Rotação</span><span style={{fontSize:10,color:"#00d4ff"}}>{sel.rotation||0}°</span></div><input type="range" min="0" max="359" value={sel.rotation||0} onChange={e=>onUpdate(selId,{rotation:Number(e.target.value)})} onMouseUp={commitSnap} onTouchEnd={commitSnap} style={{width:"100%"}}/></div>
                 {sel.kind==="text"&&<>
-                  <div style={{marginBottom:8}}><span style={L()}>Texto</span><textarea value={sel.text} onChange={e=>onUpdate(selId,{text:e.target.value})} style={{...I,height:52,resize:"vertical"}}/></div>
+                  <div style={{marginBottom:8}}><span style={L()}>Texto</span><textarea value={sel.text} onChange={e=>onUpdate(selId,{text:e.target.value})} onBlur={commitSnap} style={{...I,height:52,resize:"vertical"}}/></div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:8}}>
                     <div><span style={L()}>Tam.</span><select value={sel.fontSize} onChange={e=>onUpdate(selId,{fontSize:Number(e.target.value)})} style={I}>{FSIZES_P.map(f=><option key={f} value={f}>{f}px</option>)}</select></div>
                     <div><span style={L()}>Peso</span><select value={sel.fontWeight} onChange={e=>onUpdate(selId,{fontWeight:e.target.value})} style={I}>{["400","500","700","900"].map(w=><option key={w} value={w}>{w}</option>)}</select></div>
@@ -2234,7 +2259,13 @@ function PostEditor({ onSwitch, onHome }) {
                     <div><span style={L()}>Esp.</span><input type="number" value={sel.strokeWidth||0} onChange={e=>onUpdate(selId,{strokeWidth:Number(e.target.value)})} style={I}/></div>
                   </div>
                 </>}
-                {sel.kind==="image"&&<div style={{marginBottom:8}}><span style={L()}>Arredondamento</span><input type="number" value={sel.radius||0} onChange={e=>onUpdate(selId,{radius:Number(e.target.value)})} style={I}/></div>}
+                {sel.kind==="image"&&<div style={{marginBottom:8}}>
+                  <span style={L()}>Arredondamento</span><input type="number" value={sel.radius||0} onChange={e=>onUpdate(selId,{radius:Number(e.target.value)})} style={I}/>
+                  {sel.iconSvg&&<div style={{marginTop:8}}>
+                    <span style={L("rgba(200,119,255,.8)")}>🎨 Cor do ícone</span>
+                    <input type="color" value={sel.iconColor||"#ffffff"} onChange={e=>retintIcon(selId,sel,e.target.value)} style={{width:"100%",height:38,borderRadius:6,border:"1px solid rgba(255,255,255,.1)",cursor:"pointer",background:"none"}}/>
+                  </div>}
+                </div>}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:8}}>
                   {[["X",sel.x,"x"],["Y",sel.y,"y"],["W",sel.w,"w"],["H",sel.h,"h"]].map(([l,v,k])=>(
                     <div key={k}><span style={L()}>{l}</span><input type="number" value={v||0} onChange={e=>onUpdate(selId,{[k]:Number(e.target.value)})} style={I}/></div>
