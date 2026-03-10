@@ -275,8 +275,8 @@ const gradCSS = e => `linear-gradient(${e.gradientAngle||135}deg,${e.gradientCol
 /* ── Photo text visual ── */
 function PhotoTextView({ el }) {
   const rot  = el.rotation ? `rotate(${el.rotation}deg)` : undefined;
-  const base = { position:"absolute", left:el.x, top:el.y, width:el.w, opacity:el.opacity??1,
-    transform:rot, transformOrigin:"center center", pointerEvents:"none", userSelect:"none" };
+  const base = { position:"absolute", left:el.x, top:el.y, width:el.w, height:el.h||60, overflow:"hidden",
+    opacity:el.opacity??1, transform:rot, transformOrigin:"center center", pointerEvents:"none", userSelect:"none" };
   const shadow = `${el.shadowX||0}px ${el.shadowY||2}px ${el.shadowBlur||8}px ${el.shadowColor||"#000"}`;
   const outline = el.outline ? { WebkitTextStroke:`${el.outlineWidth||2}px ${el.outlineColor||"#000"}` } : {};
   if (el.useGradient) return (
@@ -849,7 +849,8 @@ function PhotoEditor({ onSwitch, onHome }) {
 
   const addText = () => {
     captureSnap();
-    const el = mkPhotoText({ x:40, y:photo?150:100 });
+    const w = Math.round(cvW * 0.78);
+    const el = mkPhotoText({ x: Math.round(cvW * 0.11), y: photo ? Math.round(cvH * 0.35) : 100, w, h: Math.round(w * 0.18) });
     setTexts(p=>[...p,el]); setSelTextId(el.id); changeTab("text");
   };
   const addSticker = (s) => {
@@ -1230,7 +1231,7 @@ function PhotoEditor({ onSwitch, onHome }) {
           {tab==="layers" && (
             <div style={{ padding:"10px 12px" }}>
               <div style={{ fontSize:10, color:"#00d4ff", fontWeight:700, marginBottom:8 }}>🗂 Camadas</div>
-              {overlayImgs.length===0 && texts.length===0 && <div style={{ fontSize:10, color:"#2a3050", textAlign:"center" }}>Nenhuma camada ainda</div>}
+              {overlayImgs.length===0 && texts.length===0 && !photo && <div style={{ fontSize:10, color:"#2a3050", textAlign:"center" }}>Nenhuma camada ainda</div>}
               {/* Overlay images */}
               {[...overlayImgs].reverse().map((ov,i,arr)=>(
                 <div key={ov.id} style={{ display:"flex", gap:5, alignItems:"center", padding:"6px 8px", borderRadius:7, background:selLayerId==="ov_"+ov.id?"rgba(0,212,255,.1)":"rgba(255,255,255,.03)", border:selLayerId==="ov_"+ov.id?"1px solid rgba(0,212,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:4, cursor:"pointer" }}
@@ -1253,6 +1254,14 @@ function PhotoEditor({ onSwitch, onHome }) {
                   <button onClick={e=>{e.stopPropagation();setTexts(p=>p.filter(x=>x.id!==el.id));}} style={{ padding:"3px 6px", borderRadius:4, background:"rgba(255,60,60,.15)", border:"none", color:"#ff6060", cursor:"pointer" }}>✕</button>
                 </div>
               ))}
+              {/* Foto original — base travada */}
+              {photo && (
+                <div style={{ display:"flex", gap:5, alignItems:"center", padding:"6px 8px", borderRadius:7, background:"rgba(255,255,255,.02)", border:"1px solid rgba(255,255,255,.04)", marginBottom:4, opacity:0.55 }}>
+                  <span style={{ fontSize:12 }}>📷</span>
+                  <span style={{ flex:1, fontSize:10, color:"#444" }}>Foto original</span>
+                  <span style={{ fontSize:9, color:"#333" }}>🔒 Base</span>
+                </div>
+              )}
             </div>
           )}
         </div>{/* fim tab content scroll */}
@@ -1648,7 +1657,7 @@ function PhotoEditor({ onSwitch, onHome }) {
 
             {tab==="layers" && <>
               <div style={{ fontSize:8, color:"#c87cff", letterSpacing:3, marginBottom:10 }}>GERENCIAR CAMADAS</div>
-              {overlayImgs.length===0 && texts.length===0 && <div style={{ fontSize:10, color:"#2a3050", textAlign:"center", padding:10 }}>Nenhuma camada ainda.<br/>Adicione textos ou imagens.</div>}
+              {overlayImgs.length===0 && texts.length===0 && !photo && <div style={{ fontSize:10, color:"#2a3050", textAlign:"center", padding:10 }}>Nenhuma camada ainda.<br/>Adicione textos ou imagens.</div>}
               {[...overlayImgs].reverse().map((ov,i,arr)=>(
                 <div key={ov.id} style={{ display:"flex", gap:6, alignItems:"center", padding:"8px 10px", borderRadius:8, background:selLayerId==="ov_"+ov.id?"rgba(0,212,255,.1)":"rgba(255,255,255,.03)", border:selLayerId==="ov_"+ov.id?"1px solid rgba(0,212,255,.3)":"1px solid rgba(255,255,255,.06)", marginBottom:6, cursor:"pointer" }}
                   onClick={()=>setSelLayerId("ov_"+ov.id)}>
@@ -1669,6 +1678,14 @@ function PhotoEditor({ onSwitch, onHome }) {
                   <button title="Apagar" onClick={e=>{e.stopPropagation();setTexts(p=>p.filter(x=>x.id!==el.id));}} style={{ padding:"4px 7px", borderRadius:5, background:"rgba(255,60,60,.15)", border:"1px solid rgba(255,60,60,.2)", color:"#ff6060", cursor:"pointer", fontSize:11 }}>✕</button>
                 </div>
               ))}
+              {/* Foto original — sempre na base, travada */}
+              {photo && (
+                <div style={{ display:"flex", gap:6, alignItems:"center", padding:"8px 10px", borderRadius:8, background:"rgba(255,255,255,.02)", border:"1px solid rgba(255,255,255,.04)", marginBottom:6, opacity:0.6 }}>
+                  <img src={photo} style={{ width:28, height:28, objectFit:"cover", borderRadius:4, filter:"grayscale(30%)" }}/>
+                  <span style={{ flex:1, fontSize:10, color:"#555" }}>📷 Foto original</span>
+                  <span style={{ fontSize:9, color:"#444", background:"rgba(255,255,255,.05)", padding:"2px 6px", borderRadius:4 }}>🔒 Base</span>
+                </div>
+              )}
             </>}
           </div>
         </div>
@@ -2345,11 +2362,13 @@ const COLLAGE_LAYOUTS = [
 function CollageEditor({ onHome }) {
   const isMobile = useMobile();
   const [layoutId, setLayoutId]   = useState("4g");
-  const [photos, setPhotos]       = useState([]);   // array indexed by cell
+  const [photos, setPhotos]       = useState([]);
+  const [cellAdj, setCellAdj]     = useState({}); // {idx: {brightness,contrast,saturation,posX,posY,scale}}
   const [gap, setGap]             = useState(4);
   const [radius, setRadius]       = useState(0);
   const [bgColor, setBgColor]     = useState("#000000");
   const [saving, setSaving]       = useState(false);
+  const [selCell, setSelCell]     = useState(null);
   const collageRef = useRef(null);
 
   useScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
@@ -2359,10 +2378,14 @@ function CollageEditor({ onHome }) {
   const COL_W = SIZE / layout.cols;
   const ROW_H = SIZE / layout.rows;
 
+  const getAdj = idx => ({ brightness:100, contrast:100, saturation:100, posX:50, posY:50, scale:100, ...(cellAdj[idx]||{}) });
+  const setAdj = (idx, patch) => setCellAdj(p=>({ ...p, [idx]:{ ...getAdj(idx), ...patch } }));
+
   const loadPhoto = (idx, e) => {
     const f = e.target.files[0]; if(!f) return;
     const r = new FileReader(); r.onload = ev => {
       setPhotos(p => { const a=[...p]; a[idx]=ev.target.result; return a; });
+      setSelCell(idx);
     }; r.readAsDataURL(f);
   };
 
@@ -2370,16 +2393,15 @@ function CollageEditor({ onHome }) {
     if(!collageRef.current) return; setSaving(true);
     try {
       const h2c = window.html2canvas; if(!h2c){alert("Aguarde o carregamento.");setSaving(false);return;}
-      await new Promise(r=>setTimeout(r,100));
+      setSelCell(null);
+      await new Promise(r=>setTimeout(r,120));
       const canvas = await h2c(collageRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:bgColor,logging:false});
       const a=document.createElement("a"); a.download="colagem-maker-info.png"; a.href=canvas.toDataURL("image/png"); a.click();
     } catch(err){console.error(err);alert("Erro ao exportar.");}
     setSaving(false);
   };
 
-  const iB=(on,c="#00e676")=>({padding:"8px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontWeight:700,
-    background:on?`rgba(0,230,118,.15)`:"rgba(255,255,255,.04)",
-    border:on?`1px solid rgba(0,230,118,.5)`:"1px solid rgba(255,255,255,.06)",color:on?c:"#3a4060"});
+  const adj = selCell!==null ? getAdj(selCell) : null;
 
   return (
     <div style={{minHeight:"100vh",background:"#060a14",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff"}}>
@@ -2406,36 +2428,87 @@ function CollageEditor({ onHome }) {
               const w = cell.cw * COL_W - gap;
               const h = cell.rh * ROW_H - gap;
               const photo = photos[idx];
+              const a = getAdj(idx);
+              const isSelected = selCell === idx;
               return (
-                <div key={idx} style={{position:"absolute",left:x,top:y,width:w,height:h,borderRadius:Math.max(0,radius-2),overflow:"hidden",background:"rgba(255,255,255,.06)"}}>
+                <div key={idx} onClick={()=>photo&&setSelCell(idx===selCell?null:idx)}
+                  style={{position:"absolute",left:x,top:y,width:w,height:h,borderRadius:Math.max(0,radius-2),overflow:"hidden",background:"rgba(255,255,255,.06)",
+                    outline:isSelected?"2px solid #00e676":"none",outlineOffset:"-2px",cursor:photo?"pointer":"default"}}>
                   {photo
-                    ? <img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}} crossOrigin="anonymous"/>
+                    ? <img src={photo} alt="" crossOrigin="anonymous"
+                        style={{width:`${a.scale}%`,height:`${a.scale}%`,objectFit:"cover",display:"block",
+                          objectPosition:`${a.posX}% ${a.posY}%`,
+                          filter:`brightness(${a.brightness}%) contrast(${a.contrast}%) saturate(${a.saturation}%)`}}/>
                     : <label style={{width:"100%",height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",gap:4,background:"rgba(255,255,255,.04)"}}>
                         <div style={{fontSize:Math.min(w,h)*0.3,opacity:.4}}>+</div>
                         <div style={{fontSize:Math.min(w*0.08,10),color:"rgba(255,255,255,.35)",textAlign:"center",padding:"0 4px"}}>Foto {idx+1}</div>
                         <input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}}/>
                       </label>
                   }
-                  {photo && (
+                  {photo && !isSelected && (
                     <label style={{position:"absolute",bottom:4,right:4,width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,.6)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:12}}>
                       🔄<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}}/>
                     </label>
                   )}
+                  {isSelected && <div style={{position:"absolute",top:4,left:4,fontSize:9,color:"#00e676",background:"rgba(0,0,0,.7)",padding:"2px 6px",borderRadius:4}}>✏️ editando</div>}
                 </div>
               );
             })}
           </div>
-          <div style={{fontSize:10,color:"#1a3040"}}>Clique nos slots para adicionar fotos · Arraste p/ substituir</div>
+          <div style={{fontSize:10,color:"#1a3040"}}>Clique na foto para editar · 🔄 para trocar</div>
         </div>
 
         {/* Controls panel */}
-        <div style={{flex:"0 0 auto",width:isMobile?"100%":290}}>
+        <div style={{flex:"0 0 auto",width:isMobile?"100%":290,display:"flex",flexDirection:"column",gap:10}}>
+
+          {/* Edição da célula selecionada */}
+          {selCell!==null && adj && photos[selCell] && (
+            <div style={{background:"rgba(0,230,118,.06)",border:"1px solid rgba(0,230,118,.25)",borderRadius:10,padding:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <div style={{fontSize:8,color:"#00e676",letterSpacing:3}}>✏️ FOTO {selCell+1}</div>
+                <button onClick={()=>{setCellAdj(p=>{const n={...p};delete n[selCell];return n;});}} style={{fontSize:9,color:"#ff6060",background:"none",border:"none",cursor:"pointer"}}>Resetar</button>
+              </div>
+              {[
+                ["Brilho","brightness",50,150],
+                ["Contraste","contrast",50,150],
+                ["Saturação","saturation",0,200],
+              ].map(([label,key,min,max])=>(
+                <div key={key} style={{marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                    <span style={{fontSize:10,color:"#aaa"}}>{label}</span>
+                    <span style={{fontSize:10,color:"#00e676"}}>{adj[key]}%</span>
+                  </div>
+                  <input type="range" min={min} max={max} value={adj[key]} onChange={e=>setAdj(selCell,{[key]:Number(e.target.value)})} style={{width:"100%",accentColor:"#00e676"}}/>
+                </div>
+              ))}
+              <div style={{marginBottom:8}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                  <span style={{fontSize:10,color:"#aaa"}}>Posição X</span>
+                  <span style={{fontSize:10,color:"#00e676"}}>{adj.posX}%</span>
+                </div>
+                <input type="range" min={0} max={100} value={adj.posX} onChange={e=>setAdj(selCell,{posX:Number(e.target.value)})} style={{width:"100%",accentColor:"#00e676"}}/>
+              </div>
+              <div style={{marginBottom:4}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                  <span style={{fontSize:10,color:"#aaa"}}>Posição Y</span>
+                  <span style={{fontSize:10,color:"#00e676"}}>{adj.posY}%</span>
+                </div>
+                <input type="range" min={0} max={100} value={adj.posY} onChange={e=>setAdj(selCell,{posY:Number(e.target.value)})} style={{width:"100%",accentColor:"#00e676"}}/>
+              </div>
+              <label style={{display:"flex",alignItems:"center",gap:8,marginTop:8,cursor:"pointer",padding:"7px 10px",borderRadius:7,background:"rgba(0,230,118,.08)",border:"1px solid rgba(0,230,118,.2)"}}>
+                <span style={{fontSize:10,color:"#00e676",flex:1}}>🔄 Trocar foto</span>
+                <input type="file" accept="image/*" onChange={e=>loadPhoto(selCell,e)} style={{display:"none"}}/>
+              </label>
+              <button onClick={()=>{setPhotos(p=>{const a=[...p];a[selCell]=null;return a;});setSelCell(null);}} style={{width:"100%",marginTop:6,padding:"7px",borderRadius:7,background:"rgba(255,60,60,.1)",border:"1px solid rgba(255,60,60,.2)",color:"#ff6060",fontSize:10,fontWeight:700,cursor:"pointer"}}>🗑 Remover foto</button>
+            </div>
+          )}
+
           {/* Layouts */}
-          <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:12,marginBottom:10}}>
+          <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:12}}>
             <div style={{fontSize:8,color:"#00e676",letterSpacing:3,marginBottom:10}}>LAYOUT</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
               {COLLAGE_LAYOUTS.map(l=>(
-                <button key={l.id} onClick={()=>{setLayoutId(l.id);setPhotos([]);}} style={{
+                <button key={l.id} onClick={()=>{setLayoutId(l.id);setPhotos([]);setCellAdj({});setSelCell(null);}} style={{
                   padding:"9px 6px",borderRadius:7,cursor:"pointer",fontSize:10,fontWeight:700,
                   background:layoutId===l.id?"rgba(0,230,118,.15)":"rgba(255,255,255,.04)",
                   border:layoutId===l.id?"1px solid rgba(0,230,118,.5)":"1px solid rgba(255,255,255,.06)",
@@ -2444,9 +2517,9 @@ function CollageEditor({ onHome }) {
             </div>
           </div>
 
-          {/* Ajustes */}
-          <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:12,marginBottom:10}}>
-            <div style={{fontSize:8,color:"#00e676",letterSpacing:3,marginBottom:10}}>AJUSTES</div>
+          {/* Ajustes gerais */}
+          <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:12}}>
+            <div style={{fontSize:8,color:"#00e676",letterSpacing:3,marginBottom:10}}>AJUSTES GERAIS</div>
             <div style={{marginBottom:10}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <span style={{fontSize:11,color:"#aaa"}}>Espaço entre fotos</span>
@@ -2467,16 +2540,18 @@ function CollageEditor({ onHome }) {
             </div>
           </div>
 
-          {/* Fotos adicionadas */}
+          {/* Slots */}
           <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:12}}>
-            <div style={{fontSize:8,color:"#00e676",letterSpacing:3,marginBottom:8}}>SLOTS</div>
+            <div style={{fontSize:8,color:"#00e676",letterSpacing:3,marginBottom:8}}>FOTOS</div>
             <div style={{display:"flex",flexDirection:"column",gap:5}}>
               {layout.cells.map((_,idx)=>(
-                <div key={idx} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",borderRadius:7,background:photos[idx]?"rgba(0,230,118,.08)":"rgba(255,255,255,.03)",border:photos[idx]?"1px solid rgba(0,230,118,.25)":"1px solid rgba(255,255,255,.06)"}}>
+                <div key={idx} onClick={()=>photos[idx]&&setSelCell(idx===selCell?null:idx)} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",borderRadius:7,cursor:photos[idx]?"pointer":"default",
+                  background:selCell===idx?"rgba(0,230,118,.12)":photos[idx]?"rgba(0,230,118,.06)":"rgba(255,255,255,.03)",
+                  border:selCell===idx?"1px solid rgba(0,230,118,.5)":photos[idx]?"1px solid rgba(0,230,118,.2)":"1px solid rgba(255,255,255,.06)"}}>
                   <span style={{fontSize:14}}>{photos[idx]?"🟢":"⬜"}</span>
-                  <span style={{fontSize:11,color:photos[idx]?"#00e676":"#3a4060",flex:1}}>Foto {idx+1}</span>
-                  {photos[idx]&&<button onClick={()=>setPhotos(p=>{const a=[...p];a[idx]=null;return a;})} style={{fontSize:11,color:"#ff4444",background:"none",border:"none",cursor:"pointer"}}>✕</button>}
-                  <label style={{fontSize:10,color:"#00e676",cursor:"pointer",padding:"4px 8px",borderRadius:5,border:"1px solid rgba(0,230,118,.3)",background:"rgba(0,230,118,.07)"}}>
+                  <span style={{fontSize:11,color:photos[idx]?"#00e676":"#3a4060",flex:1}}>Foto {idx+1}{selCell===idx?" ✏️":""}</span>
+                  {photos[idx]&&<button onClick={e=>{e.stopPropagation();setPhotos(p=>{const a=[...p];a[idx]=null;return a;});if(selCell===idx)setSelCell(null);}} style={{fontSize:11,color:"#ff4444",background:"none",border:"none",cursor:"pointer"}}>✕</button>}
+                  <label onClick={e=>e.stopPropagation()} style={{fontSize:10,color:"#00e676",cursor:"pointer",padding:"4px 8px",borderRadius:5,border:"1px solid rgba(0,230,118,.3)",background:"rgba(0,230,118,.07)"}}>
                     {photos[idx]?"Trocar":"Adicionar"}<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}}/>
                   </label>
                 </div>
