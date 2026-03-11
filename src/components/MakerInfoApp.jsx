@@ -276,7 +276,7 @@ const FONTS_ANUNCIO = [
   { name:"Boogaloo",           label:"Boogaloo ✓",        cat:"🎪 Pôster" },
   { name:"Lilita One",         label:"Lilita One ✓",      cat:"🎪 Pôster" },
 ];
-const mkPhotoText = (o={}) => ({ id:uid(), kind:"text", x:40, y:200, w:null, h:null, rotation:0,
+const mkPhotoText = (o={}) => ({ id:uid(), kind:"text", x:40, y:200, w:"auto", h:"auto", rotation:0,
   text:"Texto", fontSize:36, color:"#ffffff", fontFamily:"Barlow Condensed", fontWeight:"700",
   align:"center", letterSpacing:0, opacity:1, shadowBlur:8, shadowColor:"#000", shadowX:0, shadowY:2,
   outline:false, outlineColor:"#000", outlineWidth:2, useGradient:false,
@@ -312,11 +312,13 @@ function PhotoInlineEdit({ el, onDone }) {
     <textarea ref={ref} defaultValue={el.text}
       onBlur={e=>onDone(e.target.value)}
       onKeyDown={e=>{ if(e.key==="Escape") onDone(el.text); if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();onDone(e.target.value);} }}
-      style={{ position:"absolute", left:el.x, top:el.y, width:el.w, minHeight:el.h||60, fontSize:el.fontSize,
-        color:el.useGradient?"#fff":el.color, fontFamily:el.fontFamily, fontWeight:el.fontWeight,
+      style={{ position:"absolute", left:el.x, top:el.y,
+        width: typeof el.w === "number" ? el.w : "max-content", minWidth:120,
+        minHeight: typeof el.h === "number" ? el.h : el.fontSize*1.5,
+        fontSize:el.fontSize, color:el.useGradient?"#fff":el.color, fontFamily:el.fontFamily, fontWeight:el.fontWeight,
         textAlign:el.align, letterSpacing:el.letterSpacing, lineHeight:1.1,
         background:"rgba(255,255,255,.12)", border:"2px solid #fff", borderRadius:4, outline:"none",
-        resize:"none", padding:2, zIndex:50, boxSizing:"border-box",
+        resize:"both", padding:4, zIndex:50, boxSizing:"border-box",
         transform:el.rotation?`rotate(${el.rotation}deg)`:"none", transformOrigin:"center center" }}/>
   );
 }
@@ -325,53 +327,47 @@ function PhotoInlineEdit({ el, onDone }) {
 const PT_HANDLES = [{id:"se",cx:1,cy:1},{id:"sw",cx:0,cy:1},{id:"ne",cx:1,cy:0},{id:"nw",cx:0,cy:0}];
 function PhotoTextEl({ el, selected, onSelect, onUpdate, onEdit, scale }) {
   const st = useRef({ mode:null }); const wrapRef = useRef(null); const lastTap = useRef(0); const HS=18;
-  // Auto-measure on first render to fit text
-  useEffect(()=>{
-    if(el.w===null && wrapRef.current){
-      const r=wrapRef.current.getBoundingClientRect();
-      onUpdate(el.id,{w:Math.round(r.width/scale)+4||160, h:Math.round(r.height/scale)+4||50});
-    }
-  },[el.w]);
   const startDrag=(e)=>{ e.stopPropagation();e.preventDefault();
     const now=Date.now(); if(now-lastTap.current<380){onEdit(el.id);return;} lastTap.current=now;
     onSelect(el.id); const p=getPoint(e); st.current={mode:"drag",sx:p.x,sy:p.y,ox:el.x,oy:el.y}; bind(); };
-  const startRes=(e,h)=>{e.stopPropagation();e.preventDefault();const p=getPoint(e);st.current={mode:"resize",h,sx:p.x,sy:p.y,ox:el.x,oy:el.y,ow:el.w||160,oh:el.h||50};bind();};
+  const startRes=(e,h)=>{e.stopPropagation();e.preventDefault();const r=wrapRef.current?.getBoundingClientRect();const p=getPoint(e);const cw=r?Math.round(r.width/scale):160;const ch=r?Math.round(r.height/scale):50;st.current={mode:"resize",h,sx:p.x,sy:p.y,ox:el.x,oy:el.y,ow:typeof el.w==="number"?el.w:cw,oh:typeof el.h==="number"?el.h:ch};bind();};
   const startRot=(e)=>{e.stopPropagation();e.preventDefault();const r=wrapRef.current?.getBoundingClientRect();if(!r)return;const cx=r.left+r.width/2,cy=r.top+r.height/2;const p=getPoint(e);st.current={mode:"rotate",cx,cy,sa:Math.atan2(p.y-cy,p.x-cx)*180/Math.PI,or:el.rotation||0};bind();};
   const onMove=useCallback((e)=>{const d=st.current;if(!d.mode)return;const p=getPoint(e);const dx=(p.x-d.sx)/scale,dy=(p.y-d.sy)/scale;
     if(d.mode==="drag")onUpdate(el.id,{x:Math.round(d.ox+dx),y:Math.round(d.oy+dy)});
     if(d.mode==="rotate"){const a=Math.atan2(p.y-d.cy,p.x-d.cx)*180/Math.PI;onUpdate(el.id,{rotation:Math.round((d.or+(a-d.sa)+360)%360)});}
     if(d.mode==="resize"){const h=d.h;let nx=d.ox,ny=d.oy,nw=d.ow,nh=d.oh;
-      if(h.includes("e"))nw=Math.max(40,d.ow+dx);if(h.includes("s"))nh=Math.max(30,d.oh+dy);
-      if(h.includes("w")){nw=Math.max(40,d.ow-dx);nx=d.ox+(d.ow-nw);}if(h.includes("n")){nh=Math.max(30,d.oh-dy);ny=d.oy+(d.oh-nh);}
+      if(h.includes("e"))nw=Math.max(40,d.ow+dx);if(h.includes("s"))nh=Math.max(20,d.oh+dy);
+      if(h.includes("w")){nw=Math.max(40,d.ow-dx);nx=d.ox+(d.ow-nw);}if(h.includes("n")){nh=Math.max(20,d.oh-dy);ny=d.oy+(d.oh-nh);}
       onUpdate(el.id,{x:Math.round(nx),y:Math.round(ny),w:Math.round(nw),h:Math.round(nh)});}
   },[el.id,scale,onUpdate]);
   const onUp=useCallback(()=>{st.current.mode=null;unbind();},[]);
   const bind=()=>{window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);window.addEventListener("touchmove",onMove,{passive:false});window.addEventListener("touchend",onUp);};
   const unbind=()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);window.removeEventListener("touchmove",onMove);window.removeEventListener("touchend",onUp);};
   useEffect(()=>()=>unbind(),[]);
-  const autoSize = el.w === null;
+  const isFixed = typeof el.w === "number";
   return (
-    <div ref={wrapRef} style={{ position:"absolute",left:el.x,top:el.y,
-      width: autoSize ? "max-content" : el.w,
-      height: autoSize ? "auto" : el.h||50,
+    <div ref={wrapRef} style={{ position:"absolute", left:el.x, top:el.y,
+      width: isFixed ? el.w : "max-content",
+      height: isFixed ? (el.h||"auto") : "auto",
       cursor:"move",
-      outline:selected?"2px dashed rgba(255,255,255,.8)":"2px solid transparent", boxSizing:"border-box",
-      transform:el.rotation?`rotate(${el.rotation}deg)`:"none",transformOrigin:"center center",touchAction:"none" }}
+      outline: selected ? "2px dashed rgba(255,255,255,.8)" : "2px solid transparent",
+      boxSizing:"border-box",
+      transform: el.rotation ? `rotate(${el.rotation}deg)` : "none",
+      transformOrigin:"center center", touchAction:"none" }}
       onMouseDown={startDrag} onTouchStart={startDrag}>
-      <PhotoTextView el={{...el,x:0,y:0}}/>
-      {selected && !autoSize && <>
-        {PT_HANDLES.map(h=>(
+      <PhotoTextView el={{...el, x:0, y:0}}/>
+      {selected && <>
+        {isFixed && PT_HANDLES.map(h=>(
           <div key={h.id} onMouseDown={e=>startRes(e,h.id)} onTouchStart={e=>startRes(e,h.id)}
-            style={{ position:"absolute",width:HS,height:HS,background:"#fff",border:"2px solid #000",borderRadius:3,zIndex:10,
-              left:`calc(${h.cx*100}% - ${HS/2}px)`,top:`calc(${h.cy*100}% - ${HS/2}px)`,cursor:"nwse-resize",touchAction:"none" }}/>
+            style={{ position:"absolute", width:HS, height:HS, background:"#fff", border:"2px solid #000", borderRadius:3, zIndex:10,
+              left:`calc(${h.cx*100}% - ${HS/2}px)`, top:`calc(${h.cy*100}% - ${HS/2}px)`, cursor:"nwse-resize", touchAction:"none" }}/>
         ))}
         <div onMouseDown={startRot} onTouchStart={startRot}
-          style={{ position:"absolute",width:22,height:22,background:"#f5c518",border:"2px solid #fff",borderRadius:"50%",
-            top:-36,left:"50%",transform:"translateX(-50%)",cursor:"crosshair",zIndex:11,
-            display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,touchAction:"none",boxShadow:"0 0 8px rgba(245,197,24,.8)" }}>↻</div>
-        <div style={{ position:"absolute",width:2,height:22,background:"rgba(245,197,24,.4)",top:-16,left:"50%",transform:"translateX(-50%)",zIndex:10,pointerEvents:"none" }}/>
+          style={{ position:"absolute", width:22, height:22, background:"#f5c518", border:"2px solid #fff", borderRadius:"50%",
+            top:-36, left:"50%", transform:"translateX(-50%)", cursor:"crosshair", zIndex:11,
+            display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, touchAction:"none", boxShadow:"0 0 8px rgba(245,197,24,.8)" }}>↻</div>
+        <div style={{ position:"absolute", bottom:-20, left:"50%", transform:"translateX(-50%)", fontSize:9, color:"rgba(255,255,255,.8)", background:"rgba(0,0,0,.6)", padding:"2px 7px", borderRadius:3, whiteSpace:"nowrap", pointerEvents:"none" }}>{isFixed?"2× editar":"2× editar · ⊞ resize"}</div>
       </>}
-      {selected && <div style={{ position:"absolute",bottom:-20,left:"50%",transform:"translateX(-50%)",fontSize:9,color:"rgba(255,255,255,.8)",background:"rgba(0,0,0,.6)",padding:"2px 7px",borderRadius:3,whiteSpace:"nowrap",pointerEvents:"none" }}>2× para editar</div>}
     </div>
   );
 }
@@ -776,7 +772,7 @@ function PhotoEditor({ onSwitch, onHome }) {
     const el = mkPhotoText({ text:s, fontSize:64, shadowBlur:0, x:120, y:120, w:120, h:80, align:"center" });
     setTexts(p=>[...p,el]); setSelTextId(el.id);
   };
-  const updateText = useCallback((id,patch)=>setTexts(p=>p.map(e=>e.id===id?{...e,...patch}:e)),[]);
+  const updateText = useCallback((id,patch)=>dispatchTexts({type:"SET", p: textsHist.present.map(e=>e.id===id?{...e,...patch}:e)}),[textsHist.present]);
   const deleteText = () => { if(!selTextId) return; setTexts(p=>p.filter(e=>e.id!==selTextId)); setSelTextId(null); };
 
   // ✨ Auto-enhance — aplica ajustes inteligentes
@@ -1830,11 +1826,10 @@ function PostEditor({ onSwitch, onHome }) {
 
   const handleSave=async()=>{if(!posterRef.current)return;setSaving(true);try{const h2c=window.html2canvas;if(!h2c){toast("Aguarde o carregamento...","info");setSaving(false);return;}setSelId(null);setEditId(null);await new Promise(r=>setTimeout(r,150));const canvas=await h2c(posterRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});if(watermark){const ctx=canvas.getContext("2d");const fs=Math.round(canvas.width*0.022);ctx.font=`bold ${fs}px 'Segoe UI',sans-serif`;ctx.fillStyle="rgba(255,255,255,0.35)";ctx.textAlign="right";ctx.fillText("by Maker Info",canvas.width-10,canvas.height-8);}const link=document.createElement("a");link.download=`maker-info-${s.label.toLowerCase().replace(/ /g,"-")}.png`;link.href=canvas.toDataURL("image/png");link.click();toast("PNG baixado!");}catch(err){console.error(err);toast("Erro ao exportar.","error");}setSaving(false);};
 
-  const panelW = isMobile ? 0 : 330;
-  const maxW=typeof window!=="undefined"?Math.min(window.innerWidth-panelW-(isMobile?16:60),isMobile?600:700):500;
-  const maxH=isMobile?300:Math.min(window.innerHeight-120,700);
-  const viewScale=Math.min(maxW/FW, maxH/FH);
-  const cvW=Math.round(FW*viewScale),cvH=Math.round(FH*viewScale);
+  const maxCanvasW = isMobile ? Math.min(window.innerWidth-16, 600) : Math.min(window.innerWidth-370, 680);
+  const maxCanvasH = isMobile ? 320 : Math.min(window.innerHeight-180, 680);
+  const viewScale = Math.min(maxCanvasW/FW, maxCanvasH/FH, 1.5);
+  const cvW=Math.round(FW*viewScale), cvH=Math.round(FH*viewScale);
 
   const I={width:"100%",padding:"9px 11px",borderRadius:7,fontSize:12,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.09)",color:"#fff",outline:"none",boxSizing:"border-box"};
   const L=(c="#00d4ff")=>({fontSize:8,color:c,letterSpacing:3,display:"block",marginBottom:4,textTransform:"uppercase"});
