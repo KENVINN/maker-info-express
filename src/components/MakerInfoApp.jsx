@@ -796,7 +796,7 @@ function PhotoEditor({ onSwitch, onHome }) {
 
   /* ── MOBILE LAYOUT ── */
   if (isMobile) return (
-    <div style={{ minHeight:"100vh", background:"#000", fontFamily:"'Segoe UI',system-ui,sans-serif", color:"#fff", display:"flex", flexDirection:"column", WebkitTapHighlightColor:"transparent", overscrollBehavior:"none" }}>
+    <div style={{ height:"100dvh", maxHeight:"100dvh", background:"#000", fontFamily:"'Segoe UI',system-ui,sans-serif", color:"#fff", display:"flex", flexDirection:"column", WebkitTapHighlightColor:"transparent", overscrollBehavior:"none", overflow:"hidden" }}>
       {/* Top bar */}
       <div style={{ background:"rgba(0,0,0,.95)", backdropFilter:"blur(12px)", padding:"10px 14px", display:"flex", alignItems:"center", gap:8, borderBottom:"1px solid rgba(255,255,255,.06)", flexShrink:0 }}>
         <button onClick={onHome} style={{ padding:"6px 10px", borderRadius:7, background:"rgba(255,255,255,.06)", border:"1px solid rgba(255,255,255,.1)", color:"#aaa", fontSize:10, fontWeight:700, cursor:"pointer" }}>🏠</button>
@@ -812,7 +812,7 @@ function PhotoEditor({ onSwitch, onHome }) {
       </div>
 
       {/* Canvas */}
-      <div style={{ flex:"0 0 auto", display:"flex", justifyContent:"center", alignItems:"center", padding:"10px 8px", background:"#000" }}>
+      <div style={{ flex:1, display:"flex", justifyContent:"center", alignItems:"center", padding:"8px", background:"#000", overflow:"hidden", minHeight:0 }}>
         {!photo ? (
           <label style={{ width:cvW, height:220, borderRadius:16, border:"2px dashed rgba(255,255,255,.12)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", cursor:"pointer", gap:10, background:"rgba(255,255,255,.02)" }}>
             <div style={{ fontSize:48 }}>📷</div>
@@ -1041,12 +1041,11 @@ function PhotoEditor({ onSwitch, onHome }) {
             </div>
           )}
         {/* Tab buttons */}
-        <div style={{ display:"flex", borderTop:"1px solid rgba(255,255,255,.06)", overflowX:"auto" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(9,1fr)", borderTop:"1px solid rgba(255,255,255,.06)" }}>
           {[["filters","🎨","Filtros"],["adjust","⚙️","Ajustes"],["text","T","Texto"],["stickers","😊","Stickers"],["light","✨","Luz"],["border","🖼","Borda"],["crop","✂️","Crop"],["blur","🌫","Blur"],["draw","🖌","Pincel"]].map(([t,ic,lb])=>(
-            <button key={t} onClick={()=>setTab(t)} style={{ flex:"0 0 auto", minWidth:52, padding:"10px 4px", background:"none", border:"none", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
-              <span style={{ fontSize:16 }}>{ic}</span>
-              <span style={{ fontSize:8, color:tabActive(t)?"#00d4ff":"#3a4060", fontWeight:700 }}>{lb}</span>
-              {tabActive(t) && <div style={{ width:20, height:2, background:"#00d4ff", borderRadius:1 }}/>}
+            <button key={t} onClick={()=>setTab(t)} style={{ padding:"8px 2px", background:tabActive(t)?"rgba(0,212,255,.1)":"none", border:"none", borderTop:tabActive(t)?"2px solid #00d4ff":"2px solid transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:1 }}>
+              <span style={{ fontSize:14 }}>{ic}</span>
+              <span style={{ fontSize:7, color:tabActive(t)?"#00d4ff":"#3a4060", fontWeight:700 }}>{lb}</span>
             </button>
           ))}
         </div>
