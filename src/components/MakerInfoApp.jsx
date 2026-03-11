@@ -598,24 +598,48 @@ function PhotoInlineEdit({ el, onDone }) {
 const PT_HANDLES = [{id:"se",cx:1,cy:1},{id:"sw",cx:0,cy:1},{id:"ne",cx:1,cy:0},{id:"nw",cx:0,cy:0}];
 function PhotoTextEl({ el, selected, onSelect, onUpdate, onEdit, scale }) {
   const st = useRef({ mode:null }); const wrapRef = useRef(null); const lastTap = useRef(0); const HS=18;
-  const startDrag=(e)=>{ e.stopPropagation();e.preventDefault();
+  const isFixed = typeof el.w === "number";
+
+  const startDrag=(e)=>{
+    e.stopPropagation();e.preventDefault();
+    // ── Pinch-to-zoom (2 fingers) ──
+    if(e.touches && e.touches.length>=2){
+      const t0=e.touches[0],t1=e.touches[1];
+      const initDist=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);
+      const r=wrapRef.current?.getBoundingClientRect();
+      const cw=r?Math.round(r.width/scale):160;
+      const ch=r?Math.round(r.height/scale):60;
+      st.current={mode:"pinch",initDist,initFs:el.fontSize||36,initW:isFixed?el.w:cw,initH:isFixed?(el.h||ch):ch};
+      onSelect(el.id); bind(); return;
+    }
     const now=Date.now(); if(now-lastTap.current<380){onEdit(el.id);return;} lastTap.current=now;
-    onSelect(el.id); const p=getPoint(e); st.current={mode:"drag",sx:p.x,sy:p.y,ox:el.x,oy:el.y}; bind(); };
-  const startRes=(e,h)=>{e.stopPropagation();e.preventDefault();const r=wrapRef.current?.getBoundingClientRect();const p=getPoint(e);const cw=r?Math.round(r.width/scale):160;const ch=r?Math.round(r.height/scale):50;st.current={mode:"resize",h,sx:p.x,sy:p.y,ox:el.x,oy:el.y,ow:typeof el.w==="number"?el.w:cw,oh:typeof el.h==="number"?el.h:ch};bind();};
+    onSelect(el.id); const p=getPoint(e); st.current={mode:"drag",sx:p.x,sy:p.y,ox:el.x,oy:el.y}; bind();
+  };
+  const startRes=(e,h)=>{e.stopPropagation();e.preventDefault();const r=wrapRef.current?.getBoundingClientRect();const p=getPoint(e);const cw=r?Math.round(r.width/scale):160;const ch=r?Math.round(r.height/scale):50;st.current={mode:"resize",h,sx:p.x,sy:p.y,ox:el.x,oy:el.y,ow:isFixed?el.w:cw,oh:isFixed?(el.h||ch):ch};bind();};
   const startRot=(e)=>{e.stopPropagation();e.preventDefault();const r=wrapRef.current?.getBoundingClientRect();if(!r)return;const cx=r.left+r.width/2,cy=r.top+r.height/2;const p=getPoint(e);st.current={mode:"rotate",cx,cy,sa:Math.atan2(p.y-cy,p.x-cx)*180/Math.PI,or:el.rotation||0};bind();};
-  const onMove=useCallback((e)=>{const d=st.current;if(!d.mode)return;const p=getPoint(e);const dx=(p.x-d.sx)/scale,dy=(p.y-d.sy)/scale;
+  const onMove=useCallback((e)=>{const d=st.current;if(!d.mode)return;
+    // Pinch
+    if(d.mode==="pinch"){
+      if(!e.touches||e.touches.length<2)return;
+      const t0=e.touches[0],t1=e.touches[1];
+      const dist=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);
+      const ratio=Math.max(0.1,dist/d.initDist);
+      if(isFixed) onUpdate(el.id,{w:Math.max(40,Math.round(d.initW*ratio)),h:Math.max(20,Math.round(d.initH*ratio))});
+      else         onUpdate(el.id,{fontSize:Math.max(8,Math.round(d.initFs*ratio))});
+      return;
+    }
+    const p=getPoint(e);const dx=(p.x-d.sx)/scale,dy=(p.y-d.sy)/scale;
     if(d.mode==="drag")onUpdate(el.id,{x:Math.round(d.ox+dx),y:Math.round(d.oy+dy)});
     if(d.mode==="rotate"){const a=Math.atan2(p.y-d.cy,p.x-d.cx)*180/Math.PI;onUpdate(el.id,{rotation:Math.round((d.or+(a-d.sa)+360)%360)});}
     if(d.mode==="resize"){const h=d.h;let nx=d.ox,ny=d.oy,nw=d.ow,nh=d.oh;
       if(h.includes("e"))nw=Math.max(40,d.ow+dx);if(h.includes("s"))nh=Math.max(20,d.oh+dy);
       if(h.includes("w")){nw=Math.max(40,d.ow-dx);nx=d.ox+(d.ow-nw);}if(h.includes("n")){nh=Math.max(20,d.oh-dy);ny=d.oy+(d.oh-nh);}
       onUpdate(el.id,{x:Math.round(nx),y:Math.round(ny),w:Math.round(nw),h:Math.round(nh)});}
-  },[el.id,scale,onUpdate]);
+  },[el.id,scale,onUpdate,isFixed]);
   const onUp=useCallback(()=>{st.current.mode=null;unbind();},[]);
   const bind=()=>{window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);window.addEventListener("touchmove",onMove,{passive:false});window.addEventListener("touchend",onUp);};
   const unbind=()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);window.removeEventListener("touchmove",onMove);window.removeEventListener("touchend",onUp);};
   useEffect(()=>()=>unbind(),[]);
-  const isFixed = typeof el.w === "number";
   return (
     <div ref={wrapRef} style={{ position:"absolute", left:el.x, top:el.y,
       width: isFixed ? el.w : "max-content",
@@ -1318,7 +1342,7 @@ function PhotoEditor({ onSwitch, onHome }) {
               <img src={photo} alt="" style={{ width:cvW, height:cvH, objectFit:"cover", display:"block" }} crossOrigin="anonymous"/>
               <div style={{ position:"absolute", top:8, left:8, fontSize:10, color:"#fff", background:"rgba(0,0,0,.7)", padding:"4px 10px", borderRadius:6, fontWeight:700 }}>ORIGINAL</div>
             </div>
-            <div ref={photoRef} data-canvas="1" style={{ width:cvW, height:cvH, position:"relative", borderRadius:12, overflow:"hidden", ...borderStyle, transform:`scale(${zoom})`, transformOrigin:"center center", transition:"transform .15s" }}>
+            <div ref={photoRef} data-canvas="1" onMouseDown={e=>{if(e.target===e.currentTarget)setSelTextId(null);}} onTouchStart={e=>{if(e.target===e.currentTarget)setSelTextId(null);}} style={{ width:cvW, height:cvH, position:"relative", borderRadius:12, overflow:"hidden", ...borderStyle, transform:`scale(${zoom})`, transformOrigin:"center center", transition:"transform .15s" }}>
               <img src={photo} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", filter:cssFilter, transform:`scaleX(${flipH?-1:1}) scaleY(${flipV?-1:1})` }} crossOrigin="anonymous"/>
               {overlays.map((o,i)=><div key={i} style={{ position:"absolute", inset:0, ...o }}/>)}
               <div style={{ position:"absolute", inset:0, ...lightStyle, pointerEvents:"none" }}/>
@@ -1682,7 +1706,7 @@ function PhotoEditor({ onSwitch, onHome }) {
                 <img src={photo} alt="" style={{ width:440, height:440, objectFit:"cover" }} crossOrigin="anonymous"/>
                 <div style={{ position:"absolute", top:10, left:10, fontSize:11, color:"#fff", background:"rgba(0,0,0,.7)", padding:"5px 12px", borderRadius:6, fontWeight:700 }}>ORIGINAL</div>
               </div>
-              <div ref={photoRef} data-canvas="1" data-photocanvas="1" style={{ width:440, height:440, position:"relative", borderRadius:14, overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.8)", ...borderStyle, transform:`scale(${zoom})`, transformOrigin:"center center", transition:"transform .15s" }}>
+              <div ref={photoRef} data-canvas="1" data-photocanvas="1" onMouseDown={e=>{if(e.target===e.currentTarget)setSelTextId(null);}} onTouchStart={e=>{if(e.target===e.currentTarget)setSelTextId(null);}} style={{ width:440, height:440, position:"relative", borderRadius:14, overflow:"hidden", boxShadow:"0 8px 40px rgba(0,0,0,.8)", ...borderStyle, transform:`scale(${zoom})`, transformOrigin:"center center", transition:"transform .15s" }}>
                 <img src={photo} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", filter:cssFilter, transform:`scaleX(${flipH?-1:1}) scaleY(${flipV?-1:1})` }} crossOrigin="anonymous"/>
                 {overlays.map((o,i)=><div key={i} style={{ position:"absolute", inset:0, ...o }}/>)}
                 <div style={{ position:"absolute", inset:0, ...lightStyle, pointerEvents:"none" }}/>
@@ -2149,12 +2173,35 @@ const P_CURSORS={nw:"nw-resize",n:"n-resize",ne:"ne-resize",e:"e-resize",se:"se-
 
 function PInteractEl({ el, selected, multiSelected, onSelect, onUpdate, onEdit, scale, onSnapMove }) {
   const st=useRef({mode:null}); const wrapRef=useRef(null); const lastTap=useRef(0); const HS=16;
-  const startDrag=(e)=>{ if(el.locked){onSelect(el.id,e);return;} e.stopPropagation();e.preventDefault();
+  const startDrag=(e)=>{
+    // ── Pinch-to-zoom (2 fingers) ──
+    if(e.touches && e.touches.length>=2){
+      e.stopPropagation();e.preventDefault();
+      const t0=e.touches[0],t1=e.touches[1];
+      const initDist=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);
+      st.current={mode:"pinch",initDist,initW:el.w||100,initH:el.h||60};
+      onSelect(el.id,e); bind(); return;
+    }
+    if(el.locked){onSelect(el.id,e);return;}
+    e.stopPropagation();e.preventDefault();
     const now=Date.now(); if(el.kind==="text"&&now-lastTap.current<380){onEdit(el.id);return;} lastTap.current=now;
-    onSelect(el.id,e);const p=getPoint(e);st.current={mode:"drag",sx:p.x,sy:p.y,ox:el.x,oy:el.y};bind(); };
+    onSelect(el.id,e);const p=getPoint(e);st.current={mode:"drag",sx:p.x,sy:p.y,ox:el.x,oy:el.y};bind();
+  };
   const startRes=(e,h)=>{e.stopPropagation();e.preventDefault();const p=getPoint(e);st.current={mode:"resize",h,sx:p.x,sy:p.y,ox:el.x,oy:el.y,ow:el.w,oh:el.h};bind();};
   const startRot=(e)=>{e.stopPropagation();e.preventDefault();const r=wrapRef.current?.getBoundingClientRect();if(!r)return;const cx=r.left+r.width/2,cy=r.top+r.height/2;const p=getPoint(e);st.current={mode:"rotate",cx,cy,sa:Math.atan2(p.y-cy,p.x-cx)*180/Math.PI,or:el.rotation||0};bind();};
-  const onMove=useCallback((e)=>{const d=st.current;if(!d.mode)return;const p=getPoint(e);const dx=(p.x-d.sx)/scale,dy=(p.y-d.sy)/scale;
+  const onMove=useCallback((e)=>{const d=st.current;if(!d.mode)return;
+    // Pinch
+    if(d.mode==="pinch"){
+      if(!e.touches||e.touches.length<2)return;
+      const t0=e.touches[0],t1=e.touches[1];
+      const dist=Math.hypot(t1.clientX-t0.clientX,t1.clientY-t0.clientY);
+      const ratio=Math.max(0.1,dist/d.initDist);
+      const nw=Math.max(20,Math.round(d.initW*ratio));
+      const nh=Math.max(8,Math.round(d.initH*ratio));
+      onUpdate(el.id,{w:nw,h:nh});
+      return;
+    }
+    const p=getPoint(e);const dx=(p.x-d.sx)/scale,dy=(p.y-d.sy)/scale;
     if(d.mode==="drag"){const nx=Math.round(d.ox+dx),ny=Math.round(d.oy+dy);
       if(onSnapMove){onSnapMove(el.id,nx,ny,el.w,el.h||60);}else{onUpdate(el.id,{x:nx,y:ny});}}
     if(d.mode==="rotate"){const a=Math.atan2(p.y-d.cy,p.x-d.cx)*180/Math.PI;onUpdate(el.id,{rotation:Math.round((d.or+(a-d.sa)+360)%360)});}
@@ -2453,7 +2500,7 @@ function PostEditor({ onSwitch, onHome }) {
           <div style={{position:"relative"}}>
             <div data-canvas="1" style={{width:cvW,height:cvH,position:"relative",borderRadius:10,overflow:"hidden",border:"1px solid rgba(255,255,255,.1)",boxShadow:"0 8px 40px rgba(0,0,0,.8)",touchAction:"none",WebkitUserSelect:"none"}}>
               <div style={{transform:`scale(${viewScale})`,transformOrigin:"top left",width:FW,height:FH,position:"absolute"}}>
-                <div ref={posterRef} onClick={()=>{setSelId(null);setEditId(null);setMultiSelIds([]);}} style={{width:FW,height:FH,position:"relative",overflow:"hidden",...bgStyle}}>
+                <div ref={posterRef} onMouseDown={e=>{if(e.target===e.currentTarget){setSelId(null);setEditId(null);setMultiSelIds([]);}}} onTouchStart={e=>{if(e.target===e.currentTarget){setSelId(null);setEditId(null);setMultiSelIds([]);}}} style={{width:FW,height:FH,position:"relative",overflow:"hidden",...bgStyle}}>
                   {bgPhoto&&<div style={{position:"absolute",inset:0,backgroundImage:`url(${bgPhoto})`,backgroundSize:"cover",backgroundPosition:"center",opacity:bgOpacity,pointerEvents:"none"}}/>}
                   {/* Snap guides */}
                   {snapGuides.map((g,i)=>(g.x!==undefined
