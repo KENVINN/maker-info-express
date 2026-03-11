@@ -285,21 +285,23 @@ const mkPhotoText = (o={}) => ({ id:uid(), kind:"text", x:40, y:200, w:"auto", h
 const gradCSS = e => `linear-gradient(${e.gradientAngle||135}deg,${e.gradientColor1||"#fff"},${e.gradientColor2||"#f5c518"})`;
 
 /* ── Photo text visual ── */
-function PhotoTextView({ el }) {
+function PhotoTextView({ el, inline=false }) {
   const rot  = el.rotation ? `rotate(${el.rotation}deg)` : undefined;
-  const base = { position:"absolute", left:el.x, top:el.y, width:el.w, opacity:el.opacity??1,
-    transform:rot, transformOrigin:"center center", pointerEvents:"none", userSelect:"none" };
+  const base = inline
+    ? { whiteSpace:"nowrap", opacity:el.opacity??1, pointerEvents:"none", userSelect:"none" }
+    : { position:"absolute", left:el.x, top:el.y, width:el.w, opacity:el.opacity??1,
+        transform:rot, transformOrigin:"center center", pointerEvents:"none", userSelect:"none" };
   const shadow = `${el.shadowX||0}px ${el.shadowY||2}px ${el.shadowBlur||8}px ${el.shadowColor||"#000"}`;
   const outline = el.outline ? { WebkitTextStroke:`${el.outlineWidth||2}px ${el.outlineColor||"#000"}` } : {};
   if (el.useGradient) return (
     <div style={{ ...base, fontSize:el.fontSize, fontFamily:el.fontFamily, fontWeight:el.fontWeight,
-      textAlign:el.align, letterSpacing:el.letterSpacing, lineHeight:1.1, whiteSpace:"pre-wrap", wordBreak:"break-word",
+      textAlign:el.align, letterSpacing:el.letterSpacing, lineHeight:1.1, whiteSpace: inline?"nowrap":"pre-wrap", wordBreak:"break-word",
       background:gradCSS(el), WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent",
       backgroundClip:"text", filter:`drop-shadow(${shadow})`, ...outline }}>{el.text}</div>
   );
   return (
     <div style={{ ...base, fontSize:el.fontSize, color:el.color, fontFamily:el.fontFamily, fontWeight:el.fontWeight,
-      textAlign:el.align, letterSpacing:el.letterSpacing, lineHeight:1.1, whiteSpace:"pre-wrap",
+      textAlign:el.align, letterSpacing:el.letterSpacing, lineHeight:1.1, whiteSpace: inline?"nowrap":"pre-wrap",
       wordBreak:"break-word", textShadow:shadow, ...outline }}>{el.text}</div>
   );
 }
@@ -355,7 +357,7 @@ function PhotoTextEl({ el, selected, onSelect, onUpdate, onEdit, scale }) {
       transform: el.rotation ? `rotate(${el.rotation}deg)` : "none",
       transformOrigin:"center center", touchAction:"none" }}
       onMouseDown={startDrag} onTouchStart={startDrag}>
-      <PhotoTextView el={{...el, x:0, y:0}}/>
+      <PhotoTextView el={{...el, x:0, y:0}} inline={true}/>
       {selected && <>
         {isFixed && PT_HANDLES.map(h=>(
           <div key={h.id} onMouseDown={e=>startRes(e,h.id)} onTouchStart={e=>startRes(e,h.id)}
