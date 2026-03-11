@@ -1830,8 +1830,10 @@ function PostEditor({ onSwitch, onHome }) {
 
   const handleSave=async()=>{if(!posterRef.current)return;setSaving(true);try{const h2c=window.html2canvas;if(!h2c){toast("Aguarde o carregamento...","info");setSaving(false);return;}setSelId(null);setEditId(null);await new Promise(r=>setTimeout(r,150));const canvas=await h2c(posterRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});if(watermark){const ctx=canvas.getContext("2d");const fs=Math.round(canvas.width*0.022);ctx.font=`bold ${fs}px 'Segoe UI',sans-serif`;ctx.fillStyle="rgba(255,255,255,0.35)";ctx.textAlign="right";ctx.fillText("by Maker Info",canvas.width-10,canvas.height-8);}const link=document.createElement("a");link.download=`maker-info-${s.label.toLowerCase().replace(/ /g,"-")}.png`;link.href=canvas.toDataURL("image/png");link.click();toast("PNG baixado!");}catch(err){console.error(err);toast("Erro ao exportar.","error");}setSaving(false);};
 
-  const maxW=typeof window!=="undefined"?Math.min(window.innerWidth-(isMobile?16:20),isMobile?600:520):400;
-  const viewScale=Math.min(maxW/FW,(isMobile?300:520)/FH);
+  const panelW = isMobile ? 0 : 330;
+  const maxW=typeof window!=="undefined"?Math.min(window.innerWidth-panelW-(isMobile?16:60),isMobile?600:700):500;
+  const maxH=isMobile?300:Math.min(window.innerHeight-120,700);
+  const viewScale=Math.min(maxW/FW, maxH/FH);
   const cvW=Math.round(FW*viewScale),cvH=Math.round(FH*viewScale);
 
   const I={width:"100%",padding:"9px 11px",borderRadius:7,fontSize:12,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.09)",color:"#fff",outline:"none",boxSizing:"border-box"};
@@ -1911,6 +1913,7 @@ function PostEditor({ onSwitch, onHome }) {
               <span style={{fontSize:9,color:"#3a4060",marginLeft:"auto"}}>Shift+clique para adicionar/remover</span>
             </div>
           )}
+          <div style={{display:"flex",flexWrap:"wrap",gap:4,justifyContent:"center"}}>
             <button onClick={addText} style={{...iB(false,"#00d4ff")}}>＋ Texto</button>
             <button onClick={()=>addShape("rect")}     style={{...iB(false,"#c87cff")}}>▭</button>
             <button onClick={()=>addShape("circle")}   style={{...iB(false,"#00e676")}}>◯</button>
@@ -2113,6 +2116,7 @@ function PostEditor({ onSwitch, onHome }) {
         </button>
       </div>}
       </div>
+    </div>
   );
 }
 
