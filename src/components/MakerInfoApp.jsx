@@ -276,7 +276,7 @@ const FONTS_ANUNCIO = [
   { name:"Boogaloo",           label:"Boogaloo ✓",        cat:"🎪 Pôster" },
   { name:"Lilita One",         label:"Lilita One ✓",      cat:"🎪 Pôster" },
 ];
-const mkPhotoText = (o={}) => ({ id:uid(), kind:"text", x:40, y:200, w:340, h:60, rotation:0,
+const mkPhotoText = (o={}) => ({ id:uid(), kind:"text", x:40, y:200, w:null, h:null, rotation:0,
   text:"Texto", fontSize:36, color:"#ffffff", fontFamily:"Barlow Condensed", fontWeight:"700",
   align:"center", letterSpacing:0, opacity:1, shadowBlur:8, shadowColor:"#000", shadowX:0, shadowY:2,
   outline:false, outlineColor:"#000", outlineWidth:2, useGradient:false,
@@ -325,10 +325,17 @@ function PhotoInlineEdit({ el, onDone }) {
 const PT_HANDLES = [{id:"se",cx:1,cy:1},{id:"sw",cx:0,cy:1},{id:"ne",cx:1,cy:0},{id:"nw",cx:0,cy:0}];
 function PhotoTextEl({ el, selected, onSelect, onUpdate, onEdit, scale }) {
   const st = useRef({ mode:null }); const wrapRef = useRef(null); const lastTap = useRef(0); const HS=18;
-  const startDrag=(e)=>{ if(el.locked){onSelect(el.id);return;} e.stopPropagation();e.preventDefault();
+  // Auto-measure on first render to fit text
+  useEffect(()=>{
+    if(el.w===null && wrapRef.current){
+      const r=wrapRef.current.getBoundingClientRect();
+      onUpdate(el.id,{w:Math.round(r.width/scale)+4||160, h:Math.round(r.height/scale)+4||50});
+    }
+  },[el.w]);
+  const startDrag=(e)=>{ e.stopPropagation();e.preventDefault();
     const now=Date.now(); if(now-lastTap.current<380){onEdit(el.id);return;} lastTap.current=now;
     onSelect(el.id); const p=getPoint(e); st.current={mode:"drag",sx:p.x,sy:p.y,ox:el.x,oy:el.y}; bind(); };
-  const startRes=(e,h)=>{e.stopPropagation();e.preventDefault();const p=getPoint(e);st.current={mode:"resize",h,sx:p.x,sy:p.y,ox:el.x,oy:el.y,ow:el.w,oh:el.h};bind();};
+  const startRes=(e,h)=>{e.stopPropagation();e.preventDefault();const p=getPoint(e);st.current={mode:"resize",h,sx:p.x,sy:p.y,ox:el.x,oy:el.y,ow:el.w||160,oh:el.h||50};bind();};
   const startRot=(e)=>{e.stopPropagation();e.preventDefault();const r=wrapRef.current?.getBoundingClientRect();if(!r)return;const cx=r.left+r.width/2,cy=r.top+r.height/2;const p=getPoint(e);st.current={mode:"rotate",cx,cy,sa:Math.atan2(p.y-cy,p.x-cx)*180/Math.PI,or:el.rotation||0};bind();};
   const onMove=useCallback((e)=>{const d=st.current;if(!d.mode)return;const p=getPoint(e);const dx=(p.x-d.sx)/scale,dy=(p.y-d.sy)/scale;
     if(d.mode==="drag")onUpdate(el.id,{x:Math.round(d.ox+dx),y:Math.round(d.oy+dy)});
@@ -342,14 +349,17 @@ function PhotoTextEl({ el, selected, onSelect, onUpdate, onEdit, scale }) {
   const bind=()=>{window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);window.addEventListener("touchmove",onMove,{passive:false});window.addEventListener("touchend",onUp);};
   const unbind=()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);window.removeEventListener("touchmove",onMove);window.removeEventListener("touchend",onUp);};
   useEffect(()=>()=>unbind(),[]);
+  const autoSize = el.w === null;
   return (
-    <div ref={wrapRef} style={{ position:"absolute",left:el.x,top:el.y,width:el.w,height:el.h||60,cursor:"move",
+    <div ref={wrapRef} style={{ position:"absolute",left:el.x,top:el.y,
+      width: autoSize ? "max-content" : el.w,
+      height: autoSize ? "auto" : el.h||50,
+      cursor:"move",
       outline:selected?"2px dashed rgba(255,255,255,.8)":"2px solid transparent", boxSizing:"border-box",
-      overflow:"hidden",
       transform:el.rotation?`rotate(${el.rotation}deg)`:"none",transformOrigin:"center center",touchAction:"none" }}
       onMouseDown={startDrag} onTouchStart={startDrag}>
       <PhotoTextView el={{...el,x:0,y:0}}/>
-      {selected && <>
+      {selected && !autoSize && <>
         {PT_HANDLES.map(h=>(
           <div key={h.id} onMouseDown={e=>startRes(e,h.id)} onTouchStart={e=>startRes(e,h.id)}
             style={{ position:"absolute",width:HS,height:HS,background:"#fff",border:"2px solid #000",borderRadius:3,zIndex:10,
@@ -360,8 +370,8 @@ function PhotoTextEl({ el, selected, onSelect, onUpdate, onEdit, scale }) {
             top:-36,left:"50%",transform:"translateX(-50%)",cursor:"crosshair",zIndex:11,
             display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,touchAction:"none",boxShadow:"0 0 8px rgba(245,197,24,.8)" }}>↻</div>
         <div style={{ position:"absolute",width:2,height:22,background:"rgba(245,197,24,.4)",top:-16,left:"50%",transform:"translateX(-50%)",zIndex:10,pointerEvents:"none" }}/>
-        <div style={{ position:"absolute",bottom:-20,left:"50%",transform:"translateX(-50%)",fontSize:9,color:"rgba(255,255,255,.8)",background:"rgba(0,0,0,.6)",padding:"2px 7px",borderRadius:3,whiteSpace:"nowrap",pointerEvents:"none" }}>2× para editar</div>
       </>}
+      {selected && <div style={{ position:"absolute",bottom:-20,left:"50%",transform:"translateX(-50%)",fontSize:9,color:"rgba(255,255,255,.8)",background:"rgba(0,0,0,.6)",padding:"2px 7px",borderRadius:3,whiteSpace:"nowrap",pointerEvents:"none" }}>2× para editar</div>}
     </div>
   );
 }
@@ -580,7 +590,11 @@ function PhotoEditor({ onSwitch, onHome }) {
   const [lightFx, setLightFx]     = useState("none");
   const [border, setBorder]       = useState("none");
   const [tab, setTab]             = useState("filters");
-  const [texts, setTexts]         = useState([]);
+  const [textsHist, dispatchTexts] = useReducer(histReducer, {past:[], present:[], future:[]});
+  const texts = textsHist.present;
+  const setTexts = (fn) => dispatchTexts({type:"SET", p: typeof fn==="function" ? fn(textsHist.present) : fn});
+  const undoTexts = () => dispatchTexts({type:"UNDO"});
+  const redoTexts = () => dispatchTexts({type:"REDO"});
   const [blurs, setBlurs]         = useState([]); // selective blur regions
   const [selTextId, setSelTextId] = useState(null);
   const [editTextId, setEditTextId] = useState(null);
@@ -655,6 +669,16 @@ function PhotoEditor({ onSwitch, onHome }) {
     }
     setRemovingBg(false);
   };
+
+  // Ctrl+Z / Ctrl+Y undo-redo for texts
+  useEffect(()=>{
+    const h=e=>{
+      if(e.target.tagName==="INPUT"||e.target.tagName==="TEXTAREA") return;
+      if((e.metaKey||e.ctrlKey)&&e.key==="z"&&!e.shiftKey){e.preventDefault();undoTexts();}
+      if((e.metaKey||e.ctrlKey)&&(e.key==="y"||(e.key==="z"&&e.shiftKey))){e.preventDefault();redoTexts();}
+    };
+    window.addEventListener("keydown",h); return()=>window.removeEventListener("keydown",h);
+  },[]);
 
   // Zoom via Ctrl+scroll
   useEffect(()=>{
