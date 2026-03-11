@@ -1457,16 +1457,47 @@ const FORMATS_P = [
   { id:"story", label:"Story", w:600, h:1067 },
   { id:"land",  label:"16:9",  w:600, h:338  },
 ];
-const SERVICOS_P = [
-  { label:"Formatação",  emoji:"💻", preco:"R$ 80",  frase:"PC lento demais?",   sub:"Windows limpo · Drivers ok",      accent:"#00d4ff" },
-  { label:"Limpeza",     emoji:"🧹", preco:"R$ 60",  frase:"Superaquecendo?",     sub:"Pasta térmica · Limpeza completa", accent:"#ff6b35" },
-  { label:"Troca SSD",   emoji:"⚡", preco:"R$ 120", frase:"10× mais rápido!",    sub:"Migração do sistema inclusa",     accent:"#f5c518" },
-  { label:"Vírus",       emoji:"🛡️",preco:"R$ 70",  frase:"PC infectado?",       sub:"Remoção total + Proteção",       accent:"#00e676" },
-  { label:"Manutenção",  emoji:"🔧", preco:"R$ 90",  frase:"Diagnóstico GRÁTIS!", sub:"Orçamento em 10 minutos",         accent:"#c87cff" },
-  { label:"Recuperação", emoji:"💾", preco:"R$ 150", frase:"Perdeu arquivos?",    sub:"HD · Pendrive · Cartão",          accent:"#ff4081" },
-  { label:"Tela",        emoji:"🖥️", preco:"R$ 200", frase:"Tela quebrada?",      sub:"Notebook e desktop",              accent:"#00bcd4" },
-  { label:"RAM",         emoji:"🚀", preco:"R$ 80",  frase:"Mais velocidade!",    sub:"Dobra a performance do PC",       accent:"#ff9800" },
+const NICHOS_P = [
+  { id:"tech", label:"💻 Info", servicos: [
+    { label:"Formatação",  emoji:"💻", preco:"R$ 80",      frase:"PC lento demais?",    sub:"Windows limpo · Drivers ok",      accent:"#00d4ff" },
+    { label:"Limpeza",     emoji:"🧹", preco:"R$ 60",      frase:"Superaquecendo?",     sub:"Pasta térmica · Limpeza completa", accent:"#ff6b35" },
+    { label:"Troca SSD",   emoji:"⚡", preco:"R$ 120",     frase:"10× mais rápido!",    sub:"Migração do sistema inclusa",     accent:"#f5c518" },
+    { label:"Vírus",       emoji:"🛡️",preco:"R$ 70",      frase:"PC infectado?",       sub:"Remoção total + Proteção",       accent:"#00e676" },
+    { label:"Manutenção",  emoji:"🔧", preco:"R$ 90",      frase:"Diagnóstico GRÁTIS!", sub:"Orçamento em 10 minutos",         accent:"#c87cff" },
+    { label:"Recuperação", emoji:"💾", preco:"R$ 150",     frase:"Perdeu arquivos?",    sub:"HD · Pendrive · Cartão",          accent:"#ff4081" },
+    { label:"Tela",        emoji:"🖥️",preco:"R$ 200",     frase:"Tela quebrada?",      sub:"Notebook e desktop",              accent:"#00bcd4" },
+    { label:"RAM",         emoji:"🚀", preco:"R$ 80",      frase:"Mais velocidade!",    sub:"Dobra a performance do PC",       accent:"#ff9800" },
+  ]},
+  { id:"beauty", label:"💇 Beleza", servicos: [
+    { label:"Corte",       emoji:"✂️", preco:"R$ 35",      frase:"Visual renovado!",    sub:"Corte + Escova inclusos",         accent:"#ff69b4" },
+    { label:"Coloração",   emoji:"🎨", preco:"R$ 80",      frase:"Cor dos sonhos!",     sub:"Tintura + Hidratação",            accent:"#e91e8c" },
+    { label:"Manicure",    emoji:"💅", preco:"R$ 25",      frase:"Unhas perfeitas!",    sub:"Gel · Fibra · Acrigel",           accent:"#ff4081" },
+    { label:"Sobrancelha", emoji:"🙆", preco:"R$ 40",      frase:"Sobrancelha ideal!",  sub:"Design + Henna incluso",          accent:"#c87c4c" },
+    { label:"Maquiagem",   emoji:"💄", preco:"R$ 60",      frase:"Realce sua beleza!",  sub:"Social · Noiva · Festa",          accent:"#e91e63" },
+    { label:"Depilação",   emoji:"🌸", preco:"R$ 45",      frase:"Sem dor, sem pelos!", sub:"Cera · Laser · Definitiva",       accent:"#f48fb1" },
+  ]},
+  { id:"food", label:"🍔 Food", servicos: [
+    { label:"Promoção",    emoji:"🍕", preco:"R$ 29,90",   frase:"Só hoje!",            sub:"Válido até meia-noite",           accent:"#ff6600" },
+    { label:"Combo",       emoji:"🍔", preco:"R$ 24,90",   frase:"Combo especial!",     sub:"Lanche + Batata + Refri",         accent:"#ff4500" },
+    { label:"Delivery",    emoji:"🛵", preco:"Frete GRÁTIS",frase:"Entrega gratuita!",  sub:"Pedido mínimo R$ 30",             accent:"#00e676" },
+    { label:"Prato",       emoji:"🍽️",preco:"R$ 15,90",   frase:"Prato do dia!",       sub:"Completo · Inclui sobremesa",     accent:"#ffa500" },
+    { label:"Açaí",        emoji:"🍇", preco:"R$ 12,90",   frase:"O melhor açaí!",      sub:"500ml · 30 sabores",              accent:"#7b1fa2" },
+    { label:"Marmita",     emoji:"🥡", preco:"R$ 18,00",   frase:"Marmita saudável!",   sub:"Entregamos na sua empresa",       accent:"#4caf50" },
+  ]},
+  { id:"gym", label:"💪 Gym", servicos: [
+    { label:"Matrícula",   emoji:"💪", preco:"R$ 79/mês",  frase:"Comece hoje!",        sub:"3 meses por preço de 2",          accent:"#ff4400" },
+    { label:"Personal",    emoji:"🏋️",preco:"R$ 120/h",   frase:"Resultado garantido!",sub:"Treino personalizado",            accent:"#ff6600" },
+    { label:"Plano",       emoji:"🥊", preco:"R$ 59/mês",  frase:"Sem contrato!",       sub:"Musculação + Funcional",          accent:"#ff8800" },
+    { label:"Yoga",        emoji:"🧘", preco:"R$ 49/mês",  frase:"Equilíbrio total!",   sub:"Yoga · Pilates · Meditação",      accent:"#9c27b0" },
+  ]},
+  { id:"store", label:"🛍 Loja", servicos: [
+    { label:"Oferta",      emoji:"🏷️",preco:"50% OFF",    frase:"Liquidação total!",   sub:"Só este fim de semana",           accent:"#f44336" },
+    { label:"Lançamento",  emoji:"✨", preco:"Novidade!",  frase:"Chegou o novo!",      sub:"Exclusivo · Limitado",            accent:"#00d4ff" },
+    { label:"Frete Grátis",emoji:"🚚", preco:"Frete GRÁTIS",frase:"Compre sem sair!",  sub:"Entrega em 24h",                  accent:"#00e676" },
+    { label:"Promoção",    emoji:"🎁", preco:"R$ 49,90",   frase:"Imperdível!",         sub:"Últimas unidades",                accent:"#ff9800" },
+  ]},
 ];
+const SERVICOS_P = NICHOS_P[0].servicos;
 const BGS_P = [
   { id:"transparent", label:"Transparente", bg:"transparent", extra:{} },
   { id:"neon",   label:"Neon",    bg:"#030b18", extra:{ backgroundImage:"linear-gradient(rgba(0,212,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.05) 1px,transparent 1px)", backgroundSize:"40px 40px" } },
@@ -1578,6 +1609,7 @@ const PTPL_BUILDERS = [
 function PostEditor({ onSwitch, onHome }) {
   const isMobile = useMobile();
   const [si, setSi]           = useState(0);
+  const [nichoIdx, setNichoIdx] = useState(0);
   const [bgId, setBgId]       = useState("transparent");
   const [fmtId, setFmtId]     = useState("sq");
   const [bgPhoto, setBgPhoto] = useState(null);
@@ -1604,7 +1636,8 @@ function PostEditor({ onSwitch, onHome }) {
   },[]);
 
   const fmt=FORMATS_P.find(f=>f.id===fmtId); const FW=fmt.w,FH=fmt.h;
-  const s=SERVICOS_P[si];
+  const currentServicos = NICHOS_P[nichoIdx]?.servicos || NICHOS_P[0].servicos;
+  const s = currentServicos[si] || currentServicos[0];
   const bg=BGS_P.find(b=>b.id===bgId);
 
   const [hist,dispatch]=useReducer(pHistReducer,{past:[],present:[],future:[]});
@@ -1712,6 +1745,20 @@ function PostEditor({ onSwitch, onHome }) {
     addImg(qrUrl);
   };
 
+  // 💬 Adicionar Banner WhatsApp
+  const [watermark, setWatermark] = useState(false);
+  const addWhatsAppBanner = () => {
+    const phone = prompt("Número do WhatsApp (só números):", "65992824709");
+    if (!phone) return;
+    const fmt = phone.replace(/\D/g,"").replace(/^(\d{2})(\d{5})(\d{4})$/,"($1) $2-$3");
+    const bannerH = 76;
+    setEls(p => [...p,
+      mkPShape("rect",  { x:0, y:FH-bannerH, w:FW, h:bannerH, fill:"#25d366", radius:0 }),
+      mkPText({ x:0, y:FH-bannerH+12, w:FW, h:52, text:`💬 Chama no WhatsApp!   ${fmt}`, fontSize:26, color:"#fff", fontWeight:"900", align:"center", shadowColor:"#00000044", shadowBlur:8 }),
+    ]);
+    toast("Banner WhatsApp adicionado!");
+  };
+
   // 💾 Salvar projeto JSON
   const saveProjectJSON = () => {
     const data = { version:1, type:"post", bgId, fmtId, bgOpacity, els:JSON.parse(JSON.stringify(els)) };
@@ -1757,7 +1804,7 @@ function PostEditor({ onSwitch, onHome }) {
     setExportingAll(false);
   };
 
-  const handleSave=async()=>{if(!posterRef.current)return;setSaving(true);try{const h2c=window.html2canvas;if(!h2c){toast("Aguarde o carregamento...","info");setSaving(false);return;}setSelId(null);setEditId(null);await new Promise(r=>setTimeout(r,150));const canvas=await h2c(posterRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});const link=document.createElement("a");link.download=`maker-info-${s.label.toLowerCase().replace(/ /g,"-")}.png`;link.href=canvas.toDataURL("image/png");link.click();toast("PNG baixado!");}catch(err){console.error(err);toast("Erro ao exportar.","error");}setSaving(false);};
+  const handleSave=async()=>{if(!posterRef.current)return;setSaving(true);try{const h2c=window.html2canvas;if(!h2c){toast("Aguarde o carregamento...","info");setSaving(false);return;}setSelId(null);setEditId(null);await new Promise(r=>setTimeout(r,150));const canvas=await h2c(posterRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});if(watermark){const ctx=canvas.getContext("2d");const fs=Math.round(canvas.width*0.022);ctx.font=`bold ${fs}px 'Segoe UI',sans-serif`;ctx.fillStyle="rgba(255,255,255,0.35)";ctx.textAlign="right";ctx.fillText("by Maker Info",canvas.width-10,canvas.height-8);}const link=document.createElement("a");link.download=`maker-info-${s.label.toLowerCase().replace(/ /g,"-")}.png`;link.href=canvas.toDataURL("image/png");link.click();toast("PNG baixado!");}catch(err){console.error(err);toast("Erro ao exportar.","error");}setSaving(false);};
 
   const maxW=typeof window!=="undefined"?Math.min(window.innerWidth-(isMobile?16:20),isMobile?600:520):400;
   const viewScale=Math.min(maxW/FW,(isMobile?300:520)/FH);
@@ -1794,8 +1841,16 @@ function PostEditor({ onSwitch, onHome }) {
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,flexShrink:0}}>
           <div style={{display:"flex",gap:5,flexWrap:"wrap",justifyContent:"center",width:"100%"}}>
             {FORMATS_P.map(f=><button key={f.id} onClick={()=>changeFmt(f.id)} style={{...iB(fmtId===f.id),padding:"5px 10px",fontSize:10}}>{f.label}</button>)}
-            <div style={{width:1,background:"rgba(255,255,255,.1)",margin:"0 2px"}}/>
-            {SERVICOS_P.map((sv,i)=>(
+          </div>
+          {/* Nicho selector */}
+          <div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"center",width:"100%"}}>
+            {NICHOS_P.map((n,ni)=>(
+              <button key={n.id} onClick={()=>{setNichoIdx(ni);setSi(0);}} style={{padding:"5px 10px",borderRadius:14,cursor:"pointer",fontSize:10,fontWeight:700,background:nichoIdx===ni?"rgba(0,212,255,.18)":"rgba(255,255,255,.04)",border:nichoIdx===ni?"1px solid rgba(0,212,255,.5)":"1px solid rgba(255,255,255,.06)",color:nichoIdx===ni?"#00d4ff":"#3a4060"}}>{n.label}</button>
+            ))}
+          </div>
+          {/* Service selector */}
+          <div style={{display:"flex",gap:4,flexWrap:"wrap",justifyContent:"center",width:"100%"}}>
+            {currentServicos.map((sv,i)=>(
               <button key={i} onClick={()=>setSi(i)} style={{padding:"5px 9px",borderRadius:14,cursor:"pointer",fontSize:12,fontWeight:700,background:si===i?"rgba(0,212,255,.15)":"rgba(255,255,255,.03)",border:si===i?`1px solid ${sv.accent}`:"1px solid rgba(255,255,255,.05)",color:si===i?sv.accent:"#3a4060"}} title={sv.label}>{sv.emoji}</button>
             ))}
           </div>
@@ -1838,9 +1893,11 @@ function PostEditor({ onSwitch, onHome }) {
             <button onClick={()=>addShape("line")}     style={{...iB(false,"#ff9800")}}>—</button>
             <button onClick={()=>addShape("triangle")} style={{...iB(false,"#ff4081")}}>△</button>
             <label style={{...iB(false,"#f5c518"),cursor:"pointer"}}>🖼 Img<input type="file" accept="image/*" onChange={handleImgEl} style={{display:"none"}}/></label>
-            <button onClick={addQRCode} style={{...iB(false,"#25d366"),padding:"8px 10px",fontSize:11,fontWeight:700}} title="Adicionar QR Code do WhatsApp">📲 QR WhatsApp</button>
+            <button onClick={addWhatsAppBanner} style={{...iB(false,"#25d366"),padding:"8px 10px",fontSize:11,fontWeight:700}} title="Adicionar Banner WhatsApp">💬 WA Banner</button>
+            <button onClick={addQRCode} style={{...iB(false,"#25d366"),padding:"8px 10px",fontSize:11,fontWeight:700}} title="Adicionar QR Code do WhatsApp">📲 QR</button>
             <label style={{...iB(false,"rgba(180,180,180,.4)"),cursor:"pointer"}}>📷 Fundo<input type="file" accept="image/*" onChange={handleBgPhoto} style={{display:"none"}}/></label>
             {bgPhoto&&<button onClick={()=>setBgPhoto(null)} style={{...iB(false,"#ff4444")}}>✕ Fundo</button>}
+            <button onClick={()=>setWatermark(w=>!w)} style={{...iB(watermark,"#888"),padding:"8px 10px",fontSize:10}} title="Marca d'água Maker Info">{watermark?"🔏 Marca ON":"🔓 Marca OFF"}</button>
           </div>
           <div style={{fontSize:9,color:"#1a2840",textAlign:"center"}}>Clique · Arraste · 🟡 rotacionar · 2× clique p/ editar texto</div>
         </div>
@@ -2052,14 +2109,13 @@ const COLLAGE_LAYOUTS = [
 function CollageEditor({ onHome }) {
   const isMobile = useMobile();
   const [layoutId, setLayoutId]   = useState("4g");
-  const [photos, setPhotos]       = useState([]);   // array indexed by cell
+  const [photos, setPhotos]       = useState([]);
   const [gap, setGap]             = useState(4);
   const [radius, setRadius]       = useState(0);
   const [bgColor, setBgColor]     = useState("#000000");
   const [saving, setSaving]       = useState(false);
-  const collageRef = useRef(null);
-
-  useScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+  const [editingCell, setEditingCell] = useState(null);
+  const [cellAdj, setCellAdj]     = useState({}); // {idx: {brightness, contrast, saturation}}
 
   const layout = COLLAGE_LAYOUTS.find(l=>l.id===layoutId) || COLLAGE_LAYOUTS[0];
   const SIZE = isMobile ? Math.min(window.innerWidth - 32, 380) : 480;
@@ -2073,20 +2129,76 @@ function CollageEditor({ onHome }) {
     }; r.readAsDataURL(f);
   };
 
+  const getAdj = idx => ({ brightness:0, contrast:0, saturation:0, ...cellAdj[idx] });
+  const setAdj = (idx, patch) => setCellAdj(p => ({ ...p, [idx]: { ...getAdj(idx), ...patch } }));
+  const adjToFilter = adj => `brightness(${1 + adj.brightness/100}) contrast(${1 + adj.contrast/100}) saturate(${1 + adj.saturation/100})`;
+
+  // Canvas-based export — handles CSS filter correctly
   const handleExport = async () => {
-    if(!collageRef.current) return; setSaving(true);
+    setSaving(true);
     try {
-      const h2c = window.html2canvas; if(!h2c){alert("Aguarde o carregamento.");setSaving(false);return;}
-      await new Promise(r=>setTimeout(r,100));
-      const canvas = await h2c(collageRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:bgColor,logging:false});
-      const a=document.createElement("a"); a.download="colagem-maker-info.png"; a.href=canvas.toDataURL("image/png"); a.click();
-    } catch(err){console.error(err);alert("Erro ao exportar.");}
+      const SCALE = 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = SIZE * SCALE; canvas.height = SIZE * SCALE;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(SCALE, SCALE);
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, SIZE, SIZE);
+
+      for (let idx = 0; idx < layout.cells.length; idx++) {
+        const cell = layout.cells[idx];
+        const x = cell.c * COL_W + gap/2;
+        const y = cell.r * ROW_H + gap/2;
+        const w = cell.cw * COL_W - gap;
+        const h = cell.rh * ROW_H - gap;
+        const photo = photos[idx];
+        if (!photo) continue;
+
+        ctx.save();
+        // rounded clip
+        if (radius > 0) {
+          const r2 = Math.max(0, radius - 2);
+          ctx.beginPath();
+          ctx.moveTo(x + r2, y);
+          ctx.lineTo(x + w - r2, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r2);
+          ctx.lineTo(x + w, y + h - r2); ctx.quadraticCurveTo(x+w, y+h, x+w-r2, y+h);
+          ctx.lineTo(x + r2, y + h); ctx.quadraticCurveTo(x, y+h, x, y+h-r2);
+          ctx.lineTo(x, y + r2); ctx.quadraticCurveTo(x, y, x+r2, y);
+          ctx.closePath(); ctx.clip();
+        } else {
+          ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+        }
+
+        // apply filter
+        const adj = getAdj(idx);
+        ctx.filter = adjToFilter(adj);
+
+        // load + draw image with cover fit
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = photo; });
+        const iAr = img.width / img.height;
+        const cAr = w / h;
+        let sx, sy, sw, sh;
+        if (iAr > cAr) { sh = img.height; sw = sh * cAr; sx = (img.width - sw) / 2; sy = 0; }
+        else { sw = img.width; sh = sw / cAr; sx = 0; sy = (img.height - sh) / 2; }
+        ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+        ctx.restore();
+      }
+
+      const a = document.createElement("a");
+      a.download = "colagem-maker-info.png";
+      a.href = canvas.toDataURL("image/png"); a.click();
+      toast("Colagem exportada!");
+    } catch(err) { console.error(err); toast("Erro ao exportar.", "error"); }
     setSaving(false);
   };
 
   const iB=(on,c="#00e676")=>({padding:"8px 10px",borderRadius:7,cursor:"pointer",fontSize:11,fontWeight:700,
-    background:on?`rgba(${c==="on"?"0,230,118":"0,230,118"},.15)`:"rgba(255,255,255,.04)",
-    border:on?`1px solid rgba(0,230,118,.5)`:"1px solid rgba(255,255,255,.06)",color:on?"#00e676":"#3a4060"});
+    background:on?"rgba(0,230,118,.15)":"rgba(255,255,255,.04)",
+    border:on?"1px solid rgba(0,230,118,.5)":"1px solid rgba(255,255,255,.06)",color:on?"#00e676":"#3a4060"});
+
+  const editAdj = editingCell !== null ? getAdj(editingCell) : null;
 
   return (
     <div style={{minHeight:"100vh",background:"#060a14",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff"}}>
@@ -2106,33 +2218,54 @@ function CollageEditor({ onHome }) {
 
         {/* Canvas */}
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12,flexShrink:0}}>
-          <div ref={collageRef} style={{width:SIZE,height:SIZE,background:bgColor,position:"relative",borderRadius:radius,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.8)"}}>
+          <div style={{position:"relative",width:SIZE,height:SIZE,background:bgColor,borderRadius:radius,overflow:"hidden",boxShadow:"0 8px 40px rgba(0,0,0,.8)"}}>
             {layout.cells.map((cell,idx)=>{
-              const x = cell.c * COL_W + (gap/2);
-              const y = cell.r * ROW_H + (gap/2);
+              const x = cell.c * COL_W + gap/2;
+              const y = cell.r * ROW_H + gap/2;
               const w = cell.cw * COL_W - gap;
               const h = cell.rh * ROW_H - gap;
               const photo = photos[idx];
+              const adj = getAdj(idx);
+              const isEditing = editingCell === idx;
               return (
-                <div key={idx} style={{position:"absolute",left:x,top:y,width:w,height:h,borderRadius:Math.max(0,radius-2),overflow:"hidden",background:"rgba(255,255,255,.06)"}}>
+                <div key={idx} style={{position:"absolute",left:x,top:y,width:w,height:h,borderRadius:Math.max(0,radius-2),overflow:"hidden",background:"rgba(255,255,255,.06)",outline:isEditing?"2px solid #00d4ff":"none",cursor:photo?"pointer":"default"}}
+                  onClick={()=>photo&&setEditingCell(isEditing?null:idx)}>
                   {photo
-                    ? <img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}} crossOrigin="anonymous"/>
+                    ? <img src={photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover",display:"block",filter:adjToFilter(adj)}} crossOrigin="anonymous"/>
                     : <label style={{width:"100%",height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",gap:4,background:"rgba(255,255,255,.04)"}}>
                         <div style={{fontSize:Math.min(w,h)*0.3,opacity:.4}}>+</div>
                         <div style={{fontSize:Math.min(w*0.08,10),color:"rgba(255,255,255,.35)",textAlign:"center",padding:"0 4px"}}>Foto {idx+1}</div>
-                        <input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}} capture="environment"/>
+                        <input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}}/>
                       </label>
                   }
                   {photo && (
                     <label style={{position:"absolute",bottom:4,right:4,width:22,height:22,borderRadius:"50%",background:"rgba(0,0,0,.6)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:12}}>
-                      🔄<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}} capture="environment"/>
+                      🔄<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}}/>
                     </label>
                   )}
+                  {isEditing&&<div style={{position:"absolute",top:4,left:4,fontSize:9,color:"#00d4ff",background:"rgba(0,0,0,.8)",padding:"2px 6px",borderRadius:4}}>✏️ Editando</div>}
                 </div>
               );
             })}
           </div>
-          <div style={{fontSize:10,color:"#1a3040"}}>Clique nos slots para adicionar fotos · Arraste p/ substituir</div>
+          {editingCell!==null&&editAdj&&(
+            <div style={{width:SIZE,background:"rgba(0,0,0,.9)",border:"1px solid rgba(0,212,255,.3)",borderRadius:10,padding:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <span style={{fontSize:10,color:"#00d4ff",fontWeight:700}}>✏️ Ajustes — Foto {editingCell+1}</span>
+                <button onClick={()=>{setAdj(editingCell,{brightness:0,contrast:0,saturation:0});}} style={{fontSize:9,color:"#ff4444",background:"none",border:"none",cursor:"pointer"}}>Resetar</button>
+              </div>
+              {[["brightness","☀️ Brilho",-100,100],["contrast","◑ Contraste",-100,100],["saturation","🎨 Saturação",-100,100]].map(([k,lb,mn,mx])=>(
+                <div key={k} style={{marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                    <span style={{fontSize:10,color:"#aaa"}}>{lb}</span>
+                    <span style={{fontSize:10,color:"#00d4ff"}}>{editAdj[k]}</span>
+                  </div>
+                  <input type="range" min={mn} max={mx} value={editAdj[k]} onChange={e=>setAdj(editingCell,{[k]:Number(e.target.value)})} style={{width:"100%",accentColor:"#00d4ff"}}/>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{fontSize:10,color:"#1a3040"}}>Clique numa foto para ajustar brilho/contraste/saturação</div>
         </div>
 
         {/* Controls panel */}
@@ -2142,7 +2275,7 @@ function CollageEditor({ onHome }) {
             <div style={{fontSize:8,color:"#00e676",letterSpacing:3,marginBottom:10}}>LAYOUT</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
               {COLLAGE_LAYOUTS.map(l=>(
-                <button key={l.id} onClick={()=>{setLayoutId(l.id);setPhotos([]);}} style={{
+                <button key={l.id} onClick={()=>{setLayoutId(l.id);setPhotos([]);setEditingCell(null);setCellAdj({});}} style={{
                   padding:"9px 6px",borderRadius:7,cursor:"pointer",fontSize:10,fontWeight:700,
                   background:layoutId===l.id?"rgba(0,230,118,.15)":"rgba(255,255,255,.04)",
                   border:layoutId===l.id?"1px solid rgba(0,230,118,.5)":"1px solid rgba(255,255,255,.06)",
@@ -2153,7 +2286,7 @@ function CollageEditor({ onHome }) {
 
           {/* Ajustes */}
           <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:12,marginBottom:10}}>
-            <div style={{fontSize:8,color:"#00e676",letterSpacing:3,marginBottom:10}}>AJUSTES</div>
+            <div style={{fontSize:8,color:"#00e676",letterSpacing:3,marginBottom:10}}>AJUSTES GERAIS</div>
             <div style={{marginBottom:10}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <span style={{fontSize:11,color:"#aaa"}}>Espaço entre fotos</span>
@@ -2174,7 +2307,7 @@ function CollageEditor({ onHome }) {
             </div>
           </div>
 
-          {/* Fotos adicionadas */}
+          {/* Slots */}
           <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:10,padding:12}}>
             <div style={{fontSize:8,color:"#00e676",letterSpacing:3,marginBottom:8}}>SLOTS</div>
             <div style={{display:"flex",flexDirection:"column",gap:5}}>
@@ -2182,9 +2315,9 @@ function CollageEditor({ onHome }) {
                 <div key={idx} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",borderRadius:7,background:photos[idx]?"rgba(0,230,118,.08)":"rgba(255,255,255,.03)",border:photos[idx]?"1px solid rgba(0,230,118,.25)":"1px solid rgba(255,255,255,.06)"}}>
                   <span style={{fontSize:14}}>{photos[idx]?"🟢":"⬜"}</span>
                   <span style={{fontSize:11,color:photos[idx]?"#00e676":"#3a4060",flex:1}}>Foto {idx+1}</span>
-                  {photos[idx]&&<button onClick={()=>setPhotos(p=>{const a=[...p];a[idx]=null;return a;})} style={{fontSize:11,color:"#ff4444",background:"none",border:"none",cursor:"pointer"}}>✕</button>}
+                  {photos[idx]&&<button onClick={()=>{setPhotos(p=>{const a=[...p];a[idx]=null;return a;});if(editingCell===idx)setEditingCell(null);}} style={{fontSize:11,color:"#ff4444",background:"none",border:"none",cursor:"pointer"}}>✕</button>}
                   <label style={{fontSize:10,color:"#00e676",cursor:"pointer",padding:"4px 8px",borderRadius:5,border:"1px solid rgba(0,230,118,.3)",background:"rgba(0,230,118,.07)"}}>
-                    {photos[idx]?"Trocar":"Adicionar"}<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}} capture="environment"/>
+                    {photos[idx]?"Trocar":"Adicionar"}<input type="file" accept="image/*" onChange={e=>loadPhoto(idx,e)} style={{display:"none"}}/>
                   </label>
                 </div>
               ))}
