@@ -25,6 +25,33 @@ function getPoint(e) {
   return { x: e.clientX, y: e.clientY };
 }
 
+/* ── Toast ── */
+let _toastCb = null;
+function useToast() {
+  const [toasts, setToasts] = useState([]);
+  useEffect(() => { _toastCb = (msg, type="success") => {
+    const id = uid();
+    setToasts(p => [...p, {id, msg, type}]);
+    setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 3000);
+  }; return () => { _toastCb = null; }; }, []);
+  return toasts;
+}
+function toast(msg, type="success") { if(_toastCb) _toastCb(msg, type); }
+function ToastContainer({ toasts }) {
+  if (!toasts.length) return null;
+  return (
+    <div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",zIndex:9999,display:"flex",flexDirection:"column",gap:8,alignItems:"center",pointerEvents:"none"}}>
+      {toasts.map(t => (
+        <div key={t.id} style={{padding:"10px 20px",borderRadius:10,fontSize:13,fontWeight:700,backdropFilter:"blur(12px)",
+          background:t.type==="error"?"rgba(255,60,60,.9)":t.type==="info"?"rgba(0,180,255,.9)":"rgba(0,200,100,.9)",
+          color:"#fff",boxShadow:"0 4px 20px rgba(0,0,0,.4)",whiteSpace:"nowrap",animation:"fadeIn .2s ease"}}>
+          {t.type==="success"?"✅ ":t.type==="error"?"❌ ":"ℹ️ "}{t.msg}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    HOME SCREEN
 ═══════════════════════════════════════════════════════════════════ */
@@ -307,8 +334,8 @@ function PhotoTextEl({ el, selected, onSelect, onUpdate, onEdit, scale }) {
     if(d.mode==="drag")onUpdate(el.id,{x:Math.round(d.ox+dx),y:Math.round(d.oy+dy)});
     if(d.mode==="rotate"){const a=Math.atan2(p.y-d.cy,p.x-d.cx)*180/Math.PI;onUpdate(el.id,{rotation:Math.round((d.or+(a-d.sa)+360)%360)});}
     if(d.mode==="resize"){const h=d.h;let nx=d.ox,ny=d.oy,nw=d.ow,nh=d.oh;
-      if(h.includes("e"))nw=Math.max(20,d.ow+dx);if(h.includes("s"))nh=Math.max(20,d.oh+dy);
-      if(h.includes("w")){nw=Math.max(20,d.ow-dx);nx=d.ox+(d.ow-nw);}if(h.includes("n")){nh=Math.max(20,d.oh-dy);ny=d.oy+(d.oh-nh);}
+      if(h.includes("e"))nw=Math.max(40,d.ow+dx);if(h.includes("s"))nh=Math.max(30,d.oh+dy);
+      if(h.includes("w")){nw=Math.max(40,d.ow-dx);nx=d.ox+(d.ow-nw);}if(h.includes("n")){nh=Math.max(30,d.oh-dy);ny=d.oy+(d.oh-nh);}
       onUpdate(el.id,{x:Math.round(nx),y:Math.round(ny),w:Math.round(nw),h:Math.round(nh)});}
   },[el.id,scale,onUpdate]);
   const onUp=useCallback(()=>{st.current.mode=null;unbind();},[]);
@@ -318,6 +345,7 @@ function PhotoTextEl({ el, selected, onSelect, onUpdate, onEdit, scale }) {
   return (
     <div ref={wrapRef} style={{ position:"absolute",left:el.x,top:el.y,width:el.w,height:el.h||60,cursor:"move",
       outline:selected?"2px dashed rgba(255,255,255,.8)":"2px solid transparent", boxSizing:"border-box",
+      overflow:"hidden",
       transform:el.rotation?`rotate(${el.rotation}deg)`:"none",transformOrigin:"center center",touchAction:"none" }}
       onMouseDown={startDrag} onTouchStart={startDrag}>
       <PhotoTextView el={{...el,x:0,y:0}}/>
@@ -741,6 +769,7 @@ function PhotoEditor({ onSwitch, onHome }) {
     const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
     const link = document.createElement("a"); link.download="foto-projeto.json";
     link.href = URL.createObjectURL(blob); link.click();
+    toast("Projeto salvo!");
   };
 
   // 📂 Carregar projeto JSON
@@ -754,8 +783,8 @@ function PhotoEditor({ onSwitch, onHome }) {
         if(d.lightFx) setLightFx(d.lightFx); if(d.border) setBorder(d.border);
         if(d.flipH !== undefined) setFlipH(d.flipH); if(d.flipV !== undefined) setFlipV(d.flipV);
         if(d.texts) setTexts(d.texts.map(t=>({...t, id:uid()})));
-        alert("Projeto carregado! (a foto original precisa ser selecionada novamente)");
-      } catch { alert("Arquivo inválido."); }
+        toast("Projeto carregado! Selecione a foto original novamente.", "info");
+      } catch { toast("Arquivo inválido.", "error"); }
     }; r.readAsText(f);
   };
 
@@ -769,12 +798,13 @@ function PhotoEditor({ onSwitch, onHome }) {
   const handleExport = async () => {
     if(!photoRef.current) return; setSaving(true);
     try {
-      const h2c = window.html2canvas; if(!h2c){alert("Aguarde e tente novamente.");setSaving(false);return;}
+      const h2c = window.html2canvas; if(!h2c){toast("Aguarde o carregamento...","info");setSaving(false);return;}
       setSelTextId(null); setEditTextId(null); await new Promise(r=>setTimeout(r,150));
       const canvas = await h2c(photoRef.current, { scale:2, useCORS:true, allowTaint:true, backgroundColor:null, logging:false });
       const link = document.createElement("a"); link.download=`foto-editada.png`;
       link.href = canvas.toDataURL("image/png"); link.click();
-    } catch(err){ console.error(err); alert("Erro ao exportar."); }
+      toast("Foto exportada!");
+    } catch(err){ console.error(err); toast("Erro ao exportar.", "error"); }
     setSaving(false);
   };
 
@@ -1688,6 +1718,7 @@ function PostEditor({ onSwitch, onHome }) {
     const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
     const link = document.createElement("a"); link.download=`maker-info-post-${s.label.toLowerCase()}.json`;
     link.href = URL.createObjectURL(blob); link.click();
+    toast("Projeto salvo!");
   };
 
   // 📂 Carregar projeto JSON
@@ -1696,12 +1727,13 @@ function PostEditor({ onSwitch, onHome }) {
     const r=new FileReader(); r.onload=ev=>{
       try {
         const d=JSON.parse(ev.target.result);
-        if(d.type!=="post"){alert("Este arquivo é de um projeto de Foto.");return;}
+        if(d.type!=="post"){toast("Arquivo é de um projeto de Foto, não Post.", "error");return;}
         if(d.bgId)setBgId(d.bgId); if(d.fmtId)setFmtId(d.fmtId);
         if(d.bgOpacity!==undefined)setBgOpacity(d.bgOpacity);
         if(d.els)setEls(d.els.map(e=>({...e,id:uid()})));
         setSelId(null);
-      } catch{alert("Arquivo inválido.");}
+        toast("Projeto carregado!", "info");
+      } catch{ toast("Arquivo inválido.", "error"); }
     }; r.readAsText(f);
   };
 
@@ -1725,7 +1757,7 @@ function PostEditor({ onSwitch, onHome }) {
     setExportingAll(false);
   };
 
-  const handleSave=async()=>{if(!posterRef.current)return;setSaving(true);try{const h2c=window.html2canvas;if(!h2c){alert("Aguarde.");setSaving(false);return;}setSelId(null);setEditId(null);await new Promise(r=>setTimeout(r,150));const canvas=await h2c(posterRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});const link=document.createElement("a");link.download=`maker-info-${s.label.toLowerCase().replace(/ /g,"-")}.png`;link.href=canvas.toDataURL("image/png");link.click();}catch(err){console.error(err);alert("Erro ao exportar.");}setSaving(false);};
+  const handleSave=async()=>{if(!posterRef.current)return;setSaving(true);try{const h2c=window.html2canvas;if(!h2c){toast("Aguarde o carregamento...","info");setSaving(false);return;}setSelId(null);setEditId(null);await new Promise(r=>setTimeout(r,150));const canvas=await h2c(posterRef.current,{scale:2,useCORS:true,allowTaint:true,backgroundColor:null,logging:false});const link=document.createElement("a");link.download=`maker-info-${s.label.toLowerCase().replace(/ /g,"-")}.png`;link.href=canvas.toDataURL("image/png");link.click();toast("PNG baixado!");}catch(err){console.error(err);toast("Erro ao exportar.","error");}setSaving(false);};
 
   const maxW=typeof window!=="undefined"?Math.min(window.innerWidth-(isMobile?16:20),isMobile?600:520):400;
   const viewScale=Math.min(maxW/FW,(isMobile?300:520)/FH);
@@ -1738,7 +1770,7 @@ function PostEditor({ onSwitch, onHome }) {
   const bgStyle=bgId==="transparent"?{backgroundImage:"linear-gradient(45deg,#141428 25%,transparent 25%),linear-gradient(-45deg,#141428 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#141428 75%),linear-gradient(-45deg,transparent 75%,#141428 75%)",backgroundSize:"20px 20px",backgroundPosition:"0 0,0 10px,10px -10px,-10px 0",backgroundColor:"#0d0d20"}:{background:bg?.bg||"#030b18",...(bg?.extra||{})};
 
   return (
-    <div style={{minHeight:"100vh",background:"#060a14",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff",WebkitTapHighlightColor:"transparent",overscrollBehavior:"none",paddingBottom:isMobile?100:20}}>
+    <div style={{height:"100dvh",background:"#060a14",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#fff",WebkitTapHighlightColor:"transparent",overscrollBehavior:"none",display:"flex",flexDirection:"column",overflow:"hidden"}}>
       {/* Top bar */}
       <div style={{position:"sticky",top:0,zIndex:200,background:"rgba(6,10,20,.97)",backdropFilter:"blur(12px)",borderBottom:"1px solid rgba(255,255,255,.06)",padding:"10px 14px",display:"flex",alignItems:"center",gap:8}}>
         <button onClick={onHome} style={{padding:"7px 12px",borderRadius:7,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",color:"#aaa",fontSize:11,fontWeight:700,cursor:"pointer"}}>🏠 Home</button>
@@ -1757,7 +1789,7 @@ function PostEditor({ onSwitch, onHome }) {
         </button>
       </div>
 
-      <div style={{display:"flex",flexDirection:isMobile?"column":"row",gap:14,padding:isMobile?"10px 8px":"14px",alignItems:"flex-start",justifyContent:"center"}}>
+      <div style={{display:"flex",flexDirection:isMobile?"column":"row",gap:14,padding:isMobile?"10px 8px":"14px",alignItems:"flex-start",justifyContent:"center",flex:1,overflowY:"auto",minHeight:0}}>
         {/* Canvas column */}
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,flexShrink:0}}>
           <div style={{display:"flex",gap:5,flexWrap:"wrap",justifyContent:"center",width:"100%"}}>
@@ -2173,10 +2205,15 @@ function CollageEditor({ onHome }) {
    ROOT
 ═══════════════════════════════════════════════════════════════════ */
 export default function App() {
-  const [mode, setMode] = useState("home"); // home | photo | post | collage
-  if (mode==="home")    return <HomeScreen onSelect={setMode}/>;
-  if (mode==="photo")   return <PhotoEditor onSwitch={()=>setMode("post")} onHome={()=>setMode("home")}/>;
-  if (mode==="post")    return <PostEditor  onSwitch={()=>setMode("photo")} onHome={()=>setMode("home")}/>;
-  if (mode==="collage") return <CollageEditor onHome={()=>setMode("home")}/>;
-  return null;
+  const [mode, setMode] = useState("home");
+  const toasts = useToast();
+  return (
+    <>
+      {mode==="home"    && <HomeScreen onSelect={setMode}/>}
+      {mode==="photo"   && <PhotoEditor onSwitch={()=>setMode("post")} onHome={()=>setMode("home")}/>}
+      {mode==="post"    && <PostEditor  onSwitch={()=>setMode("photo")} onHome={()=>setMode("home")}/>}
+      {mode==="collage" && <CollageEditor onHome={()=>setMode("home")}/>}
+      <ToastContainer toasts={toasts}/>
+    </>
+  );
 }
