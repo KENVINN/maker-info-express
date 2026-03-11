@@ -648,15 +648,43 @@ const STICKERS = ["❤️","🔥","⭐","✨","💫","🌸","🌟","💕","😍"
 
 /* ── Light effects ── */
 const LIGHT_FX = [
-  { id:"none",     label:"Nenhum",   style:{} },
-  { id:"golden",   label:"Golden",   style:{ background:"radial-gradient(ellipse at 30% 20%, rgba(255,200,50,.35) 0%, transparent 60%)" } },
-  { id:"leak1",    label:"Vazamento",style:{ background:"linear-gradient(135deg, rgba(255,100,50,.3) 0%, transparent 40%, rgba(100,50,255,.2) 100%)" } },
-  { id:"bokeh",    label:"Bokeh",    style:{ background:"radial-gradient(circle at 70% 30%, rgba(255,255,255,.15) 0%, transparent 25%), radial-gradient(circle at 20% 80%, rgba(255,200,100,.12) 0%, transparent 20%)" } },
-  { id:"sunrise",  label:"Aurora",   style:{ background:"linear-gradient(180deg, rgba(255,150,50,.2) 0%, transparent 50%)" } },
-  { id:"neon_glow",label:"Neon",     style:{ background:"radial-gradient(ellipse at 50% 50%, rgba(0,212,255,.15) 0%, transparent 70%)" } },
-  { id:"dramatic", label:"Dramático",style:{ background:"linear-gradient(to bottom, rgba(0,0,0,.3) 0%, transparent 30%, transparent 70%, rgba(0,0,0,.4) 100%)" } },
-  { id:"matte",    label:"Matte",    style:{ background:"linear-gradient(to bottom, rgba(200,180,160,.12) 0%, transparent 100%)" } },
+  { id:"none",       label:"Nenhum",     cat:"⚪ Sem efeito", style:{} },
+  // ☀️ Sol & Calor
+  { id:"golden",     label:"Golden Hour",cat:"☀️ Sol",  style:{ background:"radial-gradient(ellipse at 25% 15%, rgba(255,200,50,.45) 0%, transparent 55%)" } },
+  { id:"sunrise2",   label:"Nascer Sol", cat:"☀️ Sol",  style:{ background:"linear-gradient(170deg, rgba(255,160,40,.35) 0%, rgba(255,80,20,.2) 40%, transparent 70%)" } },
+  { id:"sunflare",   label:"Sun Flare",  cat:"☀️ Sol",  style:{ background:"radial-gradient(ellipse at 80% 10%, rgba(255,240,180,.6) 0%, rgba(255,200,80,.2) 30%, transparent 60%)" } },
+  { id:"haze",       label:"Névoa Quente",cat:"☀️ Sol", style:{ background:"radial-gradient(ellipse at 50% 0%, rgba(255,220,150,.3) 0%, transparent 60%)" } },
+  { id:"sunburst",   label:"Sunburst",   cat:"☀️ Sol",  style:{ background:"radial-gradient(ellipse at 50% 30%, rgba(255,240,100,.35) 0%, transparent 50%), radial-gradient(ellipse at 20% 0%, rgba(255,180,0,.2) 0%, transparent 40%)" } },
+  // 🌈 Vazamento de Luz
+  { id:"leak1",      label:"Vazamento",  cat:"🌈 Leak", style:{ background:"linear-gradient(135deg, rgba(255,100,50,.35) 0%, transparent 45%, rgba(100,50,255,.25) 100%)" } },
+  { id:"leak2",      label:"Leak Roxo",  cat:"🌈 Leak", style:{ background:"linear-gradient(120deg, rgba(180,0,255,.3) 0%, transparent 40%, rgba(255,100,0,.2) 90%)" } },
+  { id:"leak3",      label:"Leak Rosa",  cat:"🌈 Leak", style:{ background:"linear-gradient(150deg, rgba(255,50,150,.3) 0%, transparent 50%, rgba(255,200,0,.2) 100%)" } },
+  { id:"leak4",      label:"Leak Ciano", cat:"🌈 Leak", style:{ background:"linear-gradient(110deg, rgba(0,220,255,.3) 0%, transparent 45%, rgba(255,150,0,.2) 100%)" } },
+  { id:"leak5",      label:"Leak Verde", cat:"🌈 Leak", style:{ background:"linear-gradient(145deg, rgba(0,255,120,.25) 0%, transparent 50%, rgba(255,0,150,.2) 100%)" } },
+  { id:"doubleleak", label:"Duplo Leak", cat:"🌈 Leak", style:{ background:"radial-gradient(circle at 5% 5%, rgba(255,80,0,.4) 0%, transparent 30%), radial-gradient(circle at 95% 95%, rgba(100,0,255,.35) 0%, transparent 30%)" } },
+  // 💡 Neon & Glow
+  { id:"neon_glow",  label:"Neon Azul",  cat:"💡 Neon", style:{ background:"radial-gradient(ellipse at 50% 50%, rgba(0,212,255,.2) 0%, transparent 70%)" } },
+  { id:"neon_pink",  label:"Neon Rosa",  cat:"💡 Neon", style:{ background:"radial-gradient(ellipse at 50% 50%, rgba(255,0,150,.2) 0%, transparent 70%)" } },
+  { id:"neon_green", label:"Neon Verde", cat:"💡 Neon", style:{ background:"radial-gradient(ellipse at 50% 50%, rgba(0,255,100,.18) 0%, transparent 70%)" } },
+  { id:"neon_purple",label:"Neon Roxo",  cat:"💡 Neon", style:{ background:"radial-gradient(ellipse at 50% 50%, rgba(160,0,255,.22) 0%, transparent 70%)" } },
+  { id:"neon_dual",  label:"Neon Duplo", cat:"💡 Neon", style:{ background:"radial-gradient(ellipse at 20% 50%, rgba(255,0,150,.2) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, rgba(0,212,255,.2) 0%, transparent 50%)" } },
+  { id:"cyberpunk",  label:"Cyberpunk",  cat:"💡 Neon", style:{ background:"linear-gradient(135deg, rgba(255,0,100,.15) 0%, transparent 50%, rgba(0,200,255,.15) 100%)" } },
+  // 🌫 Atmosférico
+  { id:"bokeh",      label:"Bokeh",      cat:"🌫 Atmosf.",style:{ background:"radial-gradient(circle at 70% 30%, rgba(255,255,255,.18) 0%, transparent 25%), radial-gradient(circle at 20% 80%, rgba(255,200,100,.12) 0%, transparent 20%)" } },
+  { id:"dramatic",   label:"Dramático",  cat:"🌫 Atmosf.",style:{ background:"linear-gradient(to bottom, rgba(0,0,0,.35) 0%, transparent 35%, transparent 65%, rgba(0,0,0,.45) 100%)" } },
+  { id:"matte",      label:"Matte",      cat:"🌫 Atmosf.",style:{ background:"linear-gradient(to bottom, rgba(200,180,160,.14) 0%, transparent 100%)" } },
+  { id:"fog",        label:"Névoa",      cat:"🌫 Atmosf.",style:{ background:"radial-gradient(ellipse at 50% 100%, rgba(200,220,255,.25) 0%, transparent 60%)" } },
+  { id:"dust",       label:"Poeira",     cat:"🌫 Atmosf.",style:{ background:"linear-gradient(135deg, rgba(200,180,140,.18) 0%, transparent 50%, rgba(200,180,140,.1) 100%)" } },
+  { id:"smoke",      label:"Fumaça",     cat:"🌫 Atmosf.",style:{ background:"radial-gradient(ellipse at 30% 80%, rgba(150,150,180,.25) 0%, transparent 50%), radial-gradient(ellipse at 70% 20%, rgba(150,150,180,.15) 0%, transparent 40%)" } },
+  // 🌙 Noturno
+  { id:"moonbeam",   label:"Luar",       cat:"🌙 Noturno",style:{ background:"radial-gradient(ellipse at 80% 10%, rgba(200,220,255,.3) 0%, transparent 50%)" } },
+  { id:"midnight2",  label:"Meia-noite", cat:"🌙 Noturno",style:{ background:"linear-gradient(180deg, rgba(20,0,60,.4) 0%, transparent 50%, rgba(0,0,30,.3) 100%)" } },
+  { id:"aurora",     label:"Aurora",     cat:"🌙 Noturno",style:{ background:"linear-gradient(180deg, rgba(0,255,150,.15) 0%, rgba(100,0,255,.1) 50%, transparent 100%)" } },
+  { id:"starlight",  label:"Estrelado",  cat:"🌙 Noturno",style:{ background:"radial-gradient(circle at 15% 15%, rgba(255,255,255,.15) 0%, transparent 8%), radial-gradient(circle at 80% 25%, rgba(255,255,255,.1) 0%, transparent 6%), radial-gradient(circle at 50% 60%, rgba(255,255,255,.08) 0%, transparent 5%)" } },
+  { id:"bluenight",  label:"Azul Noite", cat:"🌙 Noturno",style:{ background:"radial-gradient(ellipse at 50% 0%, rgba(0,80,255,.25) 0%, transparent 60%)" } },
 ];
+
+const LIGHT_FX_CATS = ["Todos", ...Array.from(new Set(LIGHT_FX.filter(f=>f.id!=="none").map(f=>f.cat)))];
 
 /* ── Borders ── */
 const BORDERS = [
@@ -885,6 +913,7 @@ function PhotoEditor({ onSwitch, onHome }) {
   const [tab, setTab]             = useState("filters");
   const [filterCat, setFilterCat] = useState("Todos");
   const [fontCat, setFontCat]     = useState("Todas");
+  const [lightCat, setLightCat]   = useState("Todos");
   const [blurs, setBlurs]         = useState([]);
   const [selTextId, setSelTextId] = useState(null);
   const [editTextId, setEditTextId] = useState(null);
@@ -1046,11 +1075,12 @@ function PhotoEditor({ onSwitch, onHome }) {
   const undoDraw=()=>undo();
   const clearDrawings=()=>setDrawings([]);
 
-  // Merged adj = preset filter + manual tweaks
+  // Merged adj = preset filter base + manual tweaks on top
   const mergedAdj = useMemo(() => {
     const filter = FILTERS.find(f=>f.id===activeFilter) || FILTERS[0];
     const base = { ...defaultAdj(), ...filter.adj };
-    return Object.fromEntries(ADJUSTMENTS.map(a => [a.id, base[a.id] + (adj[a.id] - a.def)]));
+    const tweaks = Object.fromEntries(ADJUSTMENTS.map(a=>[a.id, adj[a.id] - a.def]));
+    return Object.fromEntries(Object.keys(base).map(k=>[ k, (base[k]||0) + (tweaks[k]||0) ]));
   }, [adj, activeFilter]);
 
   const cssFilter = adjToCSS(mergedAdj);
@@ -1059,8 +1089,7 @@ function PhotoEditor({ onSwitch, onHome }) {
   const lightStyle  = LIGHT_FX.find(l=>l.id===lightFx)?.style || {};
 
   const applyFilter = (fid) => {
-    setActiveFilter(fid);
-    setAdj(defaultAdj()); // reset manual tweaks when switching filter
+    pushSnap({ activeFilter: fid, adj: defaultAdj() });
   };
 
   const addText = () => {
@@ -1455,8 +1484,24 @@ function PhotoEditor({ onSwitch, onHome }) {
             </div>
           )}
           {tab==="light" && (
-            <div style={{ display:"flex", gap:4, padding:"12px 8px", overflowX:"auto" }}>
-              {LIGHT_FX.map(fx=><LightThumb key={fx.id} fx={fx} selected={lightFx===fx.id} onClick={()=>setLightFx(fx.id)} img={photo}/>)}
+            <div style={{ display:"flex", flexDirection:"column" }}>
+              {/* Category pills */}
+              <div style={{ display:"flex", gap:5, padding:"8px 8px 4px", overflowX:"auto", WebkitOverflowScrolling:"touch", flexShrink:0 }}>
+                {LIGHT_FX_CATS.map(c=>(
+                  <button key={c} onClick={()=>setLightCat(c)}
+                    style={{ flexShrink:0, padding:"5px 11px", borderRadius:20, cursor:"pointer", fontSize:10, fontWeight:700, whiteSpace:"nowrap",
+                      background:lightCat===c?"rgba(245,197,24,.2)":"rgba(255,255,255,.05)",
+                      border:lightCat===c?"1px solid rgba(245,197,24,.5)":"1px solid rgba(255,255,255,.07)",
+                      color:lightCat===c?"#f5c518":"#556" }}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display:"flex", gap:4, padding:"6px 8px 10px", overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+                {LIGHT_FX.filter(f=>lightCat==="Todos"||f.cat===lightCat||f.id==="none").map(fx=>(
+                  <LightThumb key={fx.id} fx={fx} selected={lightFx===fx.id} onClick={()=>setLightFx(fx.id)} img={photo}/>
+                ))}
+              </div>
             </div>
           )}
           {tab==="border" && (
@@ -1532,15 +1577,61 @@ function PhotoEditor({ onSwitch, onHome }) {
               <div style={{ fontSize:9, color:"#2a3050", textAlign:"center", marginTop:6 }}>{drawMode?"Desenhe na foto diretamente!":"Ative o pincel para começar"}</div>
             </div>
           )}
-        {/* Tab buttons */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(9,1fr)", borderTop:"1px solid rgba(255,255,255,.06)" }}>
-          {[["filters","🎨","Filtros"],["adjust","⚙️","Ajustes"],["text","T","Texto"],["stickers","😊","Stickers"],["light","✨","Luz"],["border","🖼","Borda"],["crop","✂️","Crop"],["blur","🌫","Blur"],["draw","🖌","Pincel"]].map(([t,ic,lb])=>(
-            <button key={t} onClick={()=>setTab(t)} style={{ padding:"8px 2px", background:tabActive(t)?"rgba(0,212,255,.1)":"none", border:"none", borderTop:tabActive(t)?"2px solid #00d4ff":"2px solid transparent", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:1 }}>
-              <span style={{ fontSize:14 }}>{ic}</span>
-              <span style={{ fontSize:7, color:tabActive(t)?"#00d4ff":"#3a4060", fontWeight:700 }}>{lb}</span>
-            </button>
-          ))}
+        {/* ── Tab bar — 5 abas claras ── */}
+        <div style={{ display:"flex", borderTop:"2px solid rgba(255,255,255,.06)", background:"#050810", flexShrink:0 }}>
+          {[
+            { id:"filters",  icon:"🎨", label:"Filtros",   active:["filters"] },
+            { id:"adjust",   icon:"⚙️", label:"Ajustes",   active:["adjust"] },
+            { id:"text",     icon:"✏️", label:"Texto",     active:["text","stickers"] },
+            { id:"light",    icon:"✨", label:"Luz & Borda",active:["light","border"] },
+            { id:"tools",    icon:"🛠", label:"Ferramentas",active:["crop","blur","draw"] },
+          ].map(({id,icon,label,active:acts})=>{
+            const on = acts.includes(tab);
+            return (
+              <button key={id} onClick={()=>setTab(id)}
+                style={{ flex:1, padding:"10px 2px 8px", background:"none", border:"none", cursor:"pointer",
+                  borderTop: on?"2px solid #00d4ff":"2px solid transparent",
+                  display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
+                <span style={{ fontSize:18 }}>{icon}</span>
+                <span style={{ fontSize:8, color:on?"#00d4ff":"#3a4060", fontWeight:700, whiteSpace:"nowrap" }}>{label}</span>
+              </button>
+            );
+          })}
         </div>
+        {/* Sub-tab bar for grouped tabs */}
+        {["text","stickers"].includes(tab) && (
+          <div style={{ display:"flex", gap:6, padding:"6px 10px", background:"#050810", borderTop:"1px solid rgba(255,255,255,.04)" }}>
+            {[["text","✏️ Texto"],["stickers","😊 Stickers"]].map(([t,lb])=>(
+              <button key={t} onClick={()=>setTab(t)}
+                style={{ flex:1, padding:"6px", borderRadius:7, cursor:"pointer", fontSize:11, fontWeight:700,
+                  background:tab===t?"rgba(0,212,255,.15)":"rgba(255,255,255,.04)",
+                  border:tab===t?"1px solid rgba(0,212,255,.4)":"1px solid rgba(255,255,255,.06)",
+                  color:tab===t?"#00d4ff":"#3a4060" }}>{lb}</button>
+            ))}
+          </div>
+        )}
+        {["light","border"].includes(tab) && (
+          <div style={{ display:"flex", gap:6, padding:"6px 10px", background:"#050810", borderTop:"1px solid rgba(255,255,255,.04)" }}>
+            {[["light","✨ Luz"],["border","🖼 Borda"]].map(([t,lb])=>(
+              <button key={t} onClick={()=>setTab(t)}
+                style={{ flex:1, padding:"6px", borderRadius:7, cursor:"pointer", fontSize:11, fontWeight:700,
+                  background:tab===t?"rgba(245,197,24,.15)":"rgba(255,255,255,.04)",
+                  border:tab===t?"1px solid rgba(245,197,24,.4)":"1px solid rgba(255,255,255,.06)",
+                  color:tab===t?"#f5c518":"#3a4060" }}>{lb}</button>
+            ))}
+          </div>
+        )}
+        {["crop","blur","draw"].includes(tab) && (
+          <div style={{ display:"flex", gap:6, padding:"6px 10px", background:"#050810", borderTop:"1px solid rgba(255,255,255,.04)" }}>
+            {[["crop","✂️ Crop"],["blur","🌫 Blur"],["draw","🖌 Pincel"]].map(([t,lb])=>(
+              <button key={t} onClick={()=>setTab(t)}
+                style={{ flex:1, padding:"6px", borderRadius:7, cursor:"pointer", fontSize:11, fontWeight:700,
+                  background:tab===t?"rgba(200,119,255,.15)":"rgba(255,255,255,.04)",
+                  border:tab===t?"1px solid rgba(200,119,255,.4)":"1px solid rgba(255,255,255,.06)",
+                  color:tab===t?"#c87cff":"#3a4060" }}>{lb}</button>
+            ))}
+          </div>
+        )}
         </div>
       </div>
     </div>
@@ -1804,9 +1895,20 @@ function PhotoEditor({ onSwitch, onHome }) {
 
             {/* LIGHT */}
             {tab==="light" && <>
-              <div style={{ fontSize:8, color:"#00d4ff", letterSpacing:3, marginBottom:10 }}>EFEITOS DE LUZ</div>
+              <div style={{ fontSize:8, color:"#f5c518", letterSpacing:3, marginBottom:8 }}>EFEITOS DE LUZ</div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:4, marginBottom:8 }}>
+                {LIGHT_FX_CATS.map(c=>(
+                  <button key={c} onClick={()=>setLightCat(c)}
+                    style={{ padding:"4px 10px", borderRadius:20, cursor:"pointer", fontSize:9, fontWeight:700,
+                      background:lightCat===c?"rgba(245,197,24,.18)":"rgba(255,255,255,.04)",
+                      border:lightCat===c?"1px solid rgba(245,197,24,.45)":"1px solid rgba(255,255,255,.06)",
+                      color:lightCat===c?"#f5c518":"#3a4060" }}>
+                    {c}
+                  </button>
+                ))}
+              </div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:6 }}>
-                {LIGHT_FX.map(fx=>(
+                {LIGHT_FX.filter(f=>lightCat==="Todos"||f.cat===lightCat||f.id==="none").map(fx=>(
                   <button key={fx.id} onClick={()=>setLightFx(fx.id)} style={{ padding:"10px", borderRadius:8, cursor:"pointer", fontSize:11, fontWeight:700,
                     background:lightFx===fx.id?"rgba(245,197,24,.15)":"rgba(255,255,255,.04)",
                     border:lightFx===fx.id?"1px solid rgba(245,197,24,.5)":"1px solid rgba(255,255,255,.06)",
