@@ -606,7 +606,7 @@ function PhotoEditor({ onSwitch, onHome }) {
     setRemovingBg(true); setBgRemoveProgress("Carregando modelo IA...");
     try {
       // Dynamic import via esm.sh CDN — cached após 1ª vez
-      const { removeBackground } = await import("https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/web/index.js");
+      const { removeBackground } = await import("https://esm.sh/@imgly/background-removal@1.4.5");
       setBgRemoveProgress("Processando imagem...");
       // Convert dataURL → Blob
       const res = await fetch(photo);
@@ -615,7 +615,6 @@ function PhotoEditor({ onSwitch, onHome }) {
         progress: (key, cur, total) => {
           if(total>0) setBgRemoveProgress(`Baixando modelo: ${Math.round(cur/total*100)}%`);
         },
-        publicPath: "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/",
       });
       const url = URL.createObjectURL(resultBlob);
       setPhoto(url);
