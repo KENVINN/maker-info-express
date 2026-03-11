@@ -103,6 +103,19 @@ function HomeScreen({ onSelect }) {
           <div style={{ fontSize:11, color:"#1a3a20", lineHeight:1.6 }}>2, 3 ou 4 fotos em grid<br/>Vários layouts · Export PNG</div>
           <div style={{ marginTop:16, fontSize:10, color:"#00e676", fontWeight:700, letterSpacing:2 }}>ABRIR →</div>
         </button>
+        {/* Criar Post */}
+        <button onClick={() => onSelect("creator")} style={{ flex:"1 1 200px", minHeight:160, borderRadius:16, cursor:"pointer", padding:24,
+          background:"linear-gradient(135deg,#1a0d2e,#120a20)", border:"1px solid rgba(178,79,255,.2)",
+          boxShadow:"0 8px 40px rgba(178,79,255,.08)", textAlign:"left", transition:"transform .15s,box-shadow .15s",
+          position:"relative", overflow:"hidden" }}
+          onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 16px 50px rgba(178,79,255,.18)";}}
+          onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="0 8px 40px rgba(178,79,255,.08)";}}>
+          <div style={{ position:"absolute", top:-20, right:-20, fontSize:80, opacity:.07 }}>✦</div>
+          <div style={{ fontSize:36, marginBottom:12 }}>✦</div>
+          <div style={{ fontSize:18, fontWeight:900, color:"#b24fff", marginBottom:6 }}>Criar Post</div>
+          <div style={{ fontSize:11, color:"#3a2050", lineHeight:1.6 }}>Templates prontos · Foto + preço<br/>Gera post profissional em segundos</div>
+          <div style={{ marginTop:16, fontSize:10, color:"#b24fff", fontWeight:700, letterSpacing:2 }}>ABRIR →</div>
+        </button>
       </div>
       <p style={{ marginTop:32, fontSize:10, color:"#1a2535" }}>Maker Info · Várzea Grande · MT</p>
     </div>
@@ -2360,6 +2373,480 @@ function CollageEditor({ onHome }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   POST CREATOR
+═══════════════════════════════════════════════════════════════════ */
+
+/* ── Canvas helpers ── */
+function _hexRgb(hex){const n=parseInt((hex||"#888").replace("#",""),16)||0;return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}
+function _rR(ctx,x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();}
+function _iCov(ctx,img,x,y,w,h){if(!img)return;const ir=img.width/img.height,cr=w/h;let sw=img.width,sh=img.height,sx=0,sy=0;if(ir>cr){sw=sh*cr;sx=(img.width-sw)/2;}else{sh=sw/cr;sy=(img.height-sh)/2;}ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);}
+function _wT(ctx,text,x,y,maxW,lh,maxL=3){const words=(text||"Produto").split(" ");let line="",lines=[];for(const w of words){const t=line?line+" "+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;}if(line)lines.push(line);lines.slice(0,maxL).forEach((l,i)=>ctx.fillText(l,x,y+i*lh));return y+Math.min(lines.length,maxL)*lh;}
+function _oP(price,disc){const p=parseFloat((price||"").replace(",","."));const d=parseFloat(disc);if(!p||!d||d<=0||d>=100)return null;return(p/(1-d/100)).toFixed(2).replace(".",",");}
+
+/* Template 1 — NEON DARK */
+function drawNeon(ctx,W,H,{img,name,price,discount,cta,accent}){
+  const{r,g,b}=_hexRgb(accent);
+  ctx.fillStyle="#07080f";ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle=`rgba(${r},${g},${b},.07)`;ctx.lineWidth=1;
+  for(let x=0;x<W;x+=W/16){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=H/16){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const g1=ctx.createRadialGradient(W*.72,H*.35,0,W*.72,H*.35,W*.6);
+  g1.addColorStop(0,`rgba(${r},${g},${b},.28)`);g1.addColorStop(1,"transparent");
+  ctx.fillStyle=g1;ctx.fillRect(0,0,W,H);
+  const px=W*.43,py=H*.06,pw=W*.54,ph=H*.74;
+  if(img){
+    ctx.save();ctx.shadowColor=accent;ctx.shadowBlur=W*.04;
+    ctx.strokeStyle=`rgba(${r},${g},${b},.9)`;ctx.lineWidth=W*.003;
+    _rR(ctx,px,py,pw,ph,W*.025);ctx.stroke();ctx.shadowBlur=0;
+    _rR(ctx,px,py,pw,ph,W*.025);ctx.clip();_iCov(ctx,img,px,py,pw,ph);ctx.restore();
+  } else {
+    ctx.save();_rR(ctx,px,py,pw,ph,W*.025);
+    const gph=ctx.createLinearGradient(px,py,px+pw,py+ph);
+    gph.addColorStop(0,`rgba(${r},${g},${b},.12)`);gph.addColorStop(1,`rgba(${r},${g},${b},.04)`);
+    ctx.fillStyle=gph;ctx.fill();ctx.strokeStyle=`rgba(${r},${g},${b},.2)`;ctx.lineWidth=W*.002;ctx.stroke();
+    ctx.fillStyle=`rgba(${r},${g},${b},.3)`;ctx.font=`${W*.07}px Arial`;ctx.textAlign="center";
+    ctx.fillText("📷",px+pw/2,py+ph/2+W*.025);ctx.textAlign="left";ctx.restore();
+  }
+  ctx.fillStyle=`rgba(${r},${g},${b},.18)`;_rR(ctx,W*.055,H*.072,W*.24,H*.044,H*.022);ctx.fill();
+  ctx.fillStyle=accent;ctx.font=`700 ${W*.021}px 'Barlow Condensed',Impact,sans-serif`;
+  ctx.fillText("✦  DESTAQUE",W*.075,H*.103);
+  ctx.fillStyle="#fff";ctx.font=`900 ${W*.095}px 'Barlow Condensed',Impact`;
+  const ny=_wT(ctx,name||"Produto",W*.055,H*.225,W*.37,W*.102,3);
+  const op=_oP(price,discount);
+  if(price){
+    if(op){
+      ctx.fillStyle="rgba(255,255,255,.38)";ctx.font=`400 ${W*.034}px 'Barlow Condensed',Impact`;
+      const om=ctx.measureText(`R$ ${op}`);ctx.fillText(`R$ ${op}`,W*.055,ny+H*.075);
+      ctx.strokeStyle="rgba(255,255,255,.38)";ctx.lineWidth=W*.003;
+      ctx.beginPath();ctx.moveTo(W*.055,ny+H*.071);ctx.lineTo(W*.055+om.width,ny+H*.071);ctx.stroke();
+    }
+    ctx.fillStyle=accent;ctx.font=`900 ${W*.12}px 'Barlow Condensed',Impact`;
+    ctx.fillText(`R$ ${price}`,W*.055,ny+(op?H*.16:H*.11));
+  }
+  const cy=H*.855,cw=W*.32,ch=H*.074;
+  ctx.fillStyle=accent;_rR(ctx,W*.055,cy,cw,ch,ch/2);ctx.fill();
+  ctx.fillStyle="#000";ctx.font=`800 ${W*.031}px 'Barlow Condensed',Impact`;ctx.textAlign="center";
+  ctx.fillText(cta||"Ver mais",W*.055+cw/2,cy+ch*.66);ctx.textAlign="left";
+  ctx.fillStyle=`rgba(${r},${g},${b},.6)`;ctx.fillRect(0,H*.995,W,H*.005);
+}
+
+/* Template 2 — SPLIT BOLD */
+function drawSplit(ctx,W,H,{img,name,price,discount,cta,accent}){
+  const{r,g,b}=_hexRgb(accent);
+  ctx.fillStyle=accent;ctx.fillRect(0,0,W*.5,H);
+  ctx.fillStyle="#111";ctx.fillRect(W*.5,0,W*.5,H);
+  if(img){ctx.save();ctx.beginPath();ctx.rect(W*.5,0,W*.5,H);ctx.clip();_iCov(ctx,img,W*.5,0,W*.5,H);ctx.restore();}
+  ctx.fillStyle=accent;
+  ctx.beginPath();ctx.moveTo(W*.46,0);ctx.lineTo(W*.56,0);ctx.lineTo(W*.44,H);ctx.lineTo(W*.34,H);ctx.closePath();ctx.fill();
+  const lo=ctx.createLinearGradient(0,0,W*.5,0);lo.addColorStop(0,"rgba(0,0,0,.5)");lo.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=lo;ctx.fillRect(0,0,W*.5,H);
+  ctx.fillStyle="rgba(255,255,255,.22)";_rR(ctx,W*.055,H*.055,W*.2,H*.042,H*.021);ctx.fill();
+  ctx.fillStyle="#fff";ctx.font=`700 ${W*.021}px 'Barlow Condensed',Impact`;ctx.fillText("OFERTA",W*.078,H*.083);
+  ctx.fillStyle="#fff";ctx.font=`900 ${W*.088}px 'Barlow Condensed',Impact`;
+  const ny=_wT(ctx,name||"Produto",W*.055,H*.21,W*.38,W*.095,4);
+  ctx.strokeStyle="rgba(255,255,255,.3)";ctx.lineWidth=W*.003;
+  ctx.beginPath();ctx.moveTo(W*.055,ny+H*.034);ctx.lineTo(W*.37,ny+H*.034);ctx.stroke();
+  const op=_oP(price,discount);
+  if(price){
+    if(op){ctx.fillStyle="rgba(255,255,255,.5)";ctx.font=`400 ${W*.032}px 'Barlow Condensed',Impact`;ctx.fillText(`De R$ ${op}`,W*.055,ny+H*.085);}
+    ctx.fillStyle="#fff";ctx.font=`900 ${W*.115}px 'Barlow Condensed',Impact`;
+    ctx.fillText(`R$ ${price}`,W*.055,ny+(op?H*.175:H*.12));
+  }
+  const cy=H*.85,cw=W*.32,ch=H*.076;
+  ctx.fillStyle="#fff";_rR(ctx,W*.055,cy,cw,ch,ch/2);ctx.fill();
+  ctx.fillStyle=accent;ctx.font=`800 ${W*.032}px 'Barlow Condensed',Impact`;ctx.textAlign="center";
+  ctx.fillText(cta||"Ver mais",W*.055+cw/2,cy+ch*.67);ctx.textAlign="left";
+}
+
+/* Template 3 — EDITORIAL */
+function drawEditorial(ctx,W,H,{img,name,price,discount,cta,accent}){
+  const{r,g,b}=_hexRgb(accent);
+  if(img){_iCov(ctx,img,0,0,W,H);}
+  else{const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,"#1a1510");g.addColorStop(1,"#0a0807");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+  const tg=ctx.createLinearGradient(0,0,0,H*.18);tg.addColorStop(0,"rgba(0,0,0,.65)");tg.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=tg;ctx.fillRect(0,0,W,H);
+  const bg=ctx.createLinearGradient(0,H*.28,0,H);bg.addColorStop(0,"rgba(0,0,0,0)");bg.addColorStop(.5,"rgba(0,0,0,.72)");bg.addColorStop(1,"rgba(0,0,0,.95)");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=accent;ctx.fillRect(0,0,W*.26,H*.007);
+  ctx.fillStyle="rgba(255,255,255,.5)";ctx.font=`400 ${W*.018}px Georgia,serif`;ctx.fillText("PROMOÇÃO ESPECIAL",W*.055,H*.05);
+  ctx.fillStyle="#fff";ctx.font=`900 ${W*.108}px 'Barlow Condensed',Impact`;
+  const ny=_wT(ctx,name||"Produto",W*.055,H*.68,W*.88,W*.115,3);
+  const op=_oP(price,discount);
+  if(price){
+    if(op){ctx.fillStyle="rgba(255,255,255,.42)";ctx.font=`300 ${W*.032}px Georgia,serif`;ctx.fillText(`era R$ ${op}`,W*.055,ny+H*.065);}
+    ctx.fillStyle=accent;ctx.font=`900 ${W*.09}px 'Barlow Condensed',Impact`;
+    ctx.fillText(`R$ ${price}`,W*.055,ny+(op?H*.14:H*.085));
+  }
+  const cw=W*.34,ch=H*.065,cx=W-W*.055-cw,cy=H-H*.055-ch;
+  ctx.fillStyle=accent;_rR(ctx,cx,cy,cw,ch,ch/2);ctx.fill();
+  ctx.fillStyle="#000";ctx.font=`700 ${W*.028}px 'Barlow Condensed',Impact`;ctx.textAlign="center";
+  ctx.fillText(cta||"Ver mais",cx+cw/2,cy+ch*.69);ctx.textAlign="left";
+}
+
+/* Template 4 — PROMO FIRE */
+function drawPromo(ctx,W,H,{img,name,price,discount,cta,accent}){
+  const{r,g,b}=_hexRgb(accent);
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,`rgb(${Math.min(r+20,255)},${Math.max(g-30,0)},${Math.max(b-30,0)})`);
+  bg.addColorStop(1,`rgb(${Math.max(r-60,0)},${Math.max(g-80,0)},${Math.max(b-80,0)})`);
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="rgba(255,255,255,.06)";ctx.beginPath();ctx.arc(W*.85,H*.18,W*.28,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.04)";ctx.beginPath();ctx.arc(W*.1,H*.82,W*.2,0,Math.PI*2);ctx.fill();
+  const ps=W*.6,px=(W-ps)/2,py=H*.04;
+  if(img){
+    ctx.save();ctx.beginPath();ctx.arc(W/2,py+ps/2,ps/2,0,Math.PI*2);ctx.clip();_iCov(ctx,img,px,py,ps,ps);ctx.restore();
+    ctx.strokeStyle="rgba(255,255,255,.35)";ctx.lineWidth=W*.007;ctx.beginPath();ctx.arc(W/2,py+ps/2,ps/2+W*.007,0,Math.PI*2);ctx.stroke();
+  } else {
+    ctx.fillStyle="rgba(255,255,255,.1)";ctx.beginPath();ctx.arc(W/2,py+ps/2,ps/2,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,.2)";ctx.lineWidth=W*.004;ctx.beginPath();ctx.arc(W/2,py+ps/2,ps/2,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle="rgba(255,255,255,.25)";ctx.font=`${W*.07}px Arial`;ctx.textAlign="center";ctx.fillText("📷",W/2,py+ps/2+W*.025);ctx.textAlign="left";
+  }
+  if(discount){
+    ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(W*.82,H*.07,W*.095,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=accent;ctx.font=`900 ${W*.045}px 'Barlow Condensed',Impact`;ctx.textAlign="center";
+    ctx.fillText(`-${discount}%`,W*.82,H*.063);ctx.font=`700 ${W*.025}px 'Barlow Condensed',Impact`;ctx.fillText("OFF",W*.82,H*.09);ctx.textAlign="left";
+  }
+  ctx.fillStyle="#fff";ctx.font=`900 ${W*.1}px 'Barlow Condensed',Impact`;ctx.textAlign="center";
+  _wT(ctx,name||"Produto",0,H*.76,W,W*.106,2);
+  const op=_oP(price,discount);
+  if(price){
+    if(op){
+      ctx.fillStyle="rgba(255,255,255,.45)";ctx.font=`400 ${W*.033}px 'Barlow Condensed',Impact`;
+      const om=ctx.measureText(`R$ ${op}`);ctx.fillText(`R$ ${op}`,W/2,H*.86);
+      ctx.strokeStyle="rgba(255,255,255,.45)";ctx.lineWidth=W*.003;
+      ctx.beginPath();ctx.moveTo(W/2-om.width/2,H*.857);ctx.lineTo(W/2+om.width/2,H*.857);ctx.stroke();
+    }
+    ctx.fillStyle="#fff";ctx.font=`900 ${W*.12}px 'Barlow Condensed',Impact`;ctx.fillText(`R$ ${price}`,W/2,H*.86+(op?H*.1:H*.06));
+  }
+  ctx.fillStyle="rgba(255,255,255,.65)";ctx.font=`600 ${W*.026}px 'Barlow Condensed',Impact`;ctx.fillText(`↗ ${cta||"Peça agora"}`,W/2,H*.975);ctx.textAlign="left";
+}
+
+/* Template 5 — MINIMAL */
+function drawMinimal(ctx,W,H,{img,name,price,discount,cta,accent}){
+  ctx.fillStyle="#f8f7f4";ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="rgba(0,0,0,.04)";ctx.lineWidth=1;
+  for(let x=0;x<=W;x+=W/12){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<=H;y+=H/12){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.fillStyle=accent;ctx.fillRect(0,0,W,H*.006);
+  if(img){ctx.save();_rR(ctx,W*.09,H*.07,W*.82,H*.5,W*.018);ctx.clip();_iCov(ctx,img,W*.09,H*.07,W*.82,H*.5);ctx.restore();}
+  else{ctx.fillStyle="rgba(0,0,0,.07)";_rR(ctx,W*.09,H*.07,W*.82,H*.5,W*.018);ctx.fill();ctx.fillStyle="rgba(0,0,0,.15)";ctx.font=`${W*.06}px Arial`;ctx.textAlign="center";ctx.fillText("📷",W/2,H*.34);ctx.textAlign="left";}
+  ctx.fillStyle="#0a0a0a";ctx.font=`300 ${W*.065}px Georgia,serif`;ctx.textAlign="center";
+  _wT(ctx,name||"Produto",0,H*.67,W*.78,W*.072,2);ctx.textAlign="left";
+  ctx.strokeStyle="rgba(0,0,0,.1)";ctx.lineWidth=W*.002;ctx.beginPath();ctx.moveTo(W*.25,H*.79);ctx.lineTo(W*.75,H*.79);ctx.stroke();
+  const op=_oP(price,discount);
+  if(price){
+    ctx.textAlign="center";
+    if(op){
+      ctx.fillStyle="#bbb";ctx.font=`300 ${W*.028}px Georgia,serif`;
+      const om=ctx.measureText(`R$ ${op}`);ctx.fillText(`R$ ${op}`,W/2,H*.77);
+      ctx.strokeStyle="#bbb";ctx.lineWidth=W*.002;ctx.beginPath();ctx.moveTo(W/2-om.width/2,H*.768);ctx.lineTo(W/2+om.width/2,H*.768);ctx.stroke();
+    }
+    ctx.fillStyle=accent;ctx.font=`700 ${W*.085}px 'Barlow Condensed',Impact`;ctx.fillText(`R$ ${price}`,W/2,H*.77+(op?H*.09:H*.055));ctx.textAlign="left";
+  }
+  const cw=W*.48,ch=H*.065,cx=(W-cw)/2,cy=H*.9;
+  ctx.strokeStyle=accent;ctx.lineWidth=W*.003;_rR(ctx,cx,cy,cw,ch,ch/2);ctx.stroke();
+  ctx.fillStyle=accent;ctx.font=`600 ${W*.027}px 'Barlow Condensed',Impact`;ctx.textAlign="center";
+  ctx.fillText(cta||"Ver mais",W/2,cy+ch*.68);ctx.textAlign="left";
+}
+
+/* Template 6 — GLASS PREMIUM */
+function drawGlass(ctx,W,H,{img,name,price,discount,cta,accent}){
+  const{r,g,b}=_hexRgb(accent);
+  ctx.fillStyle="#090d1a";ctx.fillRect(0,0,W,H);
+  [[W*.15,H*.25,W*.35],[W*.85,H*.75,W*.3],[W*.7,H*.2,W*.22]].forEach(([cx,cy,rad])=>{
+    const gb=ctx.createRadialGradient(cx,cy,0,cx,cy,rad);gb.addColorStop(0,`rgba(${r},${g},${b},.1)`);gb.addColorStop(1,"transparent");ctx.fillStyle=gb;ctx.fillRect(0,0,W,H);
+  });
+  const ph_=H*.58;
+  if(img){
+    ctx.save();_rR(ctx,W*.04,H*.03,W*.92,ph_,W*.02);ctx.clip();_iCov(ctx,img,W*.04,H*.03,W*.92,ph_);
+    const ov=ctx.createLinearGradient(0,H*.03,0,H*.03+ph_);ov.addColorStop(.5,"rgba(9,13,26,0)");ov.addColorStop(1,"rgba(9,13,26,.6)");ctx.fillStyle=ov;ctx.fillRect(W*.04,H*.03,W*.92,ph_);ctx.restore();
+    ctx.shadowColor=accent;ctx.shadowBlur=W*.025;ctx.strokeStyle=`rgba(${r},${g},${b},.35)`;ctx.lineWidth=W*.002;
+    _rR(ctx,W*.04,H*.03,W*.92,ph_,W*.02);ctx.stroke();ctx.shadowBlur=0;
+  } else {
+    ctx.fillStyle=`rgba(${r},${g},${b},.07)`;_rR(ctx,W*.04,H*.03,W*.92,ph_,W*.02);ctx.fill();
+    ctx.strokeStyle=`rgba(${r},${g},${b},.2)`;ctx.lineWidth=W*.002;_rR(ctx,W*.04,H*.03,W*.92,ph_,W*.02);ctx.stroke();
+    ctx.fillStyle=`rgba(${r},${g},${b},.3)`;ctx.font=`${W*.07}px Arial`;ctx.textAlign="center";ctx.fillText("📷",W/2,H*.03+ph_/2+W*.025);ctx.textAlign="left";
+  }
+  const gx=W*.04,gy=H*.63,gw=W*.92,gh=H*.33;
+  ctx.fillStyle="rgba(255,255,255,.05)";_rR(ctx,gx,gy,gw,gh,W*.02);ctx.fill();
+  ctx.strokeStyle=`rgba(${r},${g},${b},.2)`;ctx.lineWidth=W*.002;_rR(ctx,gx,gy,gw,gh,W*.02);ctx.stroke();
+  const shine=ctx.createLinearGradient(gx,gy,gx,gy+gh*.12);shine.addColorStop(0,"rgba(255,255,255,.07)");shine.addColorStop(1,"transparent");ctx.fillStyle=shine;_rR(ctx,gx,gy,gw,gh*.12,W*.02);ctx.fill();
+  ctx.fillStyle="#fff";ctx.font=`700 ${W*.072}px 'Barlow Condensed',Impact`;
+  _wT(ctx,name||"Produto",gx+W*.04,gy+H*.075,gw-W*.08,W*.078,2);
+  const op=_oP(price,discount);
+  if(price){
+    if(op){ctx.fillStyle="rgba(255,255,255,.35)";ctx.font=`400 ${W*.028}px 'Barlow Condensed',Impact`;ctx.fillText(`era R$ ${op}`,gx+W*.04,gy+H*.16);}
+    ctx.fillStyle=accent;ctx.font=`900 ${W*.088}px 'Barlow Condensed',Impact`;
+    ctx.fillText(`R$ ${price}`,gx+W*.04,gy+H*.16+(op?H*.09:H*.04));
+  }
+  const cw=W*.35,ch=H*.057,cx2=gx+gw-cw-W*.04,cy2=gy+gh-ch-H*.04;
+  ctx.fillStyle=accent;_rR(ctx,cx2,cy2,cw,ch,ch/2);ctx.fill();
+  ctx.fillStyle="#000";ctx.font=`700 ${W*.027}px 'Barlow Condensed',Impact`;ctx.textAlign="center";
+  ctx.fillText(cta||"Ver mais",cx2+cw/2,cy2+ch*.69);ctx.textAlign="left";
+}
+
+const CREATOR_TPLS=[
+  {id:"neon",     label:"Neon Dark",     emoji:"🔮",defaultAccent:"#b24fff",tags:["tech","todos"],draw:drawNeon},
+  {id:"split",    label:"Split Bold",    emoji:"⚡",defaultAccent:"#ff3344",tags:["todos"],draw:drawSplit},
+  {id:"editorial",label:"Editorial",     emoji:"🎬",defaultAccent:"#d4a84b",tags:["moda","beleza","todos"],draw:drawEditorial},
+  {id:"promo",    label:"Promo Fire",    emoji:"🔥",defaultAccent:"#ff5500",tags:["food","todos"],draw:drawPromo},
+  {id:"minimal",  label:"Minimal",       emoji:"◻", defaultAccent:"#111111",tags:["moda","beleza","tech"],draw:drawMinimal},
+  {id:"glass",    label:"Glass Premium", emoji:"💎",defaultAccent:"#00c8ff",tags:["tech","todos"],draw:drawGlass},
+];
+const CREATOR_FILTERS=["todos","food","beleza","tech","moda"];
+const CREATOR_ACCENTS=["#b24fff","#ff3344","#00c8ff","#ff5500","#f5c518","#00c896","#ff3366","#4488ff","#ffffff","#111111"];
+
+function PostCreator({onHome}){
+  const isMobile=useMobile();
+  const[step,setStep]=useState("gallery");
+  const[tplId,setTplId]=useState("neon");
+  const[filter,setFilter]=useState("todos");
+  const[photo,setPhoto]=useState(null);
+  const[photoImg,setPhotoImg]=useState(null);
+  const[fields,setFields]=useState({name:"Produto Incrível",price:"299,90",discount:"30",cta:"Comprar agora",accent:"#b24fff"});
+  const[saving,setSaving]=useState(false);
+  const[mTab,setMTab]=useState("foto");
+  const canvasRef=useRef(null);
+  const thumbRefs=useRef({});
+  const sf=(k,v)=>setFields(p=>({...p,[k]:v}));
+
+  useEffect(()=>{if(!photo){setPhotoImg(null);return;}const img=new Image();img.onload=()=>setPhotoImg(img);img.src=photo;},[photo]);
+
+  const drawMain=useCallback(()=>{
+    if(!canvasRef.current)return;
+    const tpl=CREATOR_TPLS.find(t=>t.id===tplId);if(!tpl)return;
+    tpl.draw(canvasRef.current.getContext("2d"),1080,1080,{img:photoImg,...fields});
+  },[tplId,photoImg,fields]);
+
+  useEffect(()=>{document.fonts.ready.then(drawMain);},[drawMain]);
+
+  const drawThumbs=useCallback(()=>{
+    CREATOR_TPLS.forEach(tpl=>{
+      const ref=thumbRefs.current[tpl.id];if(!ref)return;
+      tpl.draw(ref.getContext("2d"),300,300,{img:photoImg,name:fields.name,price:fields.price,discount:fields.discount,cta:fields.cta,accent:tpl.defaultAccent});
+    });
+  },[photoImg,fields.name,fields.price,fields.discount]);
+
+  useEffect(()=>{const id=requestAnimationFrame(()=>requestAnimationFrame(drawThumbs));return()=>cancelAnimationFrame(id);},[drawThumbs,step]);
+
+  const handleExport=async()=>{
+    if(!canvasRef.current)return;setSaving(true);
+    await new Promise(r=>setTimeout(r,60));
+    const a=document.createElement("a");a.download=`maker-post-${Date.now()}.png`;a.href=canvasRef.current.toDataURL("image/png");a.click();
+    setSaving(false);toast("Post exportado!","success");
+  };
+
+  const pickTpl=id=>{const t=CREATOR_TPLS.find(x=>x.id===id);setTplId(id);if(t)sf("accent",t.defaultAccent);setStep("editor");};
+  const onPhotoFile=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>setPhoto(ev.target.result);r.readAsDataURL(f);};
+
+  const filteredTpls=CREATOR_TPLS.filter(t=>filter==="todos"||t.tags.includes(filter));
+  const curTpl=CREATOR_TPLS.find(t=>t.id===tplId);
+  const cvSize=isMobile?Math.min(window.innerWidth,430):Math.min(window.innerHeight-200,600);
+
+  const INP={width:"100%",padding:"10px 13px",borderRadius:9,background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",color:"#fff",fontSize:14,outline:"none",boxSizing:"border-box",fontFamily:"inherit",transition:"border-color .15s"};
+  const LBL={fontSize:10,color:"rgba(255,255,255,.38)",letterSpacing:3,fontWeight:700,display:"block",marginBottom:7};
+
+  /* ── GALLERY ── */
+  if(step==="gallery") return (
+    <div style={{minHeight:"100dvh",background:"#09090f",color:"#fff",fontFamily:"'Segoe UI',system-ui,sans-serif"}}>
+      <div style={{position:"sticky",top:0,zIndex:50,background:"rgba(9,9,15,.96)",backdropFilter:"blur(16px)",borderBottom:"1px solid rgba(255,255,255,.06)",padding:"0 24px",height:64,display:"flex",alignItems:"center",gap:16}}>
+        <button onClick={onHome} style={{padding:"8px 16px",borderRadius:9,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"rgba(255,255,255,.6)",fontSize:13,cursor:"pointer",fontWeight:700}}>← Voltar</button>
+        <div style={{flex:1}}>
+          <div style={{fontSize:17,fontWeight:800,letterSpacing:"-.4px"}}>✦ Criar Post</div>
+          <div style={{fontSize:11,color:"rgba(255,255,255,.3)",marginTop:1}}>Escolha um template e personalize</div>
+        </div>
+      </div>
+      <div style={{maxWidth:1080,margin:"0 auto",padding:"32px 24px 48px"}}>
+        <div style={{display:"flex",gap:8,marginBottom:32,flexWrap:"wrap",alignItems:"center"}}>
+          <span style={{fontSize:10,color:"rgba(255,255,255,.28)",fontWeight:700,letterSpacing:3,marginRight:4}}>FILTRAR</span>
+          {CREATOR_FILTERS.map(f=>(
+            <button key={f} onClick={()=>setFilter(f)} style={{padding:"8px 22px",borderRadius:999,fontSize:13,fontWeight:700,cursor:"pointer",
+              background:filter===f?"#fff":"rgba(255,255,255,.05)",
+              border:filter===f?"1px solid #fff":"1px solid rgba(255,255,255,.08)",
+              color:filter===f?"#09090f":"rgba(255,255,255,.5)",textTransform:"capitalize",transition:"all .15s"}}>
+              {f}
+            </button>
+          ))}
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:isMobile?"repeat(2,1fr)":"repeat(3,1fr)",gap:isMobile?12:20}}>
+          {filteredTpls.map(tpl=>(
+            <div key={tpl.id} onClick={()=>pickTpl(tpl.id)}
+              style={{borderRadius:16,overflow:"hidden",cursor:"pointer",border:"1.5px solid rgba(255,255,255,.07)",background:"rgba(255,255,255,.02)",transition:"transform .18s,box-shadow .18s,border-color .18s"}}
+              onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-5px)";e.currentTarget.style.boxShadow="0 20px 50px rgba(0,0,0,.7)";e.currentTarget.style.borderColor="rgba(255,255,255,.22)";}}
+              onMouseLeave={e=>{e.currentTarget.style.transform="";e.currentTarget.style.boxShadow="";e.currentTarget.style.borderColor="rgba(255,255,255,.07)";}}>
+              <div style={{position:"relative"}}>
+                <canvas ref={el=>{if(el)thumbRefs.current[tpl.id]=el;}} width={300} height={300} style={{width:"100%",aspectRatio:"1/1",display:"block"}}/>
+                <div style={{position:"absolute",top:10,left:10,padding:"4px 12px",borderRadius:7,background:"rgba(0,0,0,.6)",backdropFilter:"blur(8px)",fontSize:11,fontWeight:700,color:"rgba(255,255,255,.85)"}}>
+                  {tpl.emoji} {tpl.label}
+                </div>
+              </div>
+              <div style={{padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{fontSize:11,color:"rgba(255,255,255,.35)",textTransform:"capitalize"}}>{tpl.tags.filter(t=>t!=="todos").join(" · ")||"universal"}</div>
+                <button style={{padding:"5px 16px",borderRadius:7,background:"rgba(255,255,255,.08)",border:"1px solid rgba(255,255,255,.12)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>Usar →</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ── EDITOR MOBILE ── */
+  if(isMobile) return (
+    <div style={{height:"100dvh",background:"#09090f",color:"#fff",display:"flex",flexDirection:"column",fontFamily:"'Segoe UI',system-ui,sans-serif",overflow:"hidden",WebkitTapHighlightColor:"transparent"}}>
+      <div style={{padding:"10px 14px",background:"rgba(9,9,15,.98)",borderBottom:"1px solid rgba(255,255,255,.06)",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+        <button onClick={()=>setStep("gallery")} style={{padding:"7px 13px",borderRadius:8,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"rgba(255,255,255,.55)",fontSize:11,cursor:"pointer",fontWeight:700}}>← Templates</button>
+        <div style={{flex:1,fontSize:13,fontWeight:800}}>{curTpl?.emoji} {curTpl?.label}</div>
+        <button onClick={handleExport} disabled={saving} style={{padding:"8px 18px",borderRadius:9,background:saving?"rgba(255,255,255,.06)":"linear-gradient(135deg,#7c3aed,#4338ca)",border:"none",color:"#fff",fontSize:12,fontWeight:800,cursor:saving?"default":"pointer"}}>
+          {saving?"⏳":"⬇️ PNG"}
+        </button>
+      </div>
+      <div style={{flexShrink:0,background:"#000",display:"flex",justifyContent:"center",alignItems:"center",padding:"10px 0"}}>
+        <canvas ref={canvasRef} width={1080} height={1080} style={{width:cvSize,height:cvSize,borderRadius:12,boxShadow:"0 10px 40px rgba(0,0,0,.9)",display:"block"}}/>
+      </div>
+      <div style={{display:"flex",borderBottom:"1px solid rgba(255,255,255,.06)",background:"rgba(9,9,15,.98)",flexShrink:0}}>
+        {[["foto","📷"],["texto","✏️"],["cor","🎨"],["layout","🎭"]].map(([t,ic])=>(
+          <button key={t} onClick={()=>setMTab(t)} style={{flex:1,padding:"9px 0",background:"none",border:"none",color:mTab===t?"#fff":"rgba(255,255,255,.3)",fontSize:11,fontWeight:700,cursor:"pointer",borderBottom:mTab===t?"2px solid #fff":"2px solid transparent",textTransform:"capitalize",display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+            <span style={{fontSize:16}}>{ic}</span><span style={{fontSize:9}}>{t}</span>
+          </button>
+        ))}
+      </div>
+      <div style={{flex:1,overflowY:"auto"}}>
+        {mTab==="foto"&&(
+          <div style={{padding:16}}>
+            <label style={LBL}>FOTO DO PRODUTO</label>
+            <label style={{display:"block",aspectRatio:"1/1",borderRadius:12,border:photoImg?"2px solid rgba(255,255,255,.15)":"2px dashed rgba(255,255,255,.12)",cursor:"pointer",overflow:"hidden",background:"rgba(255,255,255,.025)",marginBottom:10}}>
+              {photoImg?<img src={photo} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>:
+                <div style={{width:"100%",height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10,minHeight:180}}>
+                  <div style={{fontSize:44}}>📷</div>
+                  <div style={{fontSize:13,color:"rgba(255,255,255,.4)",fontWeight:600}}>Toque para adicionar</div>
+                </div>}
+              <input type="file" accept="image/*" style={{display:"none"}} onChange={onPhotoFile}/>
+            </label>
+            {photoImg&&<button onClick={()=>setPhoto(null)} style={{width:"100%",padding:9,borderRadius:9,background:"rgba(255,80,80,.08)",border:"1px solid rgba(255,80,80,.18)",color:"rgba(255,140,140,.8)",fontSize:12,cursor:"pointer",fontWeight:700}}>🗑 Remover foto</button>}
+          </div>
+        )}
+        {mTab==="texto"&&(
+          <div style={{padding:16,display:"flex",flexDirection:"column",gap:14}}>
+            {[{k:"name",lb:"Nome do produto",ph:"Ex: iPhone 15 Pro"},{k:"price",lb:"Preço (R$)",ph:"Ex: 299,90"},{k:"discount",lb:"Desconto (%)",ph:"Ex: 30"},{k:"cta",lb:"Texto do botão",ph:"Ex: Comprar agora"}].map(({k,lb,ph})=>(
+              <div key={k}>
+                <label style={LBL}>{lb.toUpperCase()}</label>
+                <input value={fields[k]} onChange={e=>sf(k,e.target.value)} placeholder={ph}
+                  style={{...INP,fontSize:15}} onFocus={e=>e.target.style.borderColor="rgba(255,255,255,.3)"} onBlur={e=>e.target.style.borderColor="rgba(255,255,255,.1)"}/>
+              </div>
+            ))}
+          </div>
+        )}
+        {mTab==="cor"&&(
+          <div style={{padding:16}}>
+            <label style={LBL}>COR DE DESTAQUE</label>
+            <div style={{display:"flex",flexWrap:"wrap",gap:10,marginBottom:16}}>
+              {CREATOR_ACCENTS.map(c=>(
+                <div key={c} onClick={()=>sf("accent",c)} style={{width:44,height:44,borderRadius:10,background:c,cursor:"pointer",border:fields.accent===c?"3px solid #fff":"3px solid transparent",boxShadow:fields.accent===c?`0 0 18px ${c}`:"none",transition:"all .15s"}}/>
+              ))}
+            </div>
+            <label style={LBL}>HEX PERSONALIZADO</label>
+            <div style={{display:"flex",gap:10,alignItems:"center"}}>
+              <div style={{width:44,height:44,borderRadius:10,background:fields.accent,border:"1px solid rgba(255,255,255,.15)",flexShrink:0}}/>
+              <input value={fields.accent} onChange={e=>sf("accent",e.target.value)} placeholder="#b24fff" style={{...INP,fontFamily:"monospace"}} onFocus={e=>e.target.style.borderColor="rgba(255,255,255,.3)"} onBlur={e=>e.target.style.borderColor="rgba(255,255,255,.1)"}/>
+            </div>
+          </div>
+        )}
+        {mTab==="layout"&&(
+          <div style={{padding:16,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            {CREATOR_TPLS.map(tpl=>(
+              <div key={tpl.id} onClick={()=>{setTplId(tpl.id);sf("accent",tpl.defaultAccent);setMTab("foto");}}
+                style={{borderRadius:12,overflow:"hidden",cursor:"pointer",border:tplId===tpl.id?"2px solid rgba(255,255,255,.9)":"2px solid rgba(255,255,255,.08)"}}>
+                <canvas ref={el=>{if(el)thumbRefs.current[tpl.id]=el;}} width={300} height={300} style={{width:"100%",aspectRatio:"1/1",display:"block"}}/>
+                <div style={{padding:"8px 10px",fontSize:11,fontWeight:700,textAlign:"center",color:tplId===tpl.id?"#fff":"rgba(255,255,255,.5)"}}>{tpl.emoji} {tpl.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  /* ── EDITOR DESKTOP ── */
+  return (
+    <div style={{height:"100vh",background:"#09090f",color:"#fff",display:"flex",flexDirection:"column",fontFamily:"'Segoe UI',system-ui,sans-serif",overflow:"hidden"}}>
+      <div style={{height:60,background:"rgba(9,9,15,.98)",borderBottom:"1px solid rgba(255,255,255,.06)",display:"flex",alignItems:"center",gap:16,padding:"0 24px",flexShrink:0}}>
+        <button onClick={()=>setStep("gallery")} style={{padding:"8px 18px",borderRadius:9,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.1)",color:"rgba(255,255,255,.55)",fontSize:13,cursor:"pointer",fontWeight:700}}
+          onMouseEnter={e=>e.currentTarget.style.borderColor="rgba(255,255,255,.3)"}
+          onMouseLeave={e=>e.currentTarget.style.borderColor="rgba(255,255,255,.1)"}>
+          ← Templates
+        </button>
+        <div style={{width:1,height:28,background:"rgba(255,255,255,.08)"}}/>
+        <div style={{fontSize:15,fontWeight:800}}>{curTpl?.emoji} {curTpl?.label}</div>
+        <div style={{flex:1}}/>
+        <button onClick={handleExport} disabled={saving}
+          style={{padding:"10px 32px",borderRadius:10,background:saving?"rgba(255,255,255,.06)":"linear-gradient(135deg,#7c3aed,#4338ca)",border:"none",color:"#fff",fontSize:14,fontWeight:800,cursor:saving?"default":"pointer",letterSpacing:"-.2px"}}>
+          {saving?"Exportando...":"⬇️  Exportar PNG"}
+        </button>
+      </div>
+      <div style={{flex:1,display:"flex",overflow:"hidden"}}>
+        {/* LEFT PANEL */}
+        <div style={{width:310,borderRight:"1px solid rgba(255,255,255,.05)",overflowY:"auto",flexShrink:0,background:"rgba(255,255,255,.012)"}}>
+          <div style={{padding:"22px 20px 16px"}}>
+            <label style={LBL}>FOTO DO PRODUTO</label>
+            <label style={{display:"block",width:"100%",aspectRatio:"1/1",borderRadius:12,border:photoImg?"2px solid rgba(255,255,255,.15)":"2px dashed rgba(255,255,255,.1)",cursor:"pointer",overflow:"hidden",background:"rgba(255,255,255,.025)",transition:"border-color .15s"}}
+              onMouseEnter={e=>e.currentTarget.style.borderColor=photoImg?"rgba(255,255,255,.3)":"rgba(255,255,255,.2)"}
+              onMouseLeave={e=>e.currentTarget.style.borderColor=photoImg?"rgba(255,255,255,.15)":"rgba(255,255,255,.1)"}>
+              {photoImg
+                ?<img src={photo} style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
+                :<div style={{width:"100%",height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10,minHeight:200}}>
+                  <div style={{fontSize:40}}>📷</div>
+                  <div style={{fontSize:13,color:"rgba(255,255,255,.32)",fontWeight:600,textAlign:"center",lineHeight:1.5}}>Clique para adicionar<br/>foto do produto</div>
+                  <div style={{fontSize:10,color:"rgba(255,255,255,.18)"}}>PNG, JPG, WEBP</div>
+                </div>}
+              <input type="file" accept="image/*" style={{display:"none"}} onChange={onPhotoFile}/>
+            </label>
+            {photoImg&&<button onClick={()=>setPhoto(null)} style={{width:"100%",marginTop:8,padding:7,borderRadius:9,background:"rgba(255,80,80,.07)",border:"1px solid rgba(255,80,80,.15)",color:"rgba(255,140,140,.7)",fontSize:11,cursor:"pointer",fontWeight:700}}>🗑 Remover foto</button>}
+          </div>
+          <div style={{height:1,background:"rgba(255,255,255,.05)",margin:"0 20px"}}/>
+          <div style={{padding:"16px 20px",display:"flex",flexDirection:"column",gap:13}}>
+            <label style={LBL}>CONTEÚDO</label>
+            {[{k:"name",lb:"Nome do produto",ph:"Ex: iPhone 15 Pro Max"},{k:"price",lb:"Preço (R$)",ph:"Ex: 4.499,00"},{k:"discount",lb:"Desconto (%)",ph:"Ex: 20"},{k:"cta",lb:"Botão de ação",ph:"Ex: Comprar agora"}].map(({k,lb,ph})=>(
+              <div key={k}>
+                <div style={{fontSize:11,color:"rgba(255,255,255,.35)",marginBottom:5,fontWeight:600}}>{lb}</div>
+                <input value={fields[k]} onChange={e=>sf(k,e.target.value)} placeholder={ph}
+                  style={INP} onFocus={e=>e.target.style.borderColor="rgba(255,255,255,.28)"} onBlur={e=>e.target.style.borderColor="rgba(255,255,255,.1)"}/>
+              </div>
+            ))}
+          </div>
+          <div style={{height:1,background:"rgba(255,255,255,.05)",margin:"0 20px"}}/>
+          <div style={{padding:"16px 20px 28px"}}>
+            <label style={LBL}>COR DE DESTAQUE</label>
+            <div style={{display:"flex",flexWrap:"wrap",gap:9,marginBottom:12}}>
+              {CREATOR_ACCENTS.map(c=>(
+                <div key={c} onClick={()=>sf("accent",c)} style={{width:34,height:34,borderRadius:9,background:c,cursor:"pointer",border:fields.accent===c?"3px solid #fff":"3px solid transparent",boxShadow:fields.accent===c?`0 0 14px ${c}`:"none",transition:"all .15s"}}/>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <div style={{width:36,height:36,borderRadius:9,background:fields.accent,border:"1px solid rgba(255,255,255,.15)",flexShrink:0}}/>
+              <input value={fields.accent} onChange={e=>sf("accent",e.target.value)} placeholder="#b24fff"
+                style={{...INP,fontFamily:"monospace",flex:1}} onFocus={e=>e.target.style.borderColor="rgba(255,255,255,.28)"} onBlur={e=>e.target.style.borderColor="rgba(255,255,255,.1)"}/>
+            </div>
+          </div>
+        </div>
+        {/* CANVAS AREA */}
+        <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#050507",gap:20,padding:"24px 16px"}}>
+          <canvas ref={canvasRef} width={1080} height={1080} style={{width:cvSize,height:cvSize,borderRadius:14,boxShadow:"0 24px 80px rgba(0,0,0,.9)",display:"block"}}/>
+          <div style={{display:"flex",gap:8,maxWidth:cvSize,width:"100%",overflowX:"auto",paddingBottom:4}}>
+            {CREATOR_TPLS.map(tpl=>(
+              <div key={tpl.id} onClick={()=>{setTplId(tpl.id);sf("accent",tpl.defaultAccent);}} title={tpl.label}
+                style={{flexShrink:0,borderRadius:10,overflow:"hidden",cursor:"pointer",
+                  border:tplId===tpl.id?"2px solid rgba(255,255,255,.85)":"2px solid rgba(255,255,255,.08)",
+                  transition:"border-color .15s,transform .12s",transform:tplId===tpl.id?"scale(1.07)":"scale(1)"}}>
+                <canvas ref={el=>{if(el)thumbRefs.current[tpl.id]=el;}} width={200} height={200} style={{width:72,height:72,display:"block"}}/>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    ROOT
 ═══════════════════════════════════════════════════════════════════ */
 export default function App() {
@@ -2371,6 +2858,7 @@ export default function App() {
       {mode==="photo"   && <PhotoEditor onSwitch={()=>setMode("post")} onHome={()=>setMode("home")}/>}
       {mode==="post"    && <PostEditor  onSwitch={()=>setMode("photo")} onHome={()=>setMode("home")}/>}
       {mode==="collage" && <CollageEditor onHome={()=>setMode("home")}/>}
+      {mode==="creator" && <PostCreator onHome={()=>setMode("home")}/>}
       <ToastContainer toasts={toasts}/>
     </>
   );
