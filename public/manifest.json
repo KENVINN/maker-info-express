@@ -9,13 +9,20 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/maker_info_logo.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/maker_info_logo.png",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
       "type": "image/png"
     }
   ],
@@ -26,8 +33,13 @@
       "description": "Acompanhar reparo em tempo real"
     },
     {
+      "name": "Studio Pro",
+      "url": "/studio",
+      "description": "Editor de fotos e posts"
+    },
+    {
       "name": "Orçamento",
-      "url": "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento",
+      "url": "https://api.whatsapp.com/send/?phone=556592824709&text=Ol%C3%A1%2C+gostaria+de+fazer+um+or%C3%A7amento",
       "description": "Falar no WhatsApp"
     }
   ]
