@@ -1,38 +1,46 @@
-const CACHE = "makerinfo-v1";
-const ASSETS = ["/", "/pedido", "/servicos", "/maker_info_logo.png"];
-
-self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
-  self.skipWaiting();
-});
-
-self.addEventListener("activate", e => {
-  e.waitUntil(caches.keys().then(keys =>
-    Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-  ));
-  self.clients.claim();
-});
-
-self.addEventListener("fetch", e => {
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  );
-});
-
-self.addEventListener("push", e => {
-  const data = e.data?.json() || {};
-  e.waitUntil(
-    self.registration.showNotification(data.title || "Maker Info", {
-      body: data.body,
-      icon: "/maker_info_logo.png",
-      badge: "/maker_info_logo.png",
-      tag: data.tag || "makerinfo",
-      data: { url: data.url || "/pedido" }
-    })
-  );
-});
-
-self.addEventListener("notificationclick", e => {
-  e.notification.close();
-  e.waitUntil(clients.openWindow(e.notification.data?.url || "/pedido"));
-});
+{
+  "name": "Maker Info",
+  "short_name": "Maker Info",
+  "description": "Conserto de PC e Notebook em Várzea Grande e Cuiabá",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#00d4ff",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Meu Pedido",
+      "url": "/pedido",
+      "description": "Acompanhar reparo em tempo real"
+    },
+    {
+      "name": "Studio Pro",
+      "url": "/studio",
+      "description": "Editor de fotos e posts"
+    },
+    {
+      "name": "Orçamento",
+      "url": "https://api.whatsapp.com/send/?phone=556592824709&text=Ol%C3%A1%2C+gostaria+de+fazer+um+or%C3%A7amento",
+      "description": "Falar no WhatsApp"
+    }
+  ]
+}
