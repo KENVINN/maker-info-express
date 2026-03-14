@@ -2,7 +2,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import ScrollReveal from "@/components/ScrollReveal";
-import { ShieldCheck, MonitorCheck, Wrench, Wifi, Printer, HeadphonesIcon } from "lucide-react";
+import { ShieldCheck, MonitorCheck, Wrench, HeadphonesIcon } from "lucide-react";
 
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+saber+mais+sobre+os+planos+para+empresas&type=phone_number&app_absent=0";
 
@@ -97,22 +97,6 @@ const servicos = [
     problema: "PC quebrou e precisa resolver rápido?",
     descricao: "Atendemos chamados de emergência com prioridade para clientes com contrato. Diagnóstico, reparo e retorno do equipamento o mais rápido possível.",
     beneficios: ["Prioridade no atendimento", "Orçamento antes do serviço", "Garantia no reparo"],
-  },
-  {
-    icon: Wifi,
-    emoji: "📡",
-    titulo: "Configuração de Rede",
-    problema: "Internet caindo ou rede lenta na empresa?",
-    descricao: "Configuramos e otimizamos a rede da sua empresa. Roteadores, switches, Wi-Fi corporativo e cabeamento. Tudo estável e seguro.",
-    beneficios: ["Rede estável e segura", "Wi-Fi em todos os ambientes", "Configuração de firewall básico"],
-  },
-  {
-    icon: Printer,
-    emoji: "🖨️",
-    titulo: "Configuração de Impressoras em Rede",
-    problema: "Todo mundo precisando imprimir, mas a impressora não aparece?",
-    descricao: "Configuramos impressoras compartilhadas em rede para que todos os computadores da empresa imprimam sem complicação.",
-    beneficios: ["Todos os PCs conectados", "Impressão sem fila de erro", "Configuração rápida"],
   },
   {
     icon: ShieldCheck,
