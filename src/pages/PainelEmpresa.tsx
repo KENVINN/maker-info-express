@@ -19,6 +19,7 @@ type FiltroStatus = "todos" | "em_reparo" | "prontos" | "ok";
 
 const PainelEmpresa = () => {
   const [codigo, setCodigo] = useState("");
+  const [senha, setSenha] = useState("");
   const [empresa, setEmpresa] = useState<Empresa | null>(null);
   const [pcs, setPcs] = useState<PC[]>([]);
   const [pedidos, setPedidos] = useState<any[]>([]);
@@ -27,9 +28,12 @@ const PainelEmpresa = () => {
   const [erro, setErro] = useState("");
   const [filtro, setFiltro] = useState<FiltroStatus>("todos");
   const [abaAtiva, setAbaAtiva] = useState<"pcs" | "visitas">("pcs");
+  const [alterandoSenha, setAlterandoSenha] = useState(false);
+  const [novaSenhaCliente, setNovaSenhaCliente] = useState("");
+  const [senhaMsg, setSenhaMsg] = useState("");
 
   const buscar = async () => {
-    if (!codigo.trim()) return;
+    if (!codigo.trim() || !senha.trim()) return;
     setLoading(true);
     setErro("");
     setEmpresa(null);
@@ -42,6 +46,12 @@ const PainelEmpresa = () => {
 
     if (!emp) {
       setErro("Código não encontrado. Verifique e tente novamente.");
+      setLoading(false);
+      return;
+    }
+
+    if (emp.senha && emp.senha.toUpperCase() !== senha.trim().toUpperCase()) {
+      setErro("Senha incorreta. Verifique e tente novamente.");
       setLoading(false);
       return;
     }
@@ -101,25 +111,37 @@ const PainelEmpresa = () => {
             Painel da <span className="text-gradient-neon">Empresa</span>
           </h1>
           <p className="text-muted-foreground text-sm">
-            Digite o código que a Maker Info te forneceu para acompanhar todos os seus equipamentos
+            Digite o código e a senha que a Maker Info te forneceu
           </p>
         </div>
 
         {/* Busca */}
-        <div className="flex gap-3 mb-8">
-          <input
-            type="text"
-            value={codigo}
-            onChange={e => setCodigo(e.target.value.toUpperCase())}
-            onKeyDown={e => e.key === "Enter" && buscar()}
-            placeholder="Ex: EMP001"
-            className="flex-1 px-5 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground font-heading font-bold text-lg focus:outline-none focus:border-primary transition-colors"
-            maxLength={10}
-          />
-          <button onClick={buscar} disabled={loading}
-            className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-heading font-bold hover:brightness-110 transition-all disabled:opacity-50">
-            {loading ? "..." : "Buscar"}
-          </button>
+        <div className="flex flex-col gap-3 mb-8 max-w-md mx-auto">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={codigo}
+              onChange={e => setCodigo(e.target.value.toUpperCase())}
+              onKeyDown={e => e.key === "Enter" && buscar()}
+              placeholder="Código  —  Ex: EMP001"
+              className="flex-1 px-5 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground font-heading font-bold text-base focus:outline-none focus:border-primary transition-colors"
+              maxLength={10}
+            />
+          </div>
+          <div className="flex gap-3">
+            <input
+              type="password"
+              value={senha}
+              onChange={e => setSenha(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && buscar()}
+              placeholder="Senha"
+              className="flex-1 px-5 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground font-heading font-bold text-base focus:outline-none focus:border-primary transition-colors"
+            />
+            <button onClick={buscar} disabled={loading}
+              className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-heading font-bold hover:brightness-110 transition-all disabled:opacity-50">
+              {loading ? "..." : "Entrar"}
+            </button>
+          </div>
         </div>
 
         {erro && (
@@ -143,6 +165,35 @@ const PainelEmpresa = () => {
                   <WhatsAppIcon />
                   Falar com técnico
                 </a>
+              </div>
+
+              {/* Alterar senha */}
+              <div className="mt-3">
+                {alterandoSenha ? (
+                  <div className="flex items-center gap-2">
+                    <input type="password" value={novaSenhaCliente} onChange={e => setNovaSenhaCliente(e.target.value)}
+                      placeholder="Nova senha"
+                      className="px-3 py-1.5 rounded-lg bg-background border border-primary text-sm w-36 focus:outline-none" />
+                    <button onClick={async () => {
+                      if (!novaSenhaCliente.trim() || !empresa) return;
+                      await supabase.from("empresas").update({ senha: novaSenhaCliente.trim().toUpperCase() }).eq("id", empresa.id);
+                      setEmpresa(e => e ? { ...e, senha: novaSenhaCliente.trim().toUpperCase() } : e);
+                      setAlterandoSenha(false);
+                      setNovaSenhaCliente("");
+                      setSenhaMsg("Senha alterada com sucesso!");
+                      setTimeout(() => setSenhaMsg(""), 4000);
+                    }} className="text-xs text-primary font-bold px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary hover:text-primary-foreground transition-all">
+                      Salvar
+                    </button>
+                    <button onClick={() => setAlterandoSenha(false)} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Cancelar</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setAlterandoSenha(true)}
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                    🔑 Alterar minha senha
+                  </button>
+                )}
+                {senhaMsg && <p className="text-xs text-green-400 mt-1">{senhaMsg}</p>}
               </div>
 
               {/* Próxima visita */}
