@@ -45,7 +45,7 @@ const EmpresasCTA = () => (
               <span className="text-gradient-neon">A gente cuida da sua TI.</span>
             </h2>
             <p className="text-muted-foreground text-sm md:text-base max-w-lg">
-              Planos mensais de suporte técnico para manter os computadores da sua empresa funcionando todo dia — sem surpresa, sem parada.
+              Planos mensais de suporte técnico para manter os computadores da sua empresa funcionando todo dia, sem surpresa, sem parada.
             </p>
           </div>
           <a
