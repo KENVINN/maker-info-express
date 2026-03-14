@@ -15,6 +15,7 @@ export interface PC {
 export interface Empresa {
   id: string;
   codigo: string; // ex: EMP001 — usado pelo cliente para logar
+  senha: string;
   nome: string;
   contato_nome: string;
   contato_telefone: string;
@@ -51,6 +52,7 @@ const PLANO_COR: Record<PlanoEmpresa, string> = {
 };
 
 const gerarCodigo = () => `EMP${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
+const gerarSenha = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
 const diasParaVisita = (proxima: string) => {
   const diff = new Date(proxima).getTime() - new Date().getTime();
@@ -66,7 +68,11 @@ const AdminEmpresas = () => {
   const [sucesso, setSucesso] = useState("");
 
   // Form nova empresa
-  const [form, setForm] = useState({ nome: "", contato_nome: "", contato_telefone: "", plano: "Pequeno" as PlanoEmpresa, proxima_visita: "", codigo: gerarCodigo() });
+  const [form, setForm] = useState({ nome: "", contato_nome: "", contato_telefone: "", plano: "Pequeno" as PlanoEmpresa, proxima_visita: "", codigo: gerarCodigo(), senha: gerarSenha() });
+
+  // Editar senha inline
+  const [editandoSenha, setEditandoSenha] = useState<string | null>(null);
+  const [novaSenha, setNovaSenha] = useState("");
 
   // Gerenciar PCs
   const [pcNome, setPcNome] = useState("");
@@ -96,12 +102,20 @@ const AdminEmpresas = () => {
     if (!form.nome || !form.proxima_visita) return;
     const { error } = await supabase.from("empresas").insert({ ...form });
     if (!error) {
-      setSucesso(`Empresa ${form.nome} criada! Código: ${form.codigo}`);
-      setForm({ nome: "", contato_nome: "", contato_telefone: "", plano: "Pequeno", proxima_visita: "", codigo: gerarCodigo() });
+      setSucesso(`Empresa ${form.nome} criada! Código: ${form.codigo} · Senha: ${form.senha}`);
+      setForm({ nome: "", contato_nome: "", contato_telefone: "", plano: "Pequeno", proxima_visita: "", codigo: gerarCodigo(), senha: gerarSenha() });
       carregarEmpresas();
       setAbaAtiva("lista");
-      setTimeout(() => setSucesso(""), 5000);
+      setTimeout(() => setSucesso(""), 8000);
     }
+  };
+
+  const salvarSenha = async (empresaId: string) => {
+    if (!novaSenha.trim()) return;
+    await supabase.from("empresas").update({ senha: novaSenha.trim().toUpperCase() }).eq("id", empresaId);
+    setEditandoSenha(null);
+    setNovaSenha("");
+    carregarEmpresas();
   };
 
   const adicionarPC = async (empresaId: string) => {
@@ -219,6 +233,25 @@ const AdminEmpresas = () => {
                       <span className="text-xs text-muted-foreground font-mono">{emp.codigo}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">{emp.contato_nome} · {emp.contato_telefone}</p>
+                    {/* Senha */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs text-muted-foreground">Senha:</span>
+                      {editandoSenha === emp.id ? (
+                        <div className="flex items-center gap-1">
+                          <input value={novaSenha} onChange={e => setNovaSenha(e.target.value.toUpperCase())}
+                            placeholder="Nova senha"
+                            className="px-2 py-1 rounded-lg bg-background border border-primary text-xs w-24 focus:outline-none" />
+                          <button onClick={() => salvarSenha(emp.id)} className="text-xs text-primary font-bold hover:brightness-110">✓</button>
+                          <button onClick={() => setEditandoSenha(null)} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{emp.senha || "—"}</span>
+                          <button onClick={() => { setEditandoSenha(emp.id); setNovaSenha(emp.senha || ""); }}
+                            className="text-xs text-muted-foreground hover:text-primary transition-colors">✏️</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => iniciarVisita(emp)}
@@ -292,9 +325,19 @@ const AdminEmpresas = () => {
               className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary" />
           </div>
           <div className="p-3 rounded-xl bg-primary/5 border border-primary/20">
-            <p className="text-xs text-muted-foreground">Código do cliente</p>
-            <p className="font-heading font-black text-primary">{form.codigo}</p>
-            <p className="text-xs text-muted-foreground mt-1">O cliente usa esse código para acessar o painel deles</p>
+            <p className="text-xs text-muted-foreground mb-2">Acesso do cliente</p>
+            <div className="flex items-center gap-3 mb-1">
+              <span className="text-xs text-muted-foreground w-12">Código</span>
+              <span className="font-heading font-black text-primary">{form.codigo}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground w-12">Senha</span>
+              <input value={form.senha} onChange={e => setForm(f => ({ ...f, senha: e.target.value.toUpperCase() }))}
+                className="font-heading font-black text-primary bg-transparent border-b border-primary/30 focus:outline-none focus:border-primary text-sm w-28" />
+              <button type="button" onClick={() => setForm(f => ({ ...f, senha: gerarSenha() }))}
+                className="text-xs text-muted-foreground hover:text-primary transition-colors">🔄 Gerar nova</button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">O cliente usa código + senha para acessar o painel</p>
           </div>
           <button onClick={criarEmpresa}
             className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm hover:brightness-110 transition-all">
