@@ -7,6 +7,7 @@ import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
 import Servicos from "./pages/Servicos";
 import Empresas from "./pages/Empresas";
+import PainelEmpresa from "./pages/PainelEmpresa";
 import Localizacao from "./pages/Localizacao";
 import Pedido from "./pages/Pedido";
 import Admin from "./pages/Admin";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/servicos" element={<Servicos />} />
               <Route path="/empresas" element={<Empresas />} />
+              <Route path="/empresa-painel" element={<PainelEmpresa />} />
               <Route path="/localizacao" element={<Localizacao />} />
               <Route path="/pedido" element={<Pedido />} />
               <Route path="/admin" element={<Admin />} />
