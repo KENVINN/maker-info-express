@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase, Pedido, STATUS_CONFIG, StatusPedido } from "@/lib/supabase";
+import AdminEmpresas from "@/components/AdminEmpresas";
 
 const ADMIN_PASS = "makerinfo2024";
 const STATUSES = Object.keys(STATUS_CONFIG) as StatusPedido[];
@@ -13,6 +14,7 @@ const Admin = () => {
   const [logado, setLogado] = useState(false);
   const [senha, setSenha] = useState("");
   const [erroLogin, setErroLogin] = useState("");
+  const [abaAdmin, setAbaAdmin] = useState<"pedidos" | "empresas">("pedidos");
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(false);
   const TODAS_ETAPAS = Object.keys(STATUS_CONFIG) as StatusPedido[];
@@ -73,7 +75,7 @@ const Admin = () => {
         );
         window.open(`https://api.whatsapp.com/send/?phone=${numero}&text=${msg}`, "_blank");
       }
-      setForm({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo(), telefone: "" });
+      setForm({ cliente_nome: "", equipamento: "", problema: "", observacao: "", codigo: gerarCodigo(), telefone: "", valor: "", bairro: "" });
       setEtapasSelecionadas(TODAS_ETAPAS);
       setTimeout(() => setSucesso(""), 5000);
     }
@@ -85,14 +87,9 @@ const Admin = () => {
     const tel = telefone.replace(/\D/g, "");
     const numero = tel.startsWith("55") ? tel : `55${tel}`;
     const emoji: Record<string, string> = {
-      "Em Diagnóstico": "🔍",
-      "Limpeza / Formatação": "🧹",
-      "Peça Solicitada": "📦",
-      "Em Reparo": "🔧",
-      "Testes Finais": "🧪",
-      "Pronto para Retirada": "✅",
-      "Saída para Entrega": "🛵",
-      "Entregue": "🎉",
+      "Em Diagnóstico": "🔍", "Limpeza / Formatação": "🧹", "Peça Solicitada": "📦",
+      "Em Reparo": "🔧", "Testes Finais": "🧪", "Pronto para Retirada": "✅",
+      "Saída para Entrega": "🛵", "Entregue": "🎉",
     };
     const msg = encodeURIComponent(
       `${emoji[status] || "🔧"} *Maker Info — Atualização do seu pedido*\n\nCódigo: *${codigo}*\nStatus: *${status}*\n\nAcompanhe em tempo real:\nmakerinfo.com.br/pedido`
@@ -100,7 +97,7 @@ const Admin = () => {
     window.open(`https://api.whatsapp.com/send/?phone=${numero}&text=${msg}`, "_blank");
   };
 
-    const atualizarStatus = async (id: string, status: StatusPedido) => {
+  const atualizarStatus = async (id: string, status: StatusPedido) => {
     const pedido = pedidos.find(p => p.id === id);
     const historico = (pedido as any)?.historico || [];
     const novoHistorico = [...historico, { status, data: new Date().toISOString() }];
@@ -144,7 +141,7 @@ const Admin = () => {
     await supabase.storage.from("pedidos").remove([`${pedidoId}/${nome}`]);
     const novas = (fotos[pedidoId] || []).filter(u => u !== url);
     setFotos(prev => ({ ...prev, [pedidoId]: novas }));
-    await supabase.from("pedidos").update({ fotos_urls: novas, fotos_updated_at: new Date().toISOString() }).eq("id", pedidoId);
+    await supabase.from("pedidos").update({ fotos_urls: novas }).eq("id", pedidoId);
   };
 
   const abrirEdicao = (p: Pedido) => {
@@ -154,7 +151,7 @@ const Admin = () => {
 
   const salvarEdicao = async (id: string) => {
     const valorNum = parseFloat(((editForm as any).valor || "0").replace(",", ".")) || 0;
-await supabase.from("pedidos").update({ ...editForm, valor: valorNum }).eq("id", id);
+    await supabase.from("pedidos").update({ ...editForm, valor: valorNum }).eq("id", id);
     setPedidos(prev => prev.map(p => p.id === id ? { ...p, ...editForm } : p));
     setEditando(null);
   };
@@ -169,14 +166,9 @@ await supabase.from("pedidos").update({ ...editForm, valor: valorNum }).eq("id",
       <div className="bg-card border border-border rounded-2xl p-8 w-full max-w-sm text-center">
         <div className="text-4xl mb-4">🔒</div>
         <h1 className="font-heading text-2xl font-black mb-6">Painel Admin</h1>
-        <input
-          type="password"
-          value={senha}
-          onChange={e => setSenha(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && login()}
-          placeholder="Senha"
-          className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground mb-3 focus:outline-none focus:border-primary"
-        />
+        <input type="password" value={senha} onChange={e => setSenha(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && login()} placeholder="Senha"
+          className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground mb-3 focus:outline-none focus:border-primary" />
         {erroLogin && <p className="text-destructive text-sm mb-3">{erroLogin}</p>}
         <button onClick={login} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-heading font-bold hover:brightness-110 transition-all">
           Entrar
@@ -189,6 +181,7 @@ await supabase.from("pedidos").update({ ...editForm, valor: valorNum }).eq("id",
     <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
 
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-heading text-3xl font-black">Painel <span className="text-gradient-neon">Maker Info</span></h1>
@@ -206,201 +199,187 @@ await supabase.from("pedidos").update({ ...editForm, valor: valorNum }).eq("id",
           </div>
         </div>
 
-        {/* Novo pedido */}
-        <div className="bg-card border border-border rounded-2xl p-6 mb-8">
-          <h2 className="font-heading font-black text-lg mb-4">➕ Novo Pedido</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Código</label>
-              <input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value.toUpperCase() }))}
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground font-heading font-bold focus:outline-none focus:border-primary text-sm" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Nome do cliente *</label>
-              <input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))}
-                placeholder="Ex: João Silva"
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Telefone (WhatsApp)</label>
-              <input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))}
-                placeholder="Ex: 65999999999"
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Equipamento *</label>
-              <input value={form.equipamento} onChange={e => setForm(f => ({ ...f, equipamento: e.target.value }))}
-                placeholder="Ex: Notebook Dell Inspiron"
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Bairro</label>
-              <input value={form.bairro} onChange={e => setForm(f => ({ ...f, bairro: e.target.value }))}
-                placeholder="Ex: Cristo Rei"
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Problema *</label>
-              <input value={form.problema} onChange={e => setForm(f => ({ ...f, problema: e.target.value }))}
-                placeholder="Ex: Lento, não liga"
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Valor do Serviço (R$)</label>
-              <input value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))}
-                placeholder="Ex: 120,00"
-                className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
-            </div>
-          </div>
-          <div className="mb-3">
-            <label className="text-xs text-muted-foreground mb-1 block">Observação (opcional)</label>
-            <input value={form.observacao} onChange={e => setForm(f => ({ ...f, observacao: e.target.value }))}
-              placeholder="Ex: Aguardando peça"
-              className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
-          </div>
-          <div className="mb-4">
-            <label className="text-xs text-muted-foreground mb-2 block">Etapas do serviço (desmarque as que não se aplicam)</label>
-            <div className="flex flex-wrap gap-2">
-              {TODAS_ETAPAS.map(e => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setEtapasSelecionadas(prev =>
-                    prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e]
-                  )}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-heading font-bold transition-all border ${
-                    etapasSelecionadas.includes(e)
-                      ? "bg-primary/20 border-primary text-primary"
-                      : "bg-background border-border text-muted-foreground opacity-40"
-                  }`}
-                >
-                  {STATUS_CONFIG[e].emoji} {e}
-                </button>
-              ))}
-            </div>
-          </div>
-          {sucesso && <p className="text-green-500 text-sm mb-3 font-semibold">✓ {sucesso}</p>}
-          <button onClick={criarPedido} disabled={salvando}
-            className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm hover:brightness-110 transition-all disabled:opacity-50">
-            {salvando ? "Salvando..." : "Criar Pedido"}
+        {/* Abas principais */}
+        <div className="flex gap-2 mb-8 border-b border-border pb-4">
+          <button onClick={() => setAbaAdmin("pedidos")}
+            className={`px-6 py-2.5 rounded-lg font-heading font-bold text-sm transition-all ${abaAdmin === "pedidos" ? "bg-primary text-primary-foreground" : "bg-background border border-border text-muted-foreground hover:border-primary hover:text-primary"}`}>
+            🔧 Pedidos ({pedidos.length})
+          </button>
+          <button onClick={() => setAbaAdmin("empresas")}
+            className={`px-6 py-2.5 rounded-lg font-heading font-bold text-sm transition-all ${abaAdmin === "empresas" ? "bg-primary text-primary-foreground" : "bg-background border border-border text-muted-foreground hover:border-primary hover:text-primary"}`}>
+            🏢 Empresas
           </button>
         </div>
 
-        {/* Lista */}
-        <div className="space-y-4">
-          <h2 className="font-heading font-black text-lg">📋 Pedidos</h2>
-          {loading && <p className="text-muted-foreground text-sm">Carregando...</p>}
-          {pedidos.map(p => {
-            const cfg = STATUS_CONFIG[p.status as StatusPedido];
-            return (
-              <div key={p.id} className="bg-card border border-border rounded-2xl p-5">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
-                    <span className="font-heading font-black text-primary text-lg">{p.codigo}</span>
-                    <span className="text-muted-foreground text-sm ml-2">· {p.cliente_nome}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`text-sm font-semibold ${cfg?.color}`}>{cfg?.emoji} {p.status}</span>
-                    <button onClick={() => abrirEdicao(p)} className="text-muted-foreground hover:text-primary transition-colors text-xs">✏️</button>
-                    <button onClick={() => deletarPedido(p.id)} className="text-muted-foreground hover:text-destructive transition-colors text-xs">🗑️</button>
-                  </div>
+        {/* ── ABA: PEDIDOS ── */}
+        {abaAdmin === "pedidos" && (
+          <div className="space-y-8">
+            {/* Novo pedido */}
+            <div className="bg-card border border-border rounded-2xl p-6">
+              <h2 className="font-heading font-black text-lg mb-4">➕ Novo Pedido</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Código</label>
+                  <input value={form.codigo} onChange={e => setForm(f => ({ ...f, codigo: e.target.value.toUpperCase() }))}
+                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground font-heading font-bold focus:outline-none focus:border-primary text-sm" />
                 </div>
-
-                <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
-                  <div><span className="text-muted-foreground">Equipamento: </span>{p.equipamento}</div>
-                  <div><span className="text-muted-foreground">Problema: </span>{p.problema}</div>
-                  {p.telefone && <div><span className="text-muted-foreground">WhatsApp: </span>{p.telefone}</div>}
-                  {(p as any).bairro && <div><span className="text-muted-foreground">Bairro: </span>{(p as any).bairro}</div>}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Nome do cliente *</label>
+                  <input value={form.cliente_nome} onChange={e => setForm(f => ({ ...f, cliente_nome: e.target.value }))} placeholder="Ex: João Silva"
+                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
                 </div>
-
-                {/* Status buttons */}
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {STATUSES.map(s => (
-                    <button key={s} onClick={() => atualizarStatus(p.id, s)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-heading font-bold transition-all ${p.status === s ? "bg-primary text-primary-foreground" : "bg-background border border-border text-muted-foreground hover:border-primary hover:text-primary"}`}>
-                      {STATUS_CONFIG[s].emoji} {s}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Telefone (WhatsApp)</label>
+                  <input value={form.telefone} onChange={e => setForm(f => ({ ...f, telefone: e.target.value }))} placeholder="Ex: 65999999999"
+                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Equipamento *</label>
+                  <input value={form.equipamento} onChange={e => setForm(f => ({ ...f, equipamento: e.target.value }))} placeholder="Ex: Notebook Dell Inspiron"
+                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Bairro</label>
+                  <input value={form.bairro} onChange={e => setForm(f => ({ ...f, bairro: e.target.value }))} placeholder="Ex: Cristo Rei"
+                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Problema *</label>
+                  <input value={form.problema} onChange={e => setForm(f => ({ ...f, problema: e.target.value }))} placeholder="Ex: Lento, não liga"
+                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Valor do Serviço (R$)</label>
+                  <input value={form.valor} onChange={e => setForm(f => ({ ...f, valor: e.target.value }))} placeholder="Ex: 120,00"
+                    className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+                </div>
+              </div>
+              <div className="mb-3">
+                <label className="text-xs text-muted-foreground mb-1 block">Observação (opcional)</label>
+                <input value={form.observacao} onChange={e => setForm(f => ({ ...f, observacao: e.target.value }))} placeholder="Ex: Aguardando peça"
+                  className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-foreground focus:outline-none focus:border-primary text-sm" />
+              </div>
+              <div className="mb-4">
+                <label className="text-xs text-muted-foreground mb-2 block">Etapas do serviço (desmarque as que não se aplicam)</label>
+                <div className="flex flex-wrap gap-2">
+                  {TODAS_ETAPAS.map(e => (
+                    <button key={e} type="button"
+                      onClick={() => setEtapasSelecionadas(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e])}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-heading font-bold transition-all border ${etapasSelecionadas.includes(e) ? "bg-primary/20 border-primary text-primary" : "bg-background border-border text-muted-foreground opacity-40"}`}>
+                      {STATUS_CONFIG[e].emoji} {e}
                     </button>
                   ))}
                 </div>
+              </div>
+              {sucesso && <p className="text-green-500 text-sm mb-3 font-semibold">✓ {sucesso}</p>}
+              <button onClick={criarPedido} disabled={salvando}
+                className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm hover:brightness-110 transition-all disabled:opacity-50">
+                {salvando ? "Salvando..." : "Criar Pedido"}
+              </button>
+            </div>
 
-                {editando === p.id && (
-                  <div className="mt-3 p-4 rounded-xl bg-background border border-primary/30 space-y-2">
-                    <p className="text-xs text-primary font-semibold mb-2">✏️ Editando pedido</p>
-                    <input value={editForm.cliente_nome || ""} onChange={e => setEditForm(f => ({ ...f, cliente_nome: e.target.value }))}
-                      placeholder="Nome do cliente"
-                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
-                    <input value={editForm.equipamento || ""} onChange={e => setEditForm(f => ({ ...f, equipamento: e.target.value }))}
-                      placeholder="Equipamento"
-                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
-                    <input value={editForm.problema || ""} onChange={e => setEditForm(f => ({ ...f, problema: e.target.value }))}
-                      placeholder="Problema"
-                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
-                    <input value={editForm.telefone || ""} onChange={e => setEditForm(f => ({ ...f, telefone: e.target.value }))}
-                      placeholder="WhatsApp (ex: 65999999999)"
-                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
-                    <input value={(editForm as any).valor || ""} onChange={e => setEditForm(f => ({ ...f, valor: e.target.value } as any))}
-                      placeholder="Valor do serviço (ex: 120,00)"
-                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
-                    <input value={(editForm as any).bairro || ""} onChange={e => setEditForm(f => ({ ...f, bairro: e.target.value } as any))}
-                      placeholder="Bairro (ex: Cristo Rei)"
-                      className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
-                    <div className="flex gap-2 pt-1">
-                      <button onClick={() => salvarEdicao(p.id)} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-heading font-bold hover:brightness-110 transition-all">Salvar</button>
-                      <button onClick={() => setEditando(null)} className="px-4 py-1.5 rounded-lg bg-background border border-border text-xs font-heading font-bold hover:border-primary transition-all">Cancelar</button>
+            {/* Lista de pedidos */}
+            <div className="space-y-4">
+              <h2 className="font-heading font-black text-lg">📋 Pedidos</h2>
+              {loading && <p className="text-muted-foreground text-sm">Carregando...</p>}
+              {pedidos.map(p => {
+                const cfg = STATUS_CONFIG[p.status as StatusPedido];
+                return (
+                  <div key={p.id} className="bg-card border border-border rounded-2xl p-5">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div>
+                        <span className="font-heading font-black text-primary text-lg">{p.codigo}</span>
+                        <span className="text-muted-foreground text-sm ml-2">· {p.cliente_nome}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-sm font-semibold ${cfg?.color}`}>{cfg?.emoji} {p.status}</span>
+                        <button onClick={() => abrirEdicao(p)} className="text-muted-foreground hover:text-primary transition-colors text-xs">✏️</button>
+                        <button onClick={() => deletarPedido(p.id)} className="text-muted-foreground hover:text-destructive transition-colors text-xs">🗑️</button>
+                      </div>
                     </div>
-                  </div>
-                )}
-                <div className="flex gap-2 mt-3">
-                  <input
-                    defaultValue={p.observacao || ""}
-                    placeholder="Observação para o cliente..."
-                    onBlur={e => atualizarObservacao(p.id, e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-lg bg-background border border-border text-sm focus:outline-none focus:border-primary"
-                  />
-                </div>
-
-                {/* Fotos */}
-                <div className="mt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs text-muted-foreground font-semibold">📸 Fotos / Vídeos</p>
-                    <label className={`px-3 py-1 rounded-lg text-xs font-heading font-bold cursor-pointer transition-all border ${uploadingId === p.id ? "opacity-50" : "border-primary/40 text-primary hover:bg-primary/10"}`}>
-                      {uploadingId === p.id ? "Enviando..." : "+ Adicionar"}
-                      <input type="file" accept="image/*,video/*" multiple className="hidden"
-                        onChange={e => handleUpload(p.id, e.target.files)}
-                        disabled={uploadingId === p.id} />
-                    </label>
-                  </div>
-                  {fotos[p.id] && fotos[p.id].length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {fotos[p.id].map((url, i) => (
-                        <div key={i} className="relative group">
-                          {url.match(/\.(mp4|mov|webm)$/i) ? (
-                            <video src={url} className="w-20 h-20 object-cover rounded-lg border border-border" controls />
-                          ) : (
-                            <a href={url} target="_blank" rel="noopener noreferrer">
-                              <img src={url} alt="" className="w-20 h-20 object-cover rounded-lg border border-border hover:opacity-80 transition-all" />
-                            </a>
-                          )}
-                          <button onClick={() => deletarFoto(p.id, url)}
-                            className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-white text-xs hidden group-hover:flex items-center justify-center">
-                            ×
-                          </button>
-                        </div>
+                    <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
+                      <div><span className="text-muted-foreground">Equipamento: </span>{p.equipamento}</div>
+                      <div><span className="text-muted-foreground">Problema: </span>{p.problema}</div>
+                      {p.telefone && <div><span className="text-muted-foreground">WhatsApp: </span>{p.telefone}</div>}
+                      {(p as any).bairro && <div><span className="text-muted-foreground">Bairro: </span>{(p as any).bairro}</div>}
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {STATUSES.map(s => (
+                        <button key={s} onClick={() => atualizarStatus(p.id, s)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-heading font-bold transition-all ${p.status === s ? "bg-primary text-primary-foreground" : "bg-background border border-border text-muted-foreground hover:border-primary hover:text-primary"}`}>
+                          {STATUS_CONFIG[s].emoji} {s}
+                        </button>
                       ))}
                     </div>
-                  )}
-                </div>
+                    {editando === p.id && (
+                      <div className="mt-3 p-4 rounded-xl bg-background border border-primary/30 space-y-2">
+                        <p className="text-xs text-primary font-semibold mb-2">✏️ Editando pedido</p>
+                        <input value={editForm.cliente_nome || ""} onChange={e => setEditForm(f => ({ ...f, cliente_nome: e.target.value }))} placeholder="Nome do cliente"
+                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                        <input value={editForm.equipamento || ""} onChange={e => setEditForm(f => ({ ...f, equipamento: e.target.value }))} placeholder="Equipamento"
+                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                        <input value={editForm.problema || ""} onChange={e => setEditForm(f => ({ ...f, problema: e.target.value }))} placeholder="Problema"
+                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                        <input value={editForm.telefone || ""} onChange={e => setEditForm(f => ({ ...f, telefone: e.target.value }))} placeholder="WhatsApp"
+                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                        <input value={(editForm as any).valor || ""} onChange={e => setEditForm(f => ({ ...f, valor: e.target.value } as any))} placeholder="Valor (ex: 120,00)"
+                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                        <input value={(editForm as any).bairro || ""} onChange={e => setEditForm(f => ({ ...f, bairro: e.target.value } as any))} placeholder="Bairro"
+                          className="w-full px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:border-primary" />
+                        <div className="flex gap-2 pt-1">
+                          <button onClick={() => salvarEdicao(p.id)} className="px-4 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-heading font-bold hover:brightness-110 transition-all">Salvar</button>
+                          <button onClick={() => setEditando(null)} className="px-4 py-1.5 rounded-lg bg-background border border-border text-xs font-heading font-bold hover:border-primary transition-all">Cancelar</button>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex gap-2 mt-3">
+                      <input defaultValue={p.observacao || ""} placeholder="Observação para o cliente..."
+                        onBlur={e => atualizarObservacao(p.id, e.target.value)}
+                        className="flex-1 px-3 py-2 rounded-lg bg-background border border-border text-sm focus:outline-none focus:border-primary" />
+                    </div>
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-muted-foreground font-semibold">📸 Fotos / Vídeos</p>
+                        <label className={`px-3 py-1 rounded-lg text-xs font-heading font-bold cursor-pointer transition-all border ${uploadingId === p.id ? "opacity-50" : "border-primary/40 text-primary hover:bg-primary/10"}`}>
+                          {uploadingId === p.id ? "Enviando..." : "+ Adicionar"}
+                          <input type="file" accept="image/*,video/*" multiple className="hidden"
+                            onChange={e => handleUpload(p.id, e.target.files)} disabled={uploadingId === p.id} />
+                        </label>
+                      </div>
+                      {fotos[p.id] && fotos[p.id].length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {fotos[p.id].map((url, i) => (
+                            <div key={i} className="relative group">
+                              {url.match(/\.(mp4|mov|webm)$/i) ? (
+                                <video src={url} className="w-20 h-20 object-cover rounded-lg border border-border" controls />
+                              ) : (
+                                <a href={url} target="_blank" rel="noopener noreferrer">
+                                  <img src={url} alt="" className="w-20 h-20 object-cover rounded-lg border border-border hover:opacity-80 transition-all" />
+                                </a>
+                              )}
+                              <button onClick={() => deletarFoto(p.id, url)}
+                                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-white text-xs hidden group-hover:flex items-center justify-center">×</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Criado em {new Date(p.created_at).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
+                );
+              })}
+              {!loading && pedidos.length === 0 && (
+                <p className="text-muted-foreground text-sm text-center py-8">Nenhum pedido ainda.</p>
+              )}
+            </div>
+          </div>
+        )}
 
-                <p className="text-xs text-muted-foreground mt-2">
-                  Criado em {new Date(p.created_at).toLocaleString("pt-BR")}
-                </p>
-              </div>
-            );
-          })}
-          {!loading && pedidos.length === 0 && (
-            <p className="text-muted-foreground text-sm text-center py-8">Nenhum pedido ainda.</p>
-          )}
-        </div>
+        {/* ── ABA: EMPRESAS ── */}
+        {abaAdmin === "empresas" && <AdminEmpresas />}
+
       </div>
     </div>
   );
