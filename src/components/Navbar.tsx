@@ -57,6 +57,7 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-6">
           <StatusBadge />
           <a href="/servicos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Serviços</a>
+          <a href="/empresas" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Empresas</a>
           <a href="/pedido" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Meu Pedido</a>
           <a href="/#localizacao" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Localização</a>
           <button onClick={toggleTheme} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-card transition-all" aria-label="Alternar tema">
@@ -82,6 +83,7 @@ const Navbar = () => {
         <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border px-6 pb-6 pt-2 flex flex-col gap-4 animate-fade-in-up">
           <StatusBadge />
           <a href="/servicos" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Serviços</a>
+          <a href="/empresas" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Empresas</a>
           <a href="/pedido" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Meu Pedido</a>
           <a href="/#localizacao" onClick={() => setOpen(false)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Localização</a>
           <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer"
