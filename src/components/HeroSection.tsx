@@ -58,11 +58,10 @@ const TypingText = () => {
 
 const HeroSection = () => {
   return (
-    <section className="relative md:min-h-screen flex flex-col items-center justify-start md:justify-center pt-24 md:pt-20 pb-10 md:pb-16 overflow-hidden">
+    <section className="relative md:min-h-screen flex flex-col items-center justify-start md:justify-center pt-24 md:pt-20 pb-16 md:pb-16 overflow-hidden">
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
 
       <div className="container px-4 max-w-5xl mx-auto text-center">
-        <ScrollReveal>
           <div className="flex justify-center mb-2 md:mb-4">
             <img
               src="/maker_info_transparente.png"
@@ -71,6 +70,7 @@ const HeroSection = () => {
             />
           </div>
 
+        <ScrollReveal>
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold mb-4 md:mb-8">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             Várzea Grande e Cuiabá · Busca na sua porta
@@ -108,7 +108,7 @@ const HeroSection = () => {
         </ScrollReveal>
       </div>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce text-muted-foreground/40">
+      <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce text-muted-foreground/40">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 5v14M5 12l7 7 7-7"/>
         </svg>
