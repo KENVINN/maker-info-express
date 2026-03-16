@@ -63,6 +63,14 @@ const HeroSection = () => {
 
       <div className="container px-4 max-w-5xl mx-auto text-center">
         <ScrollReveal>
+          <div className="flex justify-center mb-8">
+            <img
+              src="/maker_info_transparente.png"
+              alt="Maker Info"
+              className="w-48 md:w-56 lg:w-64 drop-shadow-[0_0_24px_rgba(0,212,255,0.5)]"
+            />
+          </div>
+
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold mb-8">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             Várzea Grande e Cuiabá · Busca na sua porta
