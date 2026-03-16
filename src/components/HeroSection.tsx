@@ -58,7 +58,7 @@ const TypingText = () => {
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-start md:justify-center pt-24 md:pt-20 pb-10 md:pb-16 overflow-hidden">
+    <section className="relative md:min-h-screen flex flex-col items-center justify-start md:justify-center pt-24 md:pt-20 pb-10 md:pb-16 overflow-hidden">
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px] pointer-events-none" />
 
       <div className="container px-4 max-w-5xl mx-auto text-center">
