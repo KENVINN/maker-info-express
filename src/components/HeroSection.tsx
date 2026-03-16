@@ -63,11 +63,11 @@ const HeroSection = () => {
 
       <div className="container px-4 max-w-5xl mx-auto text-center">
         <ScrollReveal>
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-4">
             <img
               src="/maker_info_transparente.png"
               alt="Maker Info"
-              className="w-48 md:w-56 lg:w-64 drop-shadow-[0_0_24px_rgba(0,212,255,0.5)]"
+              className="w-24 md:w-28 opacity-70 drop-shadow-[0_0_12px_rgba(0,212,255,0.4)]"
             />
           </div>
 
