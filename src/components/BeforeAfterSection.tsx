@@ -79,8 +79,8 @@ const sliders = [
     afterAlt: "PC depois da limpeza com RGB",
   },
   {
-    beforeSrc: "/before-montagem.jpg",
-    afterSrc: "/after-montagem.jpg",
+    beforeSrc: "/before-montagem.png",
+    afterSrc: "/after-montagem.png",
     beforeAlt: "Peças antes da montagem",
     afterAlt: "PC montado",
   },
