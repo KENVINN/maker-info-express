@@ -105,12 +105,6 @@ const screenshotMoments = [
     body:
       "O histórico ganha leitura de progresso, e não cara de arquivo morto. A landing vende essa sensação de continuidade.",
   },
-  {
-    label: "Smart layer",
-    title: "Inteligência como reforço, não distração",
-    body:
-      "Recursos smart entram como camada opcional para quem quer ajuda de alto nível sem perder o controle do treino.",
-  },
 ];
 
 const faqs = [
@@ -136,11 +130,8 @@ const promoPoster = "/makergym/assets/makergym-promo-poster.png";
 const screenshotArts = [
   "/makergym/assets/makergym-shot-1.png",
   "/makergym/assets/makergym-shot-2.png",
-  "/makergym/assets/makergym-shot-3.png",
 ];
-const dumbbellArt = "/makergym/assets/bench-press-dumbbell.png";
 const logoArt = "/makergym/assets/logo.png";
-const iconArt = "/makergym/assets/icon.png";
 
 const MakerGym = () => {
   useEffect(() => {
@@ -251,12 +242,6 @@ const MakerGym = () => {
             <div className="absolute -right-4 top-3 z-20 hidden rounded-full border border-secondary/20 bg-secondary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-secondary md:flex maker-float-wide-delayed">
               Smart workout ready
             </div>
-            <div className="absolute right-10 top-28 z-10 hidden h-28 w-28 rounded-[2rem] border border-white/10 bg-black/35 p-3 md:block maker-spin-slow">
-              <img src={iconArt} alt="Maker Gym icon" className="h-full w-full rounded-[1.4rem] object-cover" />
-            </div>
-            <div className="absolute -right-6 bottom-8 z-20 hidden rounded-[2rem] border border-white/10 bg-black/30 p-3 backdrop-blur md:block maker-float-wide">
-              <img src={dumbbellArt} alt="halter" className="h-24 w-24 object-contain drop-shadow-[0_12px_30px_rgba(21,188,236,0.3)]" />
-            </div>
 
             <div className="relative flex items-center justify-center">
               <div className="absolute inset-x-10 top-10 h-[24rem] rounded-full bg-gradient-to-r from-primary/30 via-secondary/20 to-highlight-amber/15 blur-3xl" />
@@ -320,42 +305,47 @@ const MakerGym = () => {
         <section id="gallery" className="container px-4 py-20">
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
             <ScrollReveal className="relative rounded-[2rem] border border-white/10 bg-gradient-to-br from-primary/12 via-card/85 to-secondary/10 p-8">
-              <div className="absolute right-6 top-6 hidden rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary md:flex">
-                Animated preview
-              </div>
-              <div className="text-sm font-semibold uppercase tracking-[0.26em] text-primary">Galeria viva</div>
+              <div className="text-sm font-semibold uppercase tracking-[0.26em] text-primary">Direção visual</div>
               <h2 className="mt-4 font-heading text-4xl font-black md:text-5xl">
                 Visual de produto, não de template.
               </h2>
               <p className="mt-4 max-w-xl text-lg leading-8 text-muted-foreground">
-                A página foi desenhada para parecer lançamento de app: movimento contínuo, cards em
-                profundidade, mockup flutuando e assets reais trazendo contexto de treino.
+                A página foi desenhada para parecer lançamento de app, mas agora com uma leitura
+                mais limpa: menos repetição, mais foco no mockup principal e nos pontos que vendem
+                o produto sem poluir a navegação.
               </p>
 
               <div className="mt-8 grid gap-4 md:grid-cols-2">
-                <div className="rounded-[1.6rem] border border-white/10 bg-black/20 p-4">
-                  <div className="mb-3 text-[11px] uppercase tracking-[0.18em] text-primary/70">App motion</div>
-                  <video
-                    className="h-72 w-full rounded-[1.2rem] object-cover"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    preload="metadata"
-                    poster={promoPoster}
-                  >
-                    <source src={promoVideo} type="video/mp4" />
-                  </video>
+                <div className="rounded-[1.6rem] border border-white/10 bg-black/20 p-5">
+                  <div className="mb-3 text-[11px] uppercase tracking-[0.18em] text-primary/70">Clareza</div>
+                  <p className="leading-7 text-muted-foreground">
+                    O hero já mostra o app em ação. Aqui, a página passa a reforçar mensagem,
+                    percepção de marca e foco em progressão sem repetir o mesmo ativo de mídia.
+                  </p>
                 </div>
+                <div className="rounded-[1.6rem] border border-white/10 bg-black/20 p-5">
+                  <div className="mb-3 text-[11px] uppercase tracking-[0.18em] text-secondary/70">Narrativa</div>
+                  <p className="leading-7 text-muted-foreground">
+                    A sequência agora privilegia progresso, consistência e confiança para Play
+                    Store, em vez de multiplicar vídeos, mockups e imagens concorrendo pela atenção.
+                  </p>
+                </div>
+              </div>
 
-                <div className="rounded-[1.6rem] border border-white/10 bg-black/20 p-4">
-                  <div className="mb-3 text-[11px] uppercase tracking-[0.18em] text-secondary/70">Exercise energy</div>
-                  <div className="flex h-72 items-center justify-center rounded-[1.2rem] bg-[radial-gradient(circle_at_center,rgba(21,188,236,0.18),transparent_56%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))]">
-                    <img
-                      src={dumbbellArt}
-                      alt="Exercício com halter"
-                      className="maker-float-wide h-56 w-full object-contain drop-shadow-[0_24px_40px_rgba(21,188,236,0.24)]"
-                    />
+              <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={logoArt}
+                    alt="Maker Gym logo"
+                    className="h-14 w-14 rounded-[1.1rem] object-cover shadow-[0_10px_30px_rgba(21,188,236,0.25)]"
+                  />
+                  <div>
+                    <div className="text-sm font-semibold uppercase tracking-[0.24em] text-secondary">
+                      Maker Gym
+                    </div>
+                    <div className="mt-1 font-heading text-2xl font-black">
+                      Treino bem registrado. Progresso bem lido.
+                    </div>
                   </div>
                 </div>
               </div>
@@ -374,24 +364,8 @@ const MakerGym = () => {
                 </ScrollReveal>
               ))}
 
-              <ScrollReveal delay={360} className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-card/75 p-6">
-                <div className="absolute inset-0 maker-shimmer-overlay" />
-                <div className="relative z-10 flex items-center gap-4">
-                  <img src={logoArt} alt="Maker Gym logo" className="h-16 w-16 rounded-[1.35rem] object-cover shadow-[0_10px_30px_rgba(21,188,236,0.25)]" />
-                  <div>
-                    <div className="text-sm font-semibold uppercase tracking-[0.24em] text-secondary">Maker Gym</div>
-                    <div className="mt-1 font-heading text-3xl font-black">Treino bem registrado. Progresso bem lido.</div>
-                  </div>
-                </div>
-              </ScrollReveal>
             </div>
           </div>
-        </section>
-
-        <section id="waitlist" className="container px-4 pb-20">
-          <ScrollReveal>
-            <WaitlistSignup source="makergym-waitlist-section" />
-          </ScrollReveal>
         </section>
 
         <section className="container px-4 pb-20">
@@ -423,7 +397,7 @@ const MakerGym = () => {
               </div>
             </ScrollReveal>
 
-            <div className="grid gap-5 md:grid-cols-3">
+            <div className="grid gap-5 md:grid-cols-2">
               {screenshotMoments.map((moment, index) => (
                 <ScrollReveal
                   key={moment.title}
@@ -563,62 +537,6 @@ const MakerGym = () => {
           </div>
         </section>
 
-        <section className="container px-4 pb-20">
-          <div className="relative overflow-hidden rounded-[2.4rem] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(21,188,236,0.16),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(138,114,255,0.18),transparent_28%),linear-gradient(180deg,rgba(8,14,24,0.94),rgba(6,10,18,0.96))] px-6 py-10 md:px-10 md:py-14">
-            <div className="absolute -left-16 top-8 h-36 w-36 rounded-full bg-primary/15 blur-3xl maker-glow-drift" />
-            <div className="absolute -right-10 bottom-0 h-44 w-44 rounded-full bg-secondary/15 blur-3xl maker-glow-drift-delayed" />
-
-            <div className="relative z-10 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
-                  <Sparkles size={14} />
-                  Play Store in progress
-                </div>
-                <h2 className="mt-5 font-heading text-4xl font-black leading-[0.96] md:text-6xl">
-                  Página pública pronta.
-                  <span className="block text-gradient-neon">App quase na rua.</span>
-                </h2>
-                <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-                  O Maker Gym já tem landing, suporte e privacy policy no domínio. A última milha
-                  agora é conta Play, revisão e validação real no aparelho. A cara de produto já está aqui.
-                </p>
-
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <a
-                    href="/makergym/privacy-policy/"
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 font-heading text-sm font-black text-primary-foreground neon-glow-cyan transition-all hover:brightness-110"
-                  >
-                    Abrir privacy policy
-                  </a>
-                  <a
-                    href="/makergym/support/"
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-foreground transition-all hover:border-secondary/40 hover:bg-secondary/10"
-                  >
-                    Abrir suporte
-                  </a>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1">
-                {[
-                  ["Landing", "Página do app no domínio principal, com motion, mockups e narrativa de lançamento."],
-                  ["Privacy Policy", "URL pública já preparada para a Play Console sem depender de login ou rota frágil."],
-                  ["Support", "Página pública de contato e suporte pronta para review, usuários e operação."],
-                ].map(([title, body], index) => (
-                  <div
-                    key={title}
-                    className="rounded-[1.6rem] border border-white/10 bg-black/20 p-5 backdrop-blur"
-                    style={{ animationDelay: `${index * 160}ms` }}
-                  >
-                    <div className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">{title}</div>
-                    <p className="mt-3 leading-7 text-muted-foreground">{body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section id="faq" className="container px-4 pb-24">
           <div className="mb-10 max-w-2xl">
             <div className="text-sm font-semibold uppercase tracking-[0.26em] text-primary">FAQ</div>
@@ -649,8 +567,8 @@ const MakerGym = () => {
                   <span className="block text-gradient-neon">de produto grande.</span>
                 </h2>
                 <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-                  Landing viva, vídeo leve, screenshots dedicadas, suporte público e privacy policy
-                  pronta para a Play. A percepção agora já está no nível do lançamento.
+                  Landing viva, mockup principal forte, screenshots essenciais, suporte público e
+                  privacy policy pronta para a Play. A percepção agora já está no nível do lançamento.
                 </p>
               </div>
 
