@@ -106,6 +106,117 @@
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, hsl(var(--neon-cyan)), hsl(var(--neon-purple)));
   }
+  .maker-gym-grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 36px 36px;
+    background-position: center center;
+  }
+  .maker-marquee {
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  }
+  .maker-marquee-track {
+    display: flex;
+    width: max-content;
+    gap: 1rem;
+    animation: maker-marquee 26s linear infinite;
+    padding-inline: 1rem;
+  }
+  .maker-marquee-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    border-radius: 9999px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.8);
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: hsl(var(--foreground));
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+  }
+  .maker-shimmer-border {
+    position: relative;
+    overflow: hidden;
+  }
+  .maker-shimmer-border::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 0%, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%, transparent 100%);
+    transform: translateX(-120%);
+    animation: shimmer-sweep 3.8s ease-in-out infinite;
+  }
+  .maker-shimmer-overlay {
+    background: linear-gradient(120deg, transparent 0%, transparent 40%, rgba(255,255,255,0.08) 50%, transparent 60%, transparent 100%);
+    transform: translateX(-120%);
+    animation: shimmer-sweep 4.6s ease-in-out infinite;
+  }
+  .maker-float-panel {
+    animation: float-panel 6.8s ease-in-out infinite;
+  }
+  .maker-float-card {
+    animation: float-card 5.2s ease-in-out infinite;
+  }
+  .maker-float-card-delayed {
+    animation: float-card 6.2s ease-in-out infinite;
+    animation-delay: 1.2s;
+  }
+  .maker-float-wide {
+    animation: float-wide 6.2s ease-in-out infinite;
+  }
+  .maker-float-wide-delayed {
+    animation: float-wide 7s ease-in-out infinite;
+    animation-delay: 1.1s;
+  }
+  .maker-glow-drift {
+    animation: glow-drift 11s ease-in-out infinite;
+  }
+  .maker-glow-drift-delayed {
+    animation: glow-drift 14s ease-in-out infinite;
+    animation-delay: 1.8s;
+  }
+  .maker-spin-slow {
+    animation: spin-slow 18s linear infinite;
+  }
+  .maker-play-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.9rem;
+    border-radius: 1.25rem;
+    border: 1px solid hsl(var(--border));
+    background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    padding: 0.95rem 1rem;
+    min-width: 16rem;
+  }
+  .maker-play-badge-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.9rem;
+    background:
+      linear-gradient(135deg, rgba(21,188,236,0.2), rgba(138,114,255,0.24)),
+      linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.12);
+    position: relative;
+    box-shadow: 0 10px 28px rgba(21,188,236,0.18);
+  }
+  .maker-play-badge-icon::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    border-left: 14px solid rgba(255,255,255,0.92);
+    transform: translate(-35%, -50%);
+  }
 }
 
 @keyframes pulse-neon {
@@ -120,4 +231,39 @@
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
+}
+
+@keyframes maker-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-120%); }
+  55%, 100% { transform: translateX(140%); }
+}
+
+@keyframes float-panel {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-2deg); }
+  50% { transform: translate3d(0, -14px, 0) rotate(1.2deg); }
+}
+
+@keyframes float-card {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -10px, 0); }
+}
+
+@keyframes float-wide {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -10px, 0) rotate(2deg); }
+}
+
+@keyframes glow-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(18px, -12px, 0) scale(1.08); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

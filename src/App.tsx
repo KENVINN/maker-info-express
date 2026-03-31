@@ -12,6 +12,7 @@ import Localizacao from "./pages/Localizacao";
 import Pedido from "./pages/Pedido";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
+import MakerGym from "./pages/MakerGym";
 import NotFound from "./pages/NotFound";
 import CircuitBackground from "./components/CircuitBackground";
 
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/pedido" element={<Pedido />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/makergym" element={<MakerGym />} />
 
               {/* ── Maker Info Studio ── */}
               <Route
