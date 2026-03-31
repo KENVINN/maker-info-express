@@ -606,6 +606,9 @@ const MakerGym = () => {
             <a href="/makergym/privacy-policy/" className="rounded-2xl border border-white/10 bg-card/50 px-4 py-3 transition-colors hover:border-primary/30 hover:text-primary">
               Privacy Policy
             </a>
+            <a href="/makergym/delete-account/" className="rounded-2xl border border-white/10 bg-card/50 px-4 py-3 transition-colors hover:border-primary/30 hover:text-primary">
+              Delete Account
+            </a>
             <a href="/makergym/support/" className="rounded-2xl border border-white/10 bg-card/50 px-4 py-3 transition-colors hover:border-secondary/30 hover:text-secondary">
               Support
             </a>
