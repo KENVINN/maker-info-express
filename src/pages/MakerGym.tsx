@@ -160,8 +160,8 @@ const MakerGym = () => {
       <header className="sticky top-0 z-40 border-b border-white/10 bg-background/70 backdrop-blur-xl">
         <div className="container flex h-16 items-center justify-between">
           <a href="/makergym" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 text-primary neon-glow-cyan">
-              <Dumbbell size={18} />
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-primary/30 bg-black neon-glow-cyan">
+              <img src={logoArt} alt="Maker Gym" className="h-full w-full object-cover" />
             </div>
             <div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.32em] text-primary/80">Maker Info</div>
