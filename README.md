@@ -1,67 +1,117 @@
-# Welcome to Maker Info and Future Gym
+# Maker Info
 
-## Project info
+Frontend React + backend Express para o site, painel administrativo, painel empresarial, acompanhamento de pedidos e waitlist do Maker Gym.
 
-**URL**: https://makerinfo.com.br/
+## O que mudou
 
-## How can I edit this code?
+- autenticação do admin e do painel empresarial saiu do frontend
+- operações sensíveis agora passam pela API `/api`
+- o frontend não acessa mais o Supabase direto no navegador
+- uploads de pedidos agora passam pelo backend com sessão protegida
+- waitlist do Maker Gym também foi movida para o backend
 
-There are several ways of editing your application.
+## Ambiente
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Copie `.env.example` para `.env` e preencha:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+cp .env.example .env
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Variáveis obrigatórias:
 
-# Step 3: Install the necessary dependencies.
-npm i
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SESSION_SECRET`
+- `ADMIN_PASSWORD` e/ou `DASHBOARD_PASSWORD`
+- `APP_ORIGIN`
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Desenvolvimento
+
+```sh
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+O `npm run dev` sobe:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- frontend Vite em `http://localhost:8080`
+- backend Express em `http://localhost:3001`
 
-**Use GitHub Codespaces**
+No desenvolvimento, o Vite faz proxy de `/api` para o backend.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Produção
 
-## What technologies are used for this project?
+```sh
+npm run build
+npm run start
+```
 
-This project is built with:
+Em produção, o Express serve a API e também os arquivos do `dist/`.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Importante:
 
-## How can I deploy this project?
+- agora o projeto precisa de runtime Node no deploy; hospedar só o build estático do Vite não basta
+- o frontend e a API saem do mesmo processo em produção
+- use `NODE_ENV=production`
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### Render
 
-## Can I connect a custom domain to my Lovable project?
+O repositório já inclui `render.yaml` com:
 
-Yes, you can!
+- `buildCommand`: `npm ci && npm run build`
+- `startCommand`: `npm run start`
+- `healthCheckPath`: `/api/health`
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Docker
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+O repositório também inclui `Dockerfile` e `.dockerignore`.
+
+Build local:
+
+```sh
+docker build -t maker-info-express .
+docker run --env-file .env -p 3001:3001 maker-info-express
+```
+
+### Railway / Fly / Heroku-like
+
+Também deixei um `Procfile` com:
+
+```txt
+web: npm run start
+```
+
+## Operação
+
+Validar ambiente:
+
+```sh
+npm run check:env
+```
+
+Auditar senhas legadas das empresas sem alterar nada:
+
+```sh
+npm run migrate:empresa-passwords
+```
+
+Aplicar a migração de hash nas senhas legadas:
+
+```sh
+npm run migrate:empresa-passwords -- --apply
+```
+
+## Verificação
+
+Comandos usados nesta alteração:
+
+```sh
+npm run check:env
+npm run migrate:empresa-passwords
+npm run lint
+npm run build
+npm test
+```
+
+O `npm run lint` passa; no momento ele só emite warnings antigos de Fast Refresh nos componentes do kit `ui`.

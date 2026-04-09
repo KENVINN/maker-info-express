@@ -4,7 +4,7 @@ import { Loader2, Mail, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
+import { api, ApiError } from "@/lib/api";
 
 type Interest = "tester" | "launch" | "both";
 
@@ -67,28 +67,28 @@ export default function WaitlistSignup({
       source,
     };
 
-    const { error } = await supabase
-      .from("maker_gym_waitlist")
-      .insert(payload);
+    try {
+      await api.waitlist.signup(payload);
+    } catch (error) {
+      setIsSubmitting(false);
 
-    setIsSubmitting(false);
+      if (error instanceof ApiError && error.status === 409) {
+        toast({
+          title: "Esse e-mail ja esta na lista",
+          description: "Perfeito. Voce ja esta salvo para testers, lancamento ou ambos.",
+        });
+        return;
+      }
 
-    if (error && error.code === "23505") {
-      toast({
-        title: "Esse e-mail ja esta na lista",
-        description: "Perfeito. Voce ja esta salvo para testers, lancamento ou ambos.",
-      });
-      return;
-    }
-
-    if (error) {
       toast({
         title: "Nao deu para entrar agora",
-        description: "Confere se a tabela maker_gym_waitlist ja foi criada no Supabase com a policy de insert e tenta de novo.",
+        description: error instanceof Error ? error.message : "Tente novamente em alguns instantes.",
         variant: "destructive",
       });
       return;
     }
+
+    setIsSubmitting(false);
 
     setName("");
     setEmail("");

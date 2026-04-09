@@ -1,20 +1,9 @@
 import { useState, useEffect } from "react";
-import { supabase, STATUS_CONFIG, StatusPedido } from "@/lib/supabase";
+import { api } from "@/lib/api";
+import { Pedido, STATUS_CONFIG, StatusPedido } from "@/lib/pedidos";
 import { useNavigate } from "react-router-dom";
 
-const ADMIN_PASS = "makerinfo2024";
-
-type Pedido = {
-  id: string;
-  codigo: string;
-  cliente_nome: string;
-  equipamento: string;
-  problema: string;
-  status: string;
-  valor: number;
-  created_at: string;
-  updated_at: string;
-};
+type TipoPreco = "DUPLO" | "FIXO" | "MÃO DE OBRA" | "GRÁTIS" | "A PARTIR DE";
 
 type Custo = {
   id: string;
@@ -24,6 +13,22 @@ type Custo = {
   categoria: string;
 };
 
+type PrecoItem = {
+  nome: string;
+  tipo: TipoPreco;
+  preco: number;
+  precoGamer?: number;
+  peca: string | null;
+  incluido: string;
+  obs: string;
+  tag: string | null;
+};
+
+type GrupoPrecos = {
+  categoria: string;
+  items: PrecoItem[];
+};
+
 const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const parseBRL = (s: string) => parseFloat(s?.replace(/[R$\s.]/g, "").replace(",", ".") || "0") || 0;
 
@@ -31,7 +36,7 @@ const CATEGORIAS = ["Peça / Componente", "Marketing", "Infraestrutura", "Outros
 
 const TABS = ["📊 Visão Geral", "💰 Financeiro", "🔧 Serviços", "📦 Custos", "💲 Preços"];
 
-const PRECOS = [
+const PRECOS: GrupoPrecos[] = [
   {
     categoria: "SERVIÇOS FIXOS",
     items: [
@@ -69,6 +74,7 @@ const DESLOCAMENTO = [
 
 const Dashboard = () => {
   const [logado, setLogado] = useState(false);
+  const [verificandoSessao, setVerificandoSessao] = useState(true);
   const [senha, setSenha] = useState("");
   const [erroLogin, setErroLogin] = useState("");
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
@@ -80,45 +86,94 @@ const Dashboard = () => {
   const [periodo, setPeriodo] = useState<"7" | "30" | "90" | "tudo">("30");
   const navigate = useNavigate();
 
-  useEffect(() => { if (sessionStorage.getItem("admin")) setLogado(true); }, []);
+  useEffect(() => {
+    let active = true;
+
+    api.admin
+      .session()
+      .then(() => {
+        if (active) setLogado(true);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setVerificandoSessao(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
   useEffect(() => { if (logado) { carregar(); } }, [logado]);
 
   const carregar = async () => {
     setLoading(true);
-    const [{ data: p }, { data: c }] = await Promise.all([
-      supabase.from("pedidos").select("*").order("created_at", { ascending: false }),
-      supabase.from("custos").select("*").order("data", { ascending: false }),
-    ]);
-    if (p) setPedidos(p);
-    if (c) setCustos(c);
-    setLoading(false);
+
+    try {
+      const [{ pedidos: pedidosCarregados }, { custos: custosCarregados }] = await Promise.all([
+        api.admin.listPedidos(),
+        api.admin.listCustos(),
+      ]);
+      setPedidos(pedidosCarregados);
+      setCustos(custosCarregados);
+    } catch (error) {
+      setErroLogin(error instanceof Error ? error.message : "Nao foi possivel carregar o dashboard.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const login = () => {
-    if (senha === ADMIN_PASS) { setLogado(true); sessionStorage.setItem("admin", "1"); }
-    else setErroLogin("Senha incorreta.");
+  const login = async () => {
+    try {
+      await api.admin.login(senha);
+      setLogado(true);
+      setErroLogin("");
+    } catch (error) {
+      setErroLogin(error instanceof Error ? error.message : "Senha incorreta.");
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await api.admin.logout();
+    } catch {
+      // A sessao pode ja ter expirado.
+    }
+
+    setLogado(false);
+    setPedidos([]);
+    setCustos([]);
+    setSenha("");
   };
 
   const adicionarCusto = async () => {
     if (!novoCusto.descricao || !novoCusto.valor) return;
     setSalvandoCusto(true);
-    const { error } = await supabase.from("custos").insert({
-      data: novoCusto.data,
-      descricao: novoCusto.descricao,
-      valor: parseFloat(novoCusto.valor.replace(",", ".")),
-      categoria: novoCusto.categoria,
-    });
-    if (!error) {
+
+    try {
+      await api.admin.createCusto({
+        data: novoCusto.data,
+        descricao: novoCusto.descricao,
+        valor: parseFloat(novoCusto.valor.replace(",", ".")),
+        categoria: novoCusto.categoria,
+      });
       setNovoCusto({ data: new Date().toISOString().split("T")[0], descricao: "", valor: "", categoria: "Peça / Componente" });
       await carregar();
+    } catch (error) {
+      setErroLogin(error instanceof Error ? error.message : "Nao foi possivel cadastrar o custo.");
+    } finally {
+      setSalvandoCusto(false);
     }
-    setSalvandoCusto(false);
   };
 
   const deletarCusto = async (id: string) => {
     if (!confirm("Deletar este custo?")) return;
-    await supabase.from("custos").delete().eq("id", id);
-    setCustos(prev => prev.filter(c => c.id !== id));
+
+    try {
+      await api.admin.deleteCusto(id);
+      setCustos(prev => prev.filter(c => c.id !== id));
+    } catch (error) {
+      setErroLogin(error instanceof Error ? error.message : "Nao foi possivel deletar o custo.");
+    }
   };
 
   // Filtro de período
@@ -183,7 +238,7 @@ const Dashboard = () => {
   // Bairros
   const bairroMap: Record<string, { count: number; receita: number }> = {};
   pedidosFiltrados.forEach(p => {
-    const k = (p as any).bairro || "Não informado";
+    const k = p.bairro || "Não informado";
     if (!bairroMap[k]) bairroMap[k] = { count: 0, receita: 0 };
     bairroMap[k].count++;
     bairroMap[k].receita += p.valor || 0;
@@ -200,6 +255,16 @@ const Dashboard = () => {
   const probMap: Record<string, number> = {};
   pedidosFiltrados.forEach(p => { const k = p.problema?.split(",")[0]?.trim() || "Outros"; probMap[k] = (probMap[k] || 0) + 1; });
   const topProb = Object.entries(probMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
+
+  if (verificandoSessao) return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="bg-card border border-border rounded-2xl p-8 w-full max-w-sm text-center">
+        <div className="text-4xl mb-4">📊</div>
+        <h1 className="font-heading text-2xl font-black mb-2">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">Verificando acesso...</p>
+      </div>
+    </div>
+  );
 
   if (!logado) return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -234,6 +299,7 @@ const Dashboard = () => {
             ))}
             <button onClick={() => navigate("/admin")} className="px-3 py-1.5 rounded-lg text-xs font-heading font-bold border border-border text-muted-foreground hover:text-foreground transition-all">Admin</button>
             <button onClick={carregar} className="px-3 py-1.5 rounded-lg text-xs font-heading font-bold border border-primary/30 text-primary hover:brightness-110 transition-all">↻</button>
+            <button onClick={logout} className="px-3 py-1.5 rounded-lg text-xs font-heading font-bold border border-border text-muted-foreground hover:text-foreground transition-all">Sair</button>
           </div>
         </div>
 
@@ -548,8 +614,8 @@ const Dashboard = () => {
                               <span className="font-heading font-black text-xl text-green-500">GRÁTIS</span>
                             ) : item.tipo === "DUPLO" ? (
                               <div className="flex flex-col items-end gap-0.5">
-                                <div className="flex items-center gap-1.5"><span className="text-xs text-muted-foreground">comum</span><span className="font-heading font-black text-lg text-primary">{fmt((item as any).preco)}</span></div>
-                                <div className="flex items-center gap-1.5"><span className="text-xs text-muted-foreground">gamer</span><span className="font-heading font-black text-lg text-secondary">{fmt((item as any).precoGamer)}</span></div>
+                                <div className="flex items-center gap-1.5"><span className="text-xs text-muted-foreground">comum</span><span className="font-heading font-black text-lg text-primary">{fmt(item.preco)}</span></div>
+                                <div className="flex items-center gap-1.5"><span className="text-xs text-muted-foreground">gamer</span><span className="font-heading font-black text-lg text-secondary">{fmt(item.precoGamer ?? item.preco)}</span></div>
                               </div>
                             ) : (
                               <span className="font-heading font-black text-xl text-primary">

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: maker-info-express
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: DASHBOARD_PASSWORD
+        sync: false
+      - key: APP_ORIGIN
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

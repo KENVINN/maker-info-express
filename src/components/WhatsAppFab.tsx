@@ -1,12 +1,24 @@
-import React from 'react';
+type GtagFunction = (
+  command: "event",
+  action: string,
+  params: {
+    send_to: string;
+  },
+) => void;
+
+declare global {
+  interface Window {
+    gtag?: GtagFunction;
+  }
+}
 
 const WhatsAppFab = () => {
   const whatsappUrl = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
   const handleWhatsAppClick = () => {
     // Verifica se o gtag existe (carregado pela index.html) antes de disparar
-    if (typeof window !== "undefined" && (window as any).gtag) {
-      (window as any).gtag("event", "conversion", {
+    if (typeof window !== "undefined" && window.gtag) {
+      window.gtag("event", "conversion", {
         send_to: "AW-17997609434/Kv8YCPm3voQcENrz9oVD",
       });
     }
