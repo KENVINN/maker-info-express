@@ -31,6 +31,16 @@ type GrupoPrecos = {
 
 const fmt = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const parseBRL = (s: string) => parseFloat(s?.replace(/[R$\s.]/g, "").replace(",", ".") || "0") || 0;
+const parseCustoDate = (value: string) => {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return null;
+  }
+
+  const [ano, mes, dia] = value.split("-").map(Number);
+  const date = new Date(ano, mes - 1, dia);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
 const CATEGORIAS = ["Peça / Componente", "Marketing", "Infraestrutura", "Outros"];
 
@@ -195,9 +205,8 @@ const Dashboard = () => {
     const limite = getLimite();
     if (!limite) return custos;
     return custos.filter(c => {
-      const [ano, mes, dia] = c.data.split("-").map(Number);
-      const d = new Date(ano, mes - 1, dia);
-      return d >= limite;
+      const d = parseCustoDate(c.data);
+      return d ? d >= limite : false;
     });
   })();
 

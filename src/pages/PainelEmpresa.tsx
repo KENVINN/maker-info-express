@@ -28,13 +28,50 @@ const WhatsAppIcon = () => (
 type PedidoEmpresa = {
   id: string;
   pc_id?: string | null;
-  status: StatusPedido;
+  status: StatusPedido | string | null;
   problema: string;
   observacao?: string;
   created_at: string;
 };
 
 type FiltroStatus = "todos" | "em_reparo" | "pronto" | "ok";
+
+const STATUS_FALLBACK = {
+  label: "Status indisponível",
+  emoji: "⚠️",
+  color: "text-muted-foreground",
+  step: 0,
+};
+
+const getPedidoStatusConfig = (status: string | null | undefined) => {
+  if (status && status in STATUS_CONFIG) {
+    return STATUS_CONFIG[status as StatusPedido];
+  }
+
+  return STATUS_FALLBACK;
+};
+
+const normalizeVisitaChecklist = (checklist: Visita["checklist"] | null | undefined) => {
+  if (!checklist || typeof checklist !== "object" || Array.isArray(checklist)) {
+    return {} as Record<string, Record<string, boolean>>;
+  }
+
+  const entries = Object.entries(checklist);
+
+  if (entries.length === 0) {
+    return {} as Record<string, Record<string, boolean>>;
+  }
+
+  const nested = entries.every(([, value]) => value && typeof value === "object" && !Array.isArray(value));
+
+  if (nested) {
+    return checklist as Record<string, Record<string, boolean>>;
+  }
+
+  return {
+    geral: Object.fromEntries(entries.map(([key, value]) => [key, Boolean(value)])),
+  };
+};
 
 const PainelEmpresa = () => {
   const [codigo, setCodigo] = useState("");
@@ -400,8 +437,8 @@ const PainelEmpresa = () => {
                             </div>
                             <div className="rounded-xl bg-background/60 p-3">
                               <p className="text-xs text-muted-foreground mb-1">Status do reparo</p>
-                              <p className={`text-sm font-semibold ${STATUS_CONFIG[pedido.status].color}`}>
-                                {STATUS_CONFIG[pedido.status].emoji} {pedido.status}
+                              <p className={`text-sm font-semibold ${getPedidoStatusConfig(pedido.status).color}`}>
+                                {getPedidoStatusConfig(pedido.status).emoji} {pedido.status || "Status indisponível"}
                               </p>
                             </div>
                             {pedido.observacao && (
@@ -432,71 +469,79 @@ const PainelEmpresa = () => {
                 )}
 
                 {visitas.map((visita) => (
-                  <div key={visita.id} className="rounded-2xl bg-card border border-border p-5 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-heading font-black text-lg">
-                          {new Date(visita.data).toLocaleDateString("pt-BR", {
-                            day: "2-digit",
-                            month: "long",
-                            year: "numeric",
-                          })}
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(visita.data).toLocaleTimeString("pt-BR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                    </div>
+                  (() => {
+                    const checklistPorPc = normalizeVisitaChecklist(visita.checklist);
+                    const checklistEntries = Object.entries(checklistPorPc);
 
-                    {visita.observacao && (
-                      <div className="rounded-xl bg-background/60 p-3">
-                        <p className="text-xs text-muted-foreground mb-1">Observações</p>
-                        <p className="text-sm">{visita.observacao}</p>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      {(pcs || []).map((pc) => {
-                        const pcChecklist = (visita.checklist as Record<string, Record<string, boolean>>)[pc.id];
-
-                        if (!pcChecklist) {
-                          return null;
-                        }
-
-                        const feitos = Object.values(pcChecklist).filter(Boolean).length;
-
-                        return (
-                          <div key={pc.id} className="rounded-xl bg-background/60 p-3">
-                            <div className="flex items-center justify-between gap-3 mb-2">
-                              <p className="font-semibold">{pc.nome}</p>
-                              <span className="text-xs text-muted-foreground">
-                                {feitos}/{Object.keys(pcChecklist).length} itens
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {Object.entries(pcChecklist).map(([itemKey, done]) => {
-                                return (
-                                  <span
-                                    key={itemKey}
-                                    className={`px-2 py-1 rounded-lg text-xs border ${
-                                      done
-                                        ? "bg-green-500/10 border-green-500/30 text-green-400"
-                                        : "bg-background border-border text-muted-foreground"
-                                    }`}
-                                  >
-                                    {CHECKLIST_LABELS[itemKey] || itemKey}
-                                  </span>
-                                );
+                    return (
+                      <div key={visita.id} className="rounded-2xl bg-card border border-border p-5 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="font-heading font-black text-lg">
+                              {new Date(visita.data).toLocaleDateString("pt-BR", {
+                                day: "2-digit",
+                                month: "long",
+                                year: "numeric",
                               })}
-                            </div>
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(visita.data).toLocaleTimeString("pt-BR", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                        </div>
+
+                        {visita.observacao && (
+                          <div className="rounded-xl bg-background/60 p-3">
+                            <p className="text-xs text-muted-foreground mb-1">Observações</p>
+                            <p className="text-sm">{visita.observacao}</p>
+                          </div>
+                        )}
+
+                        {checklistEntries.length === 0 && (
+                          <div className="rounded-xl bg-background/60 p-3 text-sm text-muted-foreground">
+                            Checklist indisponível para esta visita.
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          {checklistEntries.map(([pcId, pcChecklist]) => {
+                            const pc = pcs.find((item) => item.id === pcId);
+                            const feitos = Object.values(pcChecklist).filter(Boolean).length;
+
+                            return (
+                              <div key={pcId} className="rounded-xl bg-background/60 p-3">
+                                <div className="flex items-center justify-between gap-3 mb-2">
+                                  <p className="font-semibold">{pc?.nome || (pcId === "geral" ? "Checklist geral" : `PC ${pcId}`)}</p>
+                                  <span className="text-xs text-muted-foreground">
+                                    {feitos}/{Object.keys(pcChecklist).length} itens
+                                  </span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {Object.entries(pcChecklist).map(([itemKey, done]) => {
+                                    return (
+                                      <span
+                                        key={itemKey}
+                                        className={`px-2 py-1 rounded-lg text-xs border ${
+                                          done
+                                            ? "bg-green-500/10 border-green-500/30 text-green-400"
+                                            : "bg-background border-border text-muted-foreground"
+                                        }`}
+                                      >
+                                        {CHECKLIST_LABELS[itemKey] || itemKey}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()
                 ))}
               </div>
             )}
