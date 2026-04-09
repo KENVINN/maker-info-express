@@ -1,4 +1,5 @@
 import ScrollReveal from "@/components/ScrollReveal";
+import SpotlightCard from "@/components/SpotlightCard";
 
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+fazer+um+orçamento&type=phone_number&app_absent=0";
 
@@ -14,7 +15,6 @@ const TrackingSection = () => (
     <div className="container px-4 max-w-5xl mx-auto">
       <ScrollReveal>
 
-        {/* Header */}
         <div className="text-center mb-14">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 text-sm font-semibold mb-4">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -28,25 +28,22 @@ const TrackingSection = () => (
           </p>
         </div>
 
-        {/* Diferenciais */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-14">
           {diferenciais.map((d, i) => (
-            <div key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all">
+            <SpotlightCard key={i} className="flex items-start gap-4 p-5 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all">
               <span className="text-3xl shrink-0">{d.emoji}</span>
               <div>
                 <h3 className="font-heading font-black text-sm mb-1">{d.title}</h3>
                 <p className="text-muted-foreground text-xs leading-relaxed">{d.desc}</p>
               </div>
-            </div>
+            </SpotlightCard>
           ))}
         </div>
 
-        {/* Demo visual */}
-        <div className="relative rounded-2xl bg-card border border-primary/20 overflow-hidden">
+        <SpotlightCard className="relative rounded-2xl bg-card border border-primary/20 overflow-hidden">
           <div className="absolute top-0 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="flex flex-col md:flex-row">
-            {/* Timeline mock */}
             <div className="flex-1 p-6 md:p-8 border-b md:border-b-0 md:border-r border-border">
               <p className="text-xs text-muted-foreground mb-4 font-semibold uppercase tracking-wider">Como o cliente vê</p>
               <div className="space-y-2">
@@ -70,7 +67,6 @@ const TrackingSection = () => (
               </div>
             </div>
 
-            {/* CTA */}
             <div className="flex flex-col justify-center gap-5 p-6 md:p-8 md:max-w-xs">
               <div>
                 <p className="text-xs text-green-500 font-semibold mb-2 flex items-center gap-1">
@@ -92,7 +88,7 @@ const TrackingSection = () => (
               </a>
             </div>
           </div>
-        </div>
+        </SpotlightCard>
 
       </ScrollReveal>
     </div>

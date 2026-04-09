@@ -1,35 +1,12 @@
 import { useEffect, useState } from "react";
 import ScrollReveal from "@/components/ScrollReveal";
+import SpotlightCard from "@/components/SpotlightCard";
 
 const depoimentos = [
-  {
-    nome: "Cliente via WhatsApp",
-    avatar: "💬",
-    fonte: "WhatsApp",
-    estrelas: 5,
-    texto: "Ficou muito bom, meus parabéns, te desejo sucesso no seu negócio! 🤝",
-  },
-  {
-    nome: "Gabriela N.",
-    avatar: "G",
-    fonte: "Google",
-    estrelas: 5,
-    texto: "Ótima! Super recomendo o serviço.",
-  },
-  {
-    nome: "Erik B.",
-    avatar: "E",
-    fonte: "Google",
-    estrelas: 5,
-    texto: "Excelente serviço, exímio profissional e preço camarada! 👌",
-  },
-  {
-    nome: "Maria G.",
-    avatar: "M",
-    fonte: "Google",
-    estrelas: 5,
-    texto: "Excelente atendimento, entrega o trabalho muito rápido e bem feito! Super recomendo!!",
-  },
+  { nome: "Cliente via WhatsApp", avatar: "💬", fonte: "WhatsApp", estrelas: 5, texto: "Ficou muito bom, meus parabéns, te desejo sucesso no seu negócio! 🤝" },
+  { nome: "Gabriela N.",          avatar: "G",  fonte: "Google",   estrelas: 5, texto: "Ótima! Super recomendo o serviço." },
+  { nome: "Erik B.",              avatar: "E",  fonte: "Google",   estrelas: 5, texto: "Excelente serviço, exímio profissional e preço camarada! 👌" },
+  { nome: "Maria G.",             avatar: "M",  fonte: "Google",   estrelas: 5, texto: "Excelente atendimento, entrega o trabalho muito rápido e bem feito! Super recomendo!!" },
 ];
 
 const Stars = () => (
@@ -62,9 +39,7 @@ const TestimonialsSection = () => {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % depoimentos.length);
-    }, 3500);
+    const timer = setInterval(() => setCurrent(prev => (prev + 1) % depoimentos.length), 3500);
     return () => clearInterval(timer);
   }, []);
 
@@ -79,7 +54,6 @@ const TestimonialsSection = () => {
             Avaliação média ⭐ 5.0 · Google Maps e WhatsApp
           </p>
 
-          {/* Carrossel */}
           <div className="relative overflow-hidden">
             <div
               className="flex transition-transform duration-700 ease-in-out"
@@ -87,18 +61,14 @@ const TestimonialsSection = () => {
             >
               {depoimentos.map((d, i) => (
                 <div key={i} className="w-full shrink-0 px-2">
-                  <div className="p-8 rounded-2xl bg-card/80 backdrop-blur neon-border-purple text-center">
-                    {/* Avatar */}
+                  <SpotlightCard className="p-8 rounded-2xl bg-card/80 backdrop-blur neon-border-purple text-center">
                     <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-xl font-black text-primary mx-auto mb-4">
                       {d.avatar}
                     </div>
-
                     <Stars />
-
                     <p className="text-foreground text-base leading-relaxed mb-5 italic">
                       "{d.texto}"
                     </p>
-
                     <div className="flex items-center justify-center gap-2">
                       <span className="font-heading font-bold text-sm">{d.nome}</span>
                       <span className="text-muted-foreground text-xs">·</span>
@@ -107,21 +77,18 @@ const TestimonialsSection = () => {
                         {d.fonte}
                       </div>
                     </div>
-                  </div>
+                  </SpotlightCard>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Dots */}
           <div className="flex justify-center gap-2 mt-6">
             {depoimentos.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrent(i)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  i === current ? "bg-primary w-6" : "bg-muted-foreground/30"
-                }`}
+                className={`h-2 rounded-full transition-all duration-300 ${i === current ? "bg-primary w-6" : "bg-muted-foreground/30 w-2"}`}
               />
             ))}
           </div>

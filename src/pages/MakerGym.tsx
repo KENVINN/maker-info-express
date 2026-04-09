@@ -1,65 +1,64 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   ArrowRight,
   BellRing,
   BrainCircuit,
   ChartColumnIncreasing,
-  Dumbbell,
   Flame,
   ShieldCheck,
   Sparkles,
-  Smartphone,
   TimerReset,
   Users2,
 } from "lucide-react";
 import ScrollReveal from "@/components/ScrollReveal";
 import WaitlistSignup from "@/components/makergym/WaitlistSignup";
+import SpotlightCard from "@/components/SpotlightCard";
 
 const featureCards = [
   {
     icon: ChartColumnIncreasing,
-    title: "Progresso que dá para enxergar",
+    title: "Progresso com profundidade",
     description:
-      "Acompanhe volume, séries, repetições, cargas e histórico com leitura clara do que realmente está evoluindo.",
+      "Volume total, ranking de força, heatmap muscular e detecção de PRs. Dados que provam o que realmente evoluiu.",
   },
   {
     icon: TimerReset,
-    title: "Treino vivo, não só registro",
+    title: "Sessão ao vivo inteligente",
     description:
-      "Use timer de descanso, fluxo de sessão e atalhos rápidos para manter ritmo real de treino sem atrito.",
+      "Cache da última série, sugestão de carga e timer de descanso no mesmo fluxo. Rápido o bastante para usar com treino correndo.",
+  },
+  {
+    icon: Flame,
+    title: "Modos competitivos",
+    description:
+      "Ghost, PR Hunter e Time Attack solo. Progress Race e Final Boss em dupla. O treino vira jogo com regras reais.",
   },
   {
     icon: Users2,
-    title: "Solo ou em dupla",
+    title: "Solo, em dupla ou com personal",
     description:
-      "O app foi pensado para treino individual e também para experiências com parceiro em fluxos compatíveis.",
-  },
-  {
-    icon: BellRing,
-    title: "Lembretes que ajudam",
-    description:
-      "Receba alertas e notificações para voltar ao treino e manter consistência ao longo da semana.",
+      "Treino individual, sessão sincronizada com parceiro ou prescrição recebida do seu personal diretamente no app.",
   },
   {
     icon: BrainCircuit,
-    title: "Inteligência opcional",
+    title: "IA que fala sua língua",
     description:
-      "Quando disponível, use sugestões inteligentes para estruturar treinos e refinar decisões com mais rapidez.",
+      "Descreve o treino que você quer em texto. A IA monta a estrutura, você refina. Cota gratuita semanal inclusa.",
   },
   {
-    icon: ShieldCheck,
-    title: "Conta e dados sob controle",
+    icon: BellRing,
+    title: "Streak que respeita sua rotina",
     description:
-      "Autenticação, recuperação de senha e fluxo de exclusão de conta preparados para uma operação mais saudável.",
+      "O streak considera os dias que você configurou para treinar, não o calendário inteiro. Parceiro incluso no acompanhamento.",
   },
 ];
 
 const valuePoints = [
-  "Treino registrado com clareza",
-  "Volume e progresso como métricas centrais",
-  "Timer, histórico e constância no mesmo fluxo",
-  "Experiência mobile com cara de produto real",
+  "Solo, em dupla ou com personal trainer",
+  "6 modos competitivos com regras reais",
+  "IA para montagem e refinamento de treino",
+  "Streak inteligente com parceiro",
 ];
 
 const tapes = [
@@ -67,8 +66,12 @@ const tapes = [
   "Timer de descanso no ritmo do treino",
   "Histórico limpo e legível",
   "Constância visível ao longo da semana",
+  "Modos competitivos solo e em dupla",
+  "IA com linguagem natural",
+  "Streak inteligente com parceiro",
+  "Templates com personal trainer",
   "Fluxo mobile com menos fricção",
-  "Recursos premium e smart quando fizer sentido",
+  "Importação do Hevy",
 ];
 
 const spotlightCards = [
@@ -76,34 +79,52 @@ const spotlightCards = [
     eyebrow: "Live Session",
     title: "Registrar no meio do treino precisa ser rápido",
     body:
-      "A interface foi pensada para uso real: séries, reps, carga, volume, timer e progresso sem parecer um painel burocrático.",
+      "Cache da última série, sugestão de carga para a próxima execução e timer de descanso. Sem parar o ritmo para procurar o que registrar.",
+  },
+  {
+    eyebrow: "Competitivo",
+    title: "O treino vira jogo com regras reais",
+    body:
+      "Ghost, PR Hunter e Time Attack no solo. Progress Race e Final Boss em dupla. Cada modo tem objetivo e dinâmica próprios.",
   },
   {
     eyebrow: "Momentum",
-    title: "Consistência fica visível",
+    title: "Consistência fica visível, parceiro incluso",
     body:
-      "O app junta histórico, métricas e lembretes para transformar frequência em leitura de evolução, não só em lista de sessões passadas.",
-  },
-  {
-    eyebrow: "Maker Look",
-    title: "Visual premium com clima de performance",
-    body:
-      "A estética puxa o neon do ecossistema Maker Info, mas com atmosfera fitness, contraste forte e destaque para dados que importam.",
+      "Streak inteligente que considera seus dias configurados de treino. Histórico da dupla, nudge para o parceiro e marcos de 7, 30 e 100 dias.",
   },
 ];
 
-const screenshotMoments = [
+const soloModes = [
   {
-    label: "Sessão ativa",
-    title: "Registrar sem quebrar o ritmo",
-    body:
-      "A hierarquia visual destaca o que interessa no meio do treino: exercício atual, progresso da sessão, timer e volume.",
+    name: "Ghost",
+    description: "Você compete contra o seu próprio histórico. O app carrega o que você fez antes — você decide se supera.",
   },
   {
-    label: "Consistência",
-    title: "Dados que contam uma história",
-    body:
-      "O histórico ganha leitura de progresso, e não cara de arquivo morto. A landing vende essa sensação de continuidade.",
+    name: "PR Hunter",
+    description: "Foco em máximos. O app destaca os exercícios onde você está perto de um recorde pessoal.",
+  },
+  {
+    name: "Time Attack",
+    description: "Volume máximo no menor tempo. O relógio corre, você decide o que prioriza.",
+  },
+];
+
+const duoModes = [
+  {
+    name: "Progress Race",
+    description: "Quem acumula mais volume no mesmo treino vence. Sem handicap, sem regra especial.",
+    premium: false,
+  },
+  {
+    name: "Final Boss",
+    description: "Um parceiro assume o papel de chefe. O outro tenta superar o volume dele na mesma sessão.",
+    premium: false,
+  },
+  {
+    name: "Punishment Bet",
+    description: "Aposta com consequência definida por vocês. Quem perder, cumpre.",
+    premium: true,
   },
 ];
 
@@ -111,12 +132,22 @@ const faqs = [
   {
     question: "O Maker Gym já está na Play Store?",
     answer:
-      "O app está em preparação final para distribuição. Esta página já centraliza informações públicas, suporte e política de privacidade.",
+      "Sim. O app está publicado na Play Store em teste fechado. O acesso é por convite — deixa seu e-mail no formulário acima para entrar na fila de testers.",
+  },
+  {
+    question: "O que são os modos competitivos?",
+    answer:
+      "São modos de treino com objetivo e dinâmica próprios. No solo: Ghost (bata seu próprio histórico), PR Hunter (foco em máximos) e Time Attack. Em dupla: Progress Race, Final Boss e outros. Cada modo transforma a sessão em algo além do registro.",
+  },
+  {
+    question: "O app funciona para personal trainer?",
+    answer:
+      "Sim. Personal trainers podem cadastrar alunos, prescrever treinos como templates e acompanhar sessões. O aluno recebe o treino direto no app e o personal vê o histórico de execução.",
   },
   {
     question: "Preciso de assinatura para usar tudo?",
     answer:
-      "Alguns recursos podem depender de conta, permissões do aparelho, internet ou assinatura premium, conforme a fase do produto.",
+      "Treinos solo e em dupla, histórico, IA com cota gratuita semanal e os modos competitivos principais estão disponíveis no plano base. Recursos como progresso avançado, múltiplos parceiros simultâneos e funcionalidades do personal trainer dependem do plano premium.",
   },
   {
     question: "Como entro em contato com suporte?",
@@ -127,13 +158,17 @@ const faqs = [
 
 const promoVideo = "/makergym/assets/makergym-promo.mp4";
 const promoPoster = "/makergym/assets/makergym-promo-poster.png";
-const screenshotArts = [
-  "/makergym/assets/makergym-shot-1.png",
-  "/makergym/assets/makergym-shot-2.png",
-];
 const logoArt = "/makergym/assets/logo.png";
 
 const MakerGym = () => {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   useEffect(() => {
     document.title = "Maker Gym | Treino com progresso real";
 
@@ -150,17 +185,68 @@ const MakerGym = () => {
   }, []);
 
   return (
-    <div className="maker-gym-grid-bg min-h-screen overflow-x-hidden bg-background text-foreground">
-      <div className="pointer-events-none absolute inset-0 opacity-90">
-        <div className="absolute left-[-10%] top-[-8%] h-[28rem] w-[28rem] rounded-full bg-primary/20 blur-3xl maker-glow-drift" />
-        <div className="absolute right-[-12%] top-[8%] h-[26rem] w-[26rem] rounded-full bg-secondary/20 blur-3xl maker-glow-drift-delayed" />
-        <div className="absolute bottom-[-10%] left-[20%] h-[24rem] w-[24rem] rounded-full bg-highlight-amber/10 blur-3xl maker-glow-drift" />
+    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+      {/* Aurora orbs — mesma linguagem da Maker Info HeroSection */}
+      <div className="pointer-events-none absolute inset-0">
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: 700, height: 700,
+            top: "2%", left: "10%",
+            background: "radial-gradient(circle, rgba(0,212,255,0.18) 0%, transparent 70%)",
+            filter: "blur(70px)",
+            animation: "glow-drift 9s ease-in-out infinite",
+          }}
+        />
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: 550, height: 550,
+            top: "30%", right: "5%",
+            background: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)",
+            filter: "blur(80px)",
+            animation: "glow-drift 12s ease-in-out infinite",
+            animationDelay: "1.8s",
+          }}
+        />
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: 420, height: 420,
+            bottom: "10%", left: "25%",
+            background: "radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)",
+            filter: "blur(90px)",
+            animation: "glow-drift 14s ease-in-out infinite",
+            animationDelay: "0.9s",
+          }}
+        />
       </div>
+      {/* Grain texture — mesma que a Maker Info */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          zIndex: 1,
+          opacity: 0.04,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "repeat",
+          backgroundSize: "300px 300px",
+        }}
+      />
 
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-background/70 backdrop-blur-xl">
+      <header
+        className="fixed top-0 left-0 right-0 z-40 transition-all duration-300"
+        style={{
+          background: scrolled ? "hsl(var(--background) / 0.97)" : "hsl(var(--background) / 0.80)",
+          backdropFilter: "blur(20px)",
+          borderBottom: scrolled
+            ? "1px solid rgba(0,212,255,0.18)"
+            : "1px solid rgba(255,255,255,0.10)",
+          boxShadow: scrolled ? "0 1px 24px rgba(0,212,255,0.06)" : "none",
+        }}
+      >
         <div className="container flex h-16 items-center justify-between">
-          <a href="/makergym" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-primary/30 bg-black neon-glow-cyan">
+          <a href="/makergym" className="flex items-center gap-3 group">
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-primary/30 bg-black neon-glow-cyan transition-transform duration-300 group-hover:scale-105">
               <img src={logoArt} alt="Maker Gym" className="h-full w-full object-cover" />
             </div>
             <div>
@@ -170,12 +256,26 @@ const MakerGym = () => {
           </a>
 
           <nav className="hidden items-center gap-6 md:flex">
-            <a href="#features" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Recursos</a>
-            <a href="#gallery" className="text-sm text-muted-foreground transition-colors hover:text-foreground">Galeria</a>
-            <a href="#faq" className="text-sm text-muted-foreground transition-colors hover:text-foreground">FAQ</a>
+            {[
+              { href: "#features", label: "Recursos" },
+              { href: "#gallery", label: "Galeria" },
+              { href: "#faq", label: "FAQ" },
+            ].map(({ href, label }) => (
+              <a
+                key={href}
+                href={href}
+                className="relative text-sm text-muted-foreground hover:text-primary transition-colors duration-200 group py-0.5"
+              >
+                {label}
+                <span
+                  className="absolute -bottom-0.5 left-0 h-px w-0 bg-primary group-hover:w-full transition-all duration-300 rounded-full"
+                  style={{ boxShadow: "0 0 6px rgba(0,212,255,0.8)" }}
+                />
+              </a>
+            ))}
             <a
               href="/makergym/privacy-policy/"
-              className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+              className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
             >
               Privacy Policy
             </a>
@@ -183,7 +283,7 @@ const MakerGym = () => {
         </div>
       </header>
 
-      <main className="relative z-10">
+      <main className="relative z-10 pt-16">
         <section className="container grid min-h-[calc(100vh-4rem)] items-center gap-14 px-4 py-14 md:grid-cols-[1.02fr_0.98fr] md:py-20">
           <div className="max-w-2xl">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary maker-shimmer-border">
@@ -192,14 +292,14 @@ const MakerGym = () => {
             </div>
 
             <h1 className="font-heading text-5xl font-black leading-[0.92] tracking-tight md:text-7xl">
-              A landing que parece
-              <span className="block text-gradient-neon">o app já em movimento.</span>
+              O app que faz
+              <span className="block text-gradient-neon">cada treino contar.</span>
             </h1>
 
             <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground md:text-xl">
-              O Maker Gym foi feito para quem quer treinar com clareza. Registre séries, reps,
-              cargas e volume total, mantenha o ritmo com timer de descanso e acompanhe evolução
-              real ao longo das semanas com uma experiência visual que parece viva.
+              Maker Gym foi feito para quem leva treino a sério. Registre séries, reps, cargas e
+              volume total, mantenha o ritmo com timer de descanso e acompanhe a evolução real
+              semana a semana com uma interface pensada para uso dentro da academia.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -207,7 +307,7 @@ const MakerGym = () => {
                 href="#waitlist"
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 font-heading text-sm font-black text-primary-foreground neon-glow-cyan transition-all hover:brightness-110"
               >
-                Entrar na lista
+                Quero ser testador
                 <ArrowRight size={16} />
               </a>
               <a
@@ -237,10 +337,10 @@ const MakerGym = () => {
 
           <div className="relative mx-auto w-full max-w-[38rem]">
             <div className="absolute -left-10 top-12 z-20 hidden rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary md:flex maker-float-wide">
-              6 treinos na semana
+              Volume como métrica
             </div>
             <div className="absolute -right-4 top-3 z-20 hidden rounded-full border border-secondary/20 bg-secondary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-secondary md:flex maker-float-wide-delayed">
-              Smart workout ready
+              Teste fechado · Play Store
             </div>
 
             <div className="relative flex items-center justify-center">
@@ -305,62 +405,37 @@ const MakerGym = () => {
         <section id="gallery" className="container px-4 py-20">
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
             <ScrollReveal className="relative rounded-[2rem] border border-white/10 bg-gradient-to-br from-primary/12 via-card/85 to-secondary/10 p-8">
-              <div className="text-sm font-semibold uppercase tracking-[0.26em] text-primary">Direção visual</div>
-              <h2 className="mt-4 font-heading text-4xl font-black md:text-5xl">
-                Visual de produto, não de template.
+              <h2 className="font-heading text-4xl font-black md:text-5xl">
+                Dados no centro. Interface que não atrapalha.
               </h2>
               <p className="mt-4 max-w-xl text-lg leading-8 text-muted-foreground">
-                A página foi desenhada para parecer lançamento de app, mas agora com uma leitura
-                mais limpa: menos repetição, mais foco no mockup principal e nos pontos que vendem
-                o produto sem poluir a navegação.
+                Feito para usar com treino correndo. O que importa aparece na frente — exercício atual, volume, timer de descanso e sugestão de carga para a próxima série.
               </p>
 
-              <div className="mt-8 grid gap-4 md:grid-cols-2">
-                <div className="rounded-[1.6rem] border border-white/10 bg-black/20 p-5">
-                  <div className="mb-3 text-[11px] uppercase tracking-[0.18em] text-primary/70">Clareza</div>
-                  <p className="leading-7 text-muted-foreground">
-                    O hero já mostra o app em ação. Aqui, a página passa a reforçar mensagem,
-                    percepção de marca e foco em progressão sem repetir o mesmo ativo de mídia.
-                  </p>
+              <div className="mt-8 space-y-3">
+                <div className="rounded-[1.4rem] border border-white/8 bg-black/25 px-5 py-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/70">Sessão ao vivo</div>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">Cache da última série + sugestão de carga para a próxima execução, sem digitar nada.</p>
                 </div>
-                <div className="rounded-[1.6rem] border border-white/10 bg-black/20 p-5">
-                  <div className="mb-3 text-[11px] uppercase tracking-[0.18em] text-secondary/70">Narrativa</div>
-                  <p className="leading-7 text-muted-foreground">
-                    A sequência agora privilegia progresso, consistência e confiança para Play
-                    Store, em vez de multiplicar vídeos, mockups e imagens concorrendo pela atenção.
-                  </p>
+                <div className="rounded-[1.4rem] border border-white/8 bg-black/25 px-5 py-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-secondary/70">Pós-treino</div>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">PRs detectados automaticamente, volume total, distribuição muscular e card para compartilhar.</p>
                 </div>
-              </div>
-
-              <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={logoArt}
-                    alt="Maker Gym logo"
-                    className="h-14 w-14 rounded-[1.1rem] object-cover shadow-[0_10px_30px_rgba(21,188,236,0.25)]"
-                  />
-                  <div>
-                    <div className="text-sm font-semibold uppercase tracking-[0.24em] text-secondary">
-                      Maker Gym
-                    </div>
-                    <div className="mt-1 font-heading text-2xl font-black">
-                      Treino bem registrado. Progresso bem lido.
-                    </div>
-                  </div>
+                <div className="rounded-[1.4rem] border border-white/8 bg-black/25 px-5 py-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground/60">Histórico</div>
+                  <p className="mt-1 text-sm leading-6 text-muted-foreground">Leitura de progresso por exercício — carga máxima, volume médio e gráfico de evolução.</p>
                 </div>
               </div>
             </ScrollReveal>
 
             <div className="grid gap-5">
               {spotlightCards.map((card, index) => (
-                <ScrollReveal
-                  key={card.title}
-                  className="group rounded-[1.75rem] border border-white/10 bg-card/70 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card"
-                  delay={index * 120}
-                >
-                  <div className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">{card.eyebrow}</div>
-                  <h3 className="mt-3 font-heading text-2xl font-black">{card.title}</h3>
-                  <p className="mt-3 leading-7 text-muted-foreground">{card.body}</p>
+                <ScrollReveal key={card.title} delay={index * 120}>
+                  <SpotlightCard className="group rounded-[1.75rem] border border-white/10 bg-card/70 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card h-full">
+                    <div className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">{card.eyebrow}</div>
+                    <h3 className="mt-3 font-heading text-2xl font-black">{card.title}</h3>
+                    <p className="mt-3 leading-7 text-muted-foreground">{card.body}</p>
+                  </SpotlightCard>
                 </ScrollReveal>
               ))}
 
@@ -369,58 +444,55 @@ const MakerGym = () => {
         </section>
 
         <section className="container px-4 pb-20">
-          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <ScrollReveal className="rounded-[2rem] border border-white/10 bg-card/70 p-8">
-              <div className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-secondary">
-                <Sparkles size={14} />
-                Screenshot story
-              </div>
-              <h2 className="mt-5 font-heading text-4xl font-black md:text-5xl">
-                Cada dobra da página vende um momento do app.
-              </h2>
-              <p className="mt-4 text-lg leading-8 text-muted-foreground">
-                Não é só uma landing com prints jogados. A estrutura encena treino, consistência e
-                ritmo, para a percepção de produto vir antes mesmo do download.
-              </p>
-              <div className="mt-8 rounded-[1.7rem] border border-white/10 bg-black/20 p-4">
-                <div className="maker-play-badge">
-                  <div className="maker-play-badge-icon" />
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.2em] text-primary/80">Coming soon</div>
-                    <div className="text-lg font-black">Google Play release track</div>
-                  </div>
-                </div>
-                <p className="mt-4 leading-7 text-muted-foreground">
-                  Domínio próprio, links públicos, suporte e política já prontos. A conta Play ainda é a
-                  última milha, mas a apresentação já está com cara de lançamento.
-                </p>
-              </div>
-            </ScrollReveal>
+          <div className="mb-10">
+            <h2 className="font-heading text-4xl font-black md:text-5xl">
+              6 modos. 6 formas de treinar.
+            </h2>
+            <p className="mt-4 max-w-xl text-lg leading-8 text-muted-foreground">
+              Do solo ao duelo. Cada modo tem objetivo e dinâmica próprios — não é só mudar o nome da sessão.
+            </p>
+          </div>
 
-            <div className="grid gap-5 md:grid-cols-2">
-              {screenshotMoments.map((moment, index) => (
-                <ScrollReveal
-                  key={moment.title}
-                  delay={index * 140}
-                  className="overflow-hidden rounded-[1.8rem] border border-white/10 bg-card/75"
-                >
-                  <div className="relative h-72 overflow-hidden border-b border-white/10 bg-[#0b1624]">
-                    <img
-                      src={screenshotArts[index]}
-                      alt={moment.title}
-                      className="h-full w-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                    <div className="absolute bottom-4 left-4 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary backdrop-blur">
-                      {moment.label}
+          <div className="space-y-8">
+            <div>
+              <div className="mb-5 flex items-center gap-4">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/50">Solo</span>
+                <div className="h-px flex-1 bg-white/8" />
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                {soloModes.map((mode, index) => (
+                  <ScrollReveal key={mode.name} delay={index * 80}>
+                    <div className="rounded-[1.75rem] border border-white/10 bg-card/70 p-6 h-full hover:border-primary/25 transition-colors duration-300">
+                      <div className="font-heading text-3xl font-black tracking-tight">{mode.name}</div>
+                      <p className="mt-3 leading-7 text-muted-foreground">{mode.description}</p>
                     </div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-heading text-2xl font-black">{moment.title}</h3>
-                    <p className="mt-3 leading-7 text-muted-foreground">{moment.body}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
+                  </ScrollReveal>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-5 flex items-center gap-4">
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-muted-foreground/50">Em dupla</span>
+                <div className="h-px flex-1 bg-white/8" />
+              </div>
+              <div className="grid gap-4 md:grid-cols-3">
+                {duoModes.map((mode, index) => (
+                  <ScrollReveal key={mode.name} delay={index * 80}>
+                    <div className="rounded-[1.75rem] border border-white/10 bg-card/70 p-6 h-full hover:border-secondary/25 transition-colors duration-300">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-heading text-3xl font-black tracking-tight">{mode.name}</div>
+                        {mode.premium && (
+                          <span className="mt-1 shrink-0 rounded-full border border-secondary/30 bg-secondary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.2em] text-secondary">
+                            Premium
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-3 leading-7 text-muted-foreground">{mode.description}</p>
+                    </div>
+                  </ScrollReveal>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -428,10 +500,10 @@ const MakerGym = () => {
         <section className="border-y border-white/8 bg-card/40 backdrop-blur">
           <div className="container grid gap-4 px-4 py-6 md:grid-cols-4">
             {[
-              ["Volume total", "Métrica central de evolução"],
-              ["Timer de descanso", "Ritmo real de sessão"],
-              ["Histórico claro", "Leitura de progresso no tempo"],
-              ["Fluxo mobile", "Rápido o bastante para usar treinando"],
+              ["6 modos competitivos", "Solo e em dupla com regras reais"],
+              ["IA + linguagem natural", "Monta e refina treino por texto"],
+              ["Streak com parceiro", "Considera seus dias de treino"],
+              ["Personal trainer", "Prescrição e acompanhamento no app"],
             ].map(([title, subtitle]) => (
               <div key={title} className="rounded-2xl border border-white/8 bg-black/15 px-4 py-5">
                 <div className="font-heading text-lg font-black">{title}</div>
@@ -443,28 +515,24 @@ const MakerGym = () => {
 
         <section id="features" className="container px-4 py-20">
           <div className="max-w-2xl">
-            <div className="mb-4 text-sm font-semibold uppercase tracking-[0.26em] text-primary">Recursos centrais</div>
             <h2 className="font-heading text-4xl font-black md:text-5xl">
               Um app que respeita o treino de verdade.
             </h2>
             <p className="mt-4 text-lg leading-8 text-muted-foreground">
-              Menos fricção para registrar, mais contexto para evoluir. O Maker Gym foi pensado
-              para o momento do treino e também para a leitura do que aconteceu depois.
+              Menos fricção para registrar, mais contexto para evoluir. Feito para o momento do treino e para a leitura do que aconteceu depois.
             </p>
           </div>
 
           <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {featureCards.map(({ icon: Icon, title, description }, index) => (
-              <ScrollReveal
-                key={title}
-                className="group rounded-[1.75rem] border border-white/10 bg-card/70 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card"
-                delay={index * 90}
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105">
-                  <Icon size={20} />
-                </div>
-                <h3 className="mt-5 font-heading text-2xl font-black">{title}</h3>
-                <p className="mt-3 leading-7 text-muted-foreground">{description}</p>
+              <ScrollReveal key={title} delay={index * 90}>
+                <SpotlightCard className="group rounded-[1.75rem] border border-white/10 bg-card/70 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card h-full">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105">
+                    <Icon size={20} />
+                  </div>
+                  <h3 className="mt-5 font-heading text-2xl font-black">{title}</h3>
+                  <p className="mt-3 leading-7 text-muted-foreground">{description}</p>
+                </SpotlightCard>
               </ScrollReveal>
             ))}
           </div>
@@ -473,65 +541,58 @@ const MakerGym = () => {
         <section id="experience" className="container px-4 pb-20">
           <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
             <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-primary/12 via-card/80 to-secondary/10 p-8">
-              <div className="text-sm font-semibold uppercase tracking-[0.26em] text-primary">Experiência</div>
-              <h2 className="mt-4 font-heading text-4xl font-black md:text-5xl">
-                Direção visual premium, mas com dados no centro.
+              <h2 className="font-heading text-4xl font-black md:text-5xl">
+                Descreve. A IA monta. Você treina.
               </h2>
               <p className="mt-4 max-w-xl text-lg leading-8 text-muted-foreground">
-                A linguagem do Maker Gym mistura performance, clareza e atmosfera. Não é uma
-                planilha fria nem um fitness genérico. É um produto para gente que gosta de treino
-                bem feito e acompanhamento legível.
+                Escreve o que você quer em linguagem natural. O app interpreta, gera a estrutura e deixa você refinar antes de começar.
               </p>
 
-              <div className="mt-8 space-y-4">
-                {[
-                  "UI escura com destaque em cyan e acentos vivos",
-                  "Blocos densos de informação com leitura rápida",
-                  "Chamadas visuais que valorizam carga, volume e constância",
-                ].map((item) => (
-                  <div key={item} className="rounded-2xl border border-white/8 bg-black/20 px-4 py-4 text-muted-foreground">
-                    {item}
-                  </div>
-                ))}
+              <div className="mt-8 space-y-3">
+                <div className="rounded-[1.4rem] border border-white/8 bg-black/30 px-5 py-4">
+                  <span className="text-muted-foreground/40 mr-2 text-xs">você</span>
+                  <span className="text-sm text-foreground">"costas e bíceps, 45 min, academia"</span>
+                </div>
+                <div className="rounded-[1.4rem] border border-primary/20 bg-primary/5 px-5 py-4">
+                  <span className="text-primary/60 mr-2 text-xs font-semibold uppercase tracking-wider">IA</span>
+                  <span className="text-sm text-foreground">Treino gerado · 6 exercícios · estrutura em blocos</span>
+                </div>
+                <div className="rounded-[1.4rem] border border-white/8 bg-black/20 px-5 py-3 text-xs text-muted-foreground/60 uppercase tracking-[0.2em]">
+                  Cota gratuita · 2 sessões por semana · premium ilimitado
+                </div>
               </div>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
               <div className="rounded-[1.75rem] border border-white/10 bg-card/70 p-6">
-                <Smartphone className="text-primary" size={22} />
-                <h3 className="mt-4 font-heading text-2xl font-black">Mobile first</h3>
-                <p className="mt-3 leading-7 text-muted-foreground">
-                  Fluxos pensados para usar com treino correndo, uma mão no aparelho e pouca
-                  paciência para menus desnecessários.
+                <div className="font-heading text-5xl font-black text-gradient-neon">7·30·100</div>
+                <h3 className="mt-3 font-heading text-xl font-black">Marcos de streak</h3>
+                <p className="mt-2 leading-7 text-muted-foreground">
+                  O app celebra consistência com destaque visual nos dias que importam. Solo ou com parceiro.
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-white/10 bg-card/70 p-6">
-                <Dumbbell className="text-secondary" size={22} />
-                <h3 className="mt-4 font-heading text-2xl font-black">Força e volume</h3>
-                <p className="mt-3 leading-7 text-muted-foreground">
-                  A proposta gira em torno de progressão real, sessão bem registrada e leitura de
-                  performance ao longo do tempo.
+                <div className="font-heading text-5xl font-black">PRs</div>
+                <h3 className="mt-3 font-heading text-xl font-black">Detectados automaticamente</h3>
+                <p className="mt-2 leading-7 text-muted-foreground">
+                  Ao encerrar a sessão, o app identifica recordes pessoais e os destaca no resumo pós-treino.
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-white/10 bg-card/70 p-6 md:col-span-2">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <div className="text-sm font-semibold uppercase tracking-[0.24em] text-primary">Links públicos</div>
-                    <h3 className="mt-2 font-heading text-3xl font-black">Play Store pronta para receber o app</h3>
+                    <h3 className="font-heading text-2xl font-black">Já na Play Store · teste fechado</h3>
+                    <p className="mt-2 text-muted-foreground">Acesso por convite. Deixa seu e-mail para entrar.</p>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    <a href="/makergym/privacy-policy/" className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold hover:border-primary/30 hover:text-primary">
+                    <a href="/makergym/privacy-policy/" className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold hover:border-primary/30 hover:text-primary transition-colors">
                       Privacy Policy
                     </a>
-                    <a href="/makergym/support/" className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold hover:border-secondary/30 hover:text-secondary">
-                      Support
+                    <a href="/makergym/support/" className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold hover:border-secondary/30 hover:text-secondary transition-colors">
+                      Suporte
                     </a>
                   </div>
                 </div>
-                <p className="mt-4 leading-7 text-muted-foreground">
-                  Esta estrutura já deixa o domínio pronto para Play Console, página do app,
-                  política de privacidade e contato de suporte em URLs públicas.
-                </p>
               </div>
             </div>
           </div>
@@ -539,8 +600,7 @@ const MakerGym = () => {
 
         <section id="faq" className="container px-4 pb-24">
           <div className="mb-10 max-w-2xl">
-            <div className="text-sm font-semibold uppercase tracking-[0.26em] text-primary">FAQ</div>
-            <h2 className="mt-4 font-heading text-4xl font-black md:text-5xl">O que as pessoas precisam saber</h2>
+            <h2 className="font-heading text-4xl font-black md:text-5xl">Perguntas frequentes</h2>
           </div>
 
           <div className="grid gap-4">
@@ -558,33 +618,33 @@ const MakerGym = () => {
             <div className="absolute inset-0 maker-shimmer-overlay" />
             <div className="relative z-10 grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
-                  <Sparkles size={14} />
-                  Launch control
-                </div>
-                <h2 className="mt-5 font-heading text-4xl font-black leading-[0.95] md:text-6xl">
-                  Maker Gym com cara
-                  <span className="block text-gradient-neon">de produto grande.</span>
+                <h2 className="font-heading text-4xl font-black leading-[0.95] md:text-6xl">
+                  Treino com dado.
+                  <span className="block text-gradient-neon">Progresso que aparece.</span>
                 </h2>
                 <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
-                  Landing viva, mockup principal forte, screenshots essenciais, suporte público e
-                  privacy policy pronta para a Play. A percepção agora já está no nível do lançamento.
+                  O app está em teste fechado na Play Store. Deixa seu e-mail para receber o convite antes da abertura pública.
                 </p>
+                <div className="mt-8">
+                  <WaitlistSignup source="makergym-cta" compact />
+                </div>
               </div>
 
-              <div className="grid gap-3 text-sm">
-                <a href="/makergym" className="rounded-2xl border border-white/10 bg-card/50 px-5 py-4 font-semibold transition-colors hover:border-primary/30 hover:text-primary">
-                  Abrir landing do app
-                </a>
-                <a href="/makergym/privacy-policy/" className="rounded-2xl border border-white/10 bg-card/50 px-5 py-4 font-semibold transition-colors hover:border-primary/30 hover:text-primary">
-                  Abrir privacy policy publica
-                </a>
-                <a href="/makergym/support/" className="rounded-2xl border border-white/10 bg-card/50 px-5 py-4 font-semibold transition-colors hover:border-secondary/30 hover:text-secondary">
-                  Abrir suporte publico
-                </a>
-                <a href="mailto:suporte@makergym.app" className="rounded-2xl border border-white/10 bg-card/50 px-5 py-4 font-semibold transition-colors hover:border-white/20 hover:text-foreground">
-                  suporte@makergym.app
-                </a>
+              <div className="flex flex-col gap-3 text-sm lg:items-end">
+                <div className="rounded-[1.75rem] border border-white/10 bg-card/50 p-6 w-full">
+                  <div className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground/60 mb-4">Links públicos</div>
+                  <div className="space-y-2">
+                    <a href="/makergym/privacy-policy/" className="flex items-center justify-between rounded-xl border border-white/8 px-4 py-3 transition-colors hover:border-primary/30 hover:text-primary">
+                      Privacy Policy
+                    </a>
+                    <a href="/makergym/support/" className="flex items-center justify-between rounded-xl border border-white/8 px-4 py-3 transition-colors hover:border-secondary/30 hover:text-secondary">
+                      Suporte
+                    </a>
+                    <a href="mailto:suporte@makergym.app" className="flex items-center justify-between rounded-xl border border-white/8 px-4 py-3 transition-colors hover:border-white/20">
+                      suporte@makergym.app
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
           </ScrollReveal>
@@ -626,3 +686,6 @@ const MakerGym = () => {
 };
 
 export default MakerGym;
+;
+;
+;

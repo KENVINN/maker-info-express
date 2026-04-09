@@ -14,19 +14,19 @@ const interestOptions: Array<{
   description: string;
 }> = [
   {
-    value: "both",
-    label: "Tester + lancamento",
-    description: "Quero testar antes e tambem ser avisado quando abrir geral.",
+    value: "tester",
+    label: "Quero testar agora",
+    description: "Quero acesso ao teste fechado na Play Store e ajudar a moldar o app.",
   },
   {
-    value: "tester",
-    label: "Quero testar cedo",
-    description: "Tenho interesse em acesso antecipado e feedback.",
+    value: "both",
+    label: "Testar e acompanhar",
+    description: "Quero testar agora e também ser avisado quando abrir para o público.",
   },
   {
     value: "launch",
-    label: "So no lancamento",
-    description: "Quero entrar na lista para ser avisado quando sair.",
+    label: "Só no lançamento",
+    description: "Prefiro aguardar e ser avisado quando o app abrir oficialmente.",
   },
 ];
 
@@ -52,7 +52,7 @@ export default function WaitlistSignup({
     if (!trimmedEmail) {
       toast({
         title: "Falta seu e-mail",
-        description: "Coloque um e-mail valido para entrar na lista do Maker Gym.",
+        description: "Coloque um e-mail válido para solicitar acesso ao teste.",
       });
       return;
     }
@@ -95,13 +95,13 @@ export default function WaitlistSignup({
     setInterest("both");
 
     toast({
-      title: "Voce entrou na lista",
+      title: "Solicitação recebida",
       description:
         interest === "tester"
-          ? "Perfeito. Vamos te considerar para acesso antecipado."
+          ? "Ótimo. Vamos te convidar para o teste fechado na Play Store em breve."
           : interest === "launch"
             ? "Perfeito. Vamos te avisar quando o Maker Gym abrir oficialmente."
-            : "Perfeito. Vamos te avisar sobre testes antecipados e sobre o lancamento.",
+            : "Ótimo. Vamos te convidar para o teste e avisar no lançamento público.",
     });
   }
 
@@ -117,13 +117,13 @@ export default function WaitlistSignup({
         </div>
         <div>
           <div className="text-sm font-semibold uppercase tracking-[0.22em] text-primary">
-            Lista do Maker Gym
+            Teste fechado · Play Store
           </div>
           <h3 className="mt-2 font-heading text-2xl font-black">
-            Capture testers agora e publico depois.
+            Quero testar o Maker Gym.
           </h3>
           <p className="mt-2 leading-7 text-muted-foreground">
-            Deixa o e-mail aqui para acesso antecipado, aviso de lancamento ou os dois.
+            O app já está na Play Store em teste fechado. Deixa seu e-mail para receber o convite de acesso ou ser avisado no lançamento público.
           </p>
         </div>
       </div>
@@ -171,7 +171,7 @@ export default function WaitlistSignup({
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm leading-6 text-muted-foreground">
-            Ao entrar na lista, voce autoriza contato sobre testes do Maker Gym e comunicacoes de lancamento.
+            Ao enviar, você autoriza contato sobre o teste fechado e o lançamento do Maker Gym.
           </p>
           <Button
             type="submit"
@@ -179,7 +179,7 @@ export default function WaitlistSignup({
             className="h-12 rounded-2xl px-6 font-heading font-black neon-glow-cyan"
           >
             {isSubmitting ? <Loader2 className="animate-spin" /> : <Mail />}
-            Entrar na lista
+            Quero ser testador
           </Button>
         </div>
       </form>
