@@ -19,15 +19,23 @@ function pickServerKey(keys) {
       }))
     : [];
 
+  const isUsableKey = (value) =>
+    typeof value === "string" &&
+    value.length > 20 &&
+    !value.includes("·") &&
+    !value.includes("...") &&
+    /^[A-Za-z0-9._-]+$/.test(value);
+
   return (
-    normalized.find((key) => key.apiKey.startsWith("sb_secret_"))?.apiKey ||
-    normalized.find((key) => key.name.includes("secret"))?.apiKey ||
-    normalized.find((key) => key.description.includes("secret"))?.apiKey ||
-    normalized.find((key) => key.name.includes("service_role"))?.apiKey ||
-    normalized.find((key) => key.description.includes("service_role"))?.apiKey ||
+    normalized.find((key) => key.apiKey.startsWith("sb_secret_") && isUsableKey(key.apiKey))?.apiKey ||
+    normalized.find((key) => key.name.includes("secret") && isUsableKey(key.apiKey))?.apiKey ||
+    normalized.find((key) => key.description.includes("secret") && isUsableKey(key.apiKey))?.apiKey ||
+    normalized.find((key) => key.name.includes("service_role") && isUsableKey(key.apiKey))?.apiKey ||
+    normalized.find((key) => key.description.includes("service_role") && isUsableKey(key.apiKey))?.apiKey ||
     normalized.find(
       (key) =>
         key.apiKey.startsWith("eyJ") &&
+        isUsableKey(key.apiKey) &&
         !key.name.includes("anon") &&
         !key.name.includes("publishable") &&
         !key.description.includes("anon") &&
