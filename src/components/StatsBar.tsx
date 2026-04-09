@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ScrollReveal from "@/components/ScrollReveal";
 
 const stats = [
-  { valor: 5, sufixo: "+", label: "Computadores consertados" },
+  { valor: 10, sufixo: "+", label: "Computadores consertados" },
   { valor: 5, sufixo: "★", label: "Avaliação no Google" },
   { valor: 10, sufixo: "min", label: "Para ter seu orçamento" },
   { valor: 100, sufixo: "%", label: "Garantia nos serviços" },

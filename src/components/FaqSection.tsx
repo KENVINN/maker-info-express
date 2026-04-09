@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ScrollReveal from "@/components/ScrollReveal";
+import SpotlightCard from "@/components/SpotlightCard";
 
 const faqs = [
   {
@@ -44,13 +45,14 @@ const FaqSection = () => {
 
           <div className="space-y-3">
             {faqs.map((faq, i) => (
-              <div
+              <SpotlightCard
                 key={i}
+                radius={250}
                 className="rounded-2xl bg-card/80 backdrop-blur border border-border overflow-hidden"
               >
                 <button
                   onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                  className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-card transition-colors"
+                  className="w-full flex items-center justify-between gap-4 px-6 py-4 text-left hover:bg-card/50 transition-colors"
                 >
                   <span className="font-heading font-bold text-sm md:text-base">{faq.q}</span>
                   <span className={`text-primary text-xl shrink-0 transition-transform duration-300 ${openIndex === i ? "rotate-45" : ""}`}>
@@ -63,7 +65,7 @@ const FaqSection = () => {
                     {faq.a}
                   </p>
                 </div>
-              </div>
+              </SpotlightCard>
             ))}
           </div>
         </ScrollReveal>

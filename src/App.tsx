@@ -15,6 +15,9 @@ import Dashboard from "./pages/Dashboard";
 import MakerGym from "./pages/MakerGym";
 import NotFound from "./pages/NotFound";
 import CircuitBackground from "./components/CircuitBackground";
+import CustomCursor from "./components/CustomCursor";
+import ScrollProgressBar from "./components/ScrollProgressBar";
+import SocialProofToast from "./components/SocialProofToast";
 
 // Studio carrega só quando o usuário acessa /studio
 // Fontes + modelos de IA NÃO pesam o site principal
@@ -28,6 +31,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <div className="relative min-h-screen bg-background">
+        <CustomCursor />
+        <ScrollProgressBar />
+        <SocialProofToast />
         <CircuitBackground />
         <div className="relative z-10">
           <BrowserRouter>

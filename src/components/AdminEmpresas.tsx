@@ -1,40 +1,8 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-// ─── Tipos ───────────────────────────────────────────────
-export type PlanoEmpresa = "Pequeno" | "Médio" | "Grande";
+import { api } from "@/lib/api";
+import type { Empresa, PC, PlanoEmpresa } from "@/lib/empresas";
 
-export interface PC {
-  id: string;
-  empresa_id: string;
-  nome: string; // ex: "PC-01 — João da Contabilidade"
-  setor: string;
-  created_at: string;
-}
-
-export interface Empresa {
-  id: string;
-  codigo: string; // ex: EMP001 — usado pelo cliente para logar
-  senha: string;
-  nome: string;
-  contato_nome: string;
-  contato_telefone: string;
-  plano: PlanoEmpresa;
-  proxima_visita: string; // ISO date
-  created_at: string;
-  pcs?: PC[];
-}
-
-export interface Visita {
-  id: string;
-  empresa_id: string;
-  data: string;
-  observacao: string;
-  checklist: Record<string, boolean>; // pc_id -> checked items
-  created_at: string;
-}
-
-// ─── Checklist padrão por PC ──────────────────────────────
 const CHECKLIST_ITENS = [
   { key: "limpeza", label: "Limpeza física", emoji: "🧹" },
   { key: "temperatura", label: "Temperatura verificada", emoji: "🌡️" },
@@ -51,178 +19,285 @@ const PLANO_COR: Record<PlanoEmpresa, string> = {
   Grande: "bg-amber-500/10 text-amber-400 border-amber-500/30",
 };
 
-const gerarCodigo = () => `EMP${String(Math.floor(Math.random() * 999) + 1).padStart(3, "0")}`;
-const gerarSenha = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+const gerarCodigo = () => {
+  const bytes = new Uint8Array(2);
+  crypto.getRandomValues(bytes);
+  return `EMP${Array.from(bytes)
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase()}`;
+};
+
+const gerarSenha = () => {
+  const bytes = new Uint8Array(5);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[byte % 32]).join("");
+};
 
 const diasParaVisita = (proxima: string) => {
   const diff = new Date(proxima).getTime() - new Date().getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 };
 
-// ─── Componente principal ─────────────────────────────────
-const AdminEmpresas = () => {
+type Props = {
+  prefill?: { nome: string; contato_nome: string; contato_telefone: string } | null;
+  onPrefillConsumed?: () => void;
+};
+
+const AdminEmpresas = ({ prefill, onPrefillConsumed }: Props) => {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState<"lista" | "nova" | "visita">("lista");
   const [empresaSelecionada, setEmpresaSelecionada] = useState<Empresa | null>(null);
   const [sucesso, setSucesso] = useState("");
-
-  // Form nova empresa
-  const [form, setForm] = useState({ nome: "", contato_nome: "", contato_telefone: "", plano: "Pequeno" as PlanoEmpresa, proxima_visita: "", codigo: gerarCodigo(), senha: gerarSenha() });
-
-  // Editar senha inline
+  const [erro, setErro] = useState("");
+  const [form, setForm] = useState({
+    nome: "",
+    contato_nome: "",
+    contato_telefone: "",
+    plano: "Pequeno" as PlanoEmpresa,
+    proxima_visita: "",
+    codigo: gerarCodigo(),
+    senha: gerarSenha(),
+  });
   const [editandoSenha, setEditandoSenha] = useState<string | null>(null);
   const [novaSenha, setNovaSenha] = useState("");
-
-  // Gerenciar PCs
   const [pcNome, setPcNome] = useState("");
   const [pcSetor, setPcSetor] = useState("");
-
-  // Checklist de visita
   const [checklist, setChecklist] = useState<Record<string, Record<string, boolean>>>({});
   const [obsVisita, setObsVisita] = useState("");
   const [salvandoVisita, setSalvandoVisita] = useState(false);
 
-  useEffect(() => { carregarEmpresas(); }, []);
+  const prefillApplied = useRef(false);
 
-  const carregarEmpresas = async () => {
-    setLoading(true);
-    const { data: emps } = await supabase.from("empresas").select("*").order("created_at", { ascending: false });
-    if (emps) {
-      const comPcs = await Promise.all(emps.map(async (e) => {
-        const { data: pcs } = await supabase.from("pcs_empresa").select("*").eq("empresa_id", e.id).order("created_at");
-        return { ...e, pcs: pcs || [] };
-      }));
-      setEmpresas(comPcs);
-    }
-    setLoading(false);
+  const mostrarErro = (error: unknown) => {
+    const message = error instanceof Error ? error.message : "Nao foi possivel concluir a operacao.";
+    setErro(message);
+    setTimeout(() => setErro(""), 6000);
   };
 
+  const carregarEmpresas = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const { empresas: loadedEmpresas } = await api.admin.listEmpresas();
+      setEmpresas(loadedEmpresas);
+    } catch (error) {
+      mostrarErro(error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarEmpresas();
+  }, [carregarEmpresas]);
+
+  useEffect(() => {
+    if (!prefill || prefillApplied.current) return;
+    prefillApplied.current = true;
+    setForm((current) => ({
+      ...current,
+      nome: prefill.nome,
+      contato_nome: prefill.contato_nome,
+      contato_telefone: prefill.contato_telefone,
+    }));
+    setAbaAtiva("nova");
+    onPrefillConsumed?.();
+  }, [prefill, onPrefillConsumed]);
+
   const criarEmpresa = async () => {
-    if (!form.nome || !form.proxima_visita) return;
-    const { error } = await supabase.from("empresas").insert({ ...form });
-    if (!error) {
-      setSucesso(`Empresa ${form.nome} criada! Código: ${form.codigo} · Senha: ${form.senha}`);
-      setForm({ nome: "", contato_nome: "", contato_telefone: "", plano: "Pequeno", proxima_visita: "", codigo: gerarCodigo(), senha: gerarSenha() });
-      carregarEmpresas();
+    if (!form.nome || !form.proxima_visita) {
+      return;
+    }
+
+    try {
+      const { empresa, generatedPassword } = await api.admin.createEmpresa(form);
+      setSucesso(`Empresa ${empresa.nome} criada! Código: ${empresa.codigo} · Senha inicial: ${generatedPassword}`);
+      setForm({
+        nome: "",
+        contato_nome: "",
+        contato_telefone: "",
+        plano: "Pequeno",
+        proxima_visita: "",
+        codigo: gerarCodigo(),
+        senha: gerarSenha(),
+      });
       setAbaAtiva("lista");
+      await carregarEmpresas();
       setTimeout(() => setSucesso(""), 8000);
+    } catch (error) {
+      mostrarErro(error);
     }
   };
 
   const salvarSenha = async (empresaId: string) => {
-    if (!novaSenha.trim()) return;
-    await supabase.from("empresas").update({ senha: novaSenha.trim().toUpperCase() }).eq("id", empresaId);
-    setEditandoSenha(null);
-    setNovaSenha("");
-    carregarEmpresas();
+    if (!novaSenha.trim()) {
+      return;
+    }
+
+    try {
+      await api.admin.updateEmpresaPassword(empresaId, novaSenha.trim().toUpperCase());
+      setEditandoSenha(null);
+      setNovaSenha("");
+      setSucesso("Senha da empresa atualizada com sucesso.");
+      await carregarEmpresas();
+      setTimeout(() => setSucesso(""), 5000);
+    } catch (error) {
+      mostrarErro(error);
+    }
   };
 
   const adicionarPC = async (empresaId: string) => {
-    if (!pcNome) return;
-    await supabase.from("pcs_empresa").insert({ empresa_id: empresaId, nome: pcNome, setor: pcSetor });
-    setPcNome(""); setPcSetor("");
-    carregarEmpresas();
+    if (!pcNome.trim()) {
+      return;
+    }
+
+    try {
+      await api.admin.addPc(empresaId, { nome: pcNome.trim(), setor: pcSetor.trim() });
+      setPcNome("");
+      setPcSetor("");
+      await carregarEmpresas();
+    } catch (error) {
+      mostrarErro(error);
+    }
   };
 
   const removerPC = async (pcId: string) => {
-    await supabase.from("pcs_empresa").delete().eq("id", pcId);
-    carregarEmpresas();
+    try {
+      await api.admin.removePc(pcId);
+      await carregarEmpresas();
+    } catch (error) {
+      mostrarErro(error);
+    }
   };
 
   const iniciarVisita = (empresa: Empresa) => {
     setEmpresaSelecionada(empresa);
-    // Inicializa checklist para cada PC
-    const init: Record<string, Record<string, boolean>> = {};
-    (empresa.pcs || []).forEach(pc => {
-      init[pc.id] = {};
-      CHECKLIST_ITENS.forEach(item => { init[pc.id][item.key] = false; });
+
+    const initialChecklist: Record<string, Record<string, boolean>> = {};
+    (empresa.pcs || []).forEach((pc: PC) => {
+      initialChecklist[pc.id] = {};
+      CHECKLIST_ITENS.forEach((item) => {
+        initialChecklist[pc.id][item.key] = false;
+      });
     });
-    setChecklist(init);
+
+    setChecklist(initialChecklist);
     setObsVisita("");
     setAbaAtiva("visita");
   };
 
   const toggleCheck = (pcId: string, key: string) => {
-    setChecklist(prev => ({
+    setChecklist((prev) => ({
       ...prev,
-      [pcId]: { ...prev[pcId], [key]: !prev[pcId][key] }
+      [pcId]: { ...prev[pcId], [key]: !prev[pcId]?.[key] },
     }));
   };
 
   const progressoPC = (pcId: string) => {
-    if (!checklist[pcId]) return 0;
+    if (!checklist[pcId]) {
+      return 0;
+    }
+
     const total = CHECKLIST_ITENS.length;
     const feitos = Object.values(checklist[pcId]).filter(Boolean).length;
+
     return Math.round((feitos / total) * 100);
   };
 
   const progressoGeral = () => {
-    if (!empresaSelecionada?.pcs?.length) return 0;
+    if (!empresaSelecionada?.pcs?.length) {
+      return 0;
+    }
+
     const total = empresaSelecionada.pcs.length * CHECKLIST_ITENS.length;
-    const feitos = Object.values(checklist).reduce((acc, pc) => acc + Object.values(pc).filter(Boolean).length, 0);
+    const feitos = Object.values(checklist).reduce((acc, pcChecklist) => {
+      return acc + Object.values(pcChecklist).filter(Boolean).length;
+    }, 0);
+
     return Math.round((feitos / total) * 100);
   };
 
   const salvarVisita = async () => {
-    if (!empresaSelecionada) return;
+    if (!empresaSelecionada) {
+      return;
+    }
+
     setSalvandoVisita(true);
-    // Salva visita
-    await supabase.from("visitas_empresa").insert({
-      empresa_id: empresaSelecionada.id,
-      data: new Date().toISOString(),
-      observacao: obsVisita,
-      checklist,
-    });
-    // Atualiza próxima visita (+30 dias)
-    const proxima = new Date();
-    proxima.setDate(proxima.getDate() + 30);
-    await supabase.from("empresas").update({ proxima_visita: proxima.toISOString().split("T")[0] }).eq("id", empresaSelecionada.id);
-    setSalvandoVisita(false);
-    setSucesso(`Visita em ${empresaSelecionada.nome} registrada!`);
-    carregarEmpresas();
-    setAbaAtiva("lista");
-    setTimeout(() => setSucesso(""), 5000);
+
+    try {
+      await api.admin.saveVisita(empresaSelecionada.id, {
+        observacao: obsVisita,
+        checklist,
+      });
+      setSucesso(`Visita em ${empresaSelecionada.nome} registrada!`);
+      setAbaAtiva("lista");
+      await carregarEmpresas();
+      setTimeout(() => setSucesso(""), 5000);
+    } catch (error) {
+      mostrarErro(error);
+    } finally {
+      setSalvandoVisita(false);
+    }
   };
 
   const deletarEmpresa = async (id: string) => {
-    if (!confirm("Deletar empresa e todos os PCs?")) return;
-    await supabase.from("pcs_empresa").delete().eq("empresa_id", id);
-    await supabase.from("empresas").delete().eq("id", id);
-    carregarEmpresas();
+    if (!confirm("Deletar empresa e todos os PCs?")) {
+      return;
+    }
+
+    try {
+      await api.admin.deleteEmpresa(id);
+      await carregarEmpresas();
+    } catch (error) {
+      mostrarErro(error);
+    }
   };
 
-  // ─── Render ───────────────────────────────────────────────
   return (
     <div className="space-y-6">
       {sucesso && <p className="text-green-500 text-sm font-semibold">✓ {sucesso}</p>}
+      {erro && <p className="text-destructive text-sm font-semibold">{erro}</p>}
 
-      {/* Abas */}
       <div className="flex gap-2 border-b border-border pb-3">
         {[
           { key: "lista", label: "🏢 Empresas" },
           { key: "nova", label: "➕ Nova Empresa" },
-        ].map(a => (
-          <button key={a.key} onClick={() => setAbaAtiva(a.key as any)}
-            className={`px-4 py-2 rounded-lg text-sm font-heading font-bold transition-all ${abaAtiva === a.key ? "bg-primary text-primary-foreground" : "bg-background border border-border text-muted-foreground hover:border-primary hover:text-primary"}`}>
-            {a.label}
+        ].map((aba) => (
+          <button
+            key={aba.key}
+            onClick={() => setAbaAtiva(aba.key as "lista" | "nova")}
+            className={`px-4 py-2 rounded-lg text-sm font-heading font-bold transition-all ${
+              abaAtiva === aba.key
+                ? "bg-primary text-primary-foreground"
+                : "bg-background border border-border text-muted-foreground hover:border-primary hover:text-primary"
+            }`}
+          >
+            {aba.label}
           </button>
         ))}
       </div>
 
-      {/* ── ABA: LISTA ── */}
       {abaAtiva === "lista" && (
         <div className="space-y-4">
           {loading && <p className="text-muted-foreground text-sm">Carregando...</p>}
           {!loading && empresas.length === 0 && (
             <p className="text-muted-foreground text-sm text-center py-8">Nenhuma empresa ainda. Crie a primeira!</p>
           )}
-          {empresas.map(emp => {
+
+          {empresas.map((emp) => {
             const dias = diasParaVisita(emp.proxima_visita);
             const vencida = dias < 0;
             const urgente = dias >= 0 && dias <= 5;
+
             return (
-              <div key={emp.id} className={`bg-card border rounded-2xl p-5 ${vencida ? "border-red-500/40" : urgente ? "border-amber-500/40" : "border-border"}`}>
+              <div
+                key={emp.id}
+                className={`bg-card border rounded-2xl p-5 ${
+                  vencida ? "border-red-500/40" : urgente ? "border-amber-500/40" : "border-border"
+                }`}
+              >
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -232,62 +307,112 @@ const AdminEmpresas = () => {
                       </span>
                       <span className="text-xs text-muted-foreground font-mono">{emp.codigo}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{emp.contato_nome} · {emp.contato_telefone}</p>
-                    {/* Senha */}
+                    <p className="text-sm text-muted-foreground">
+                      {emp.contato_nome} · {emp.contato_telefone}
+                    </p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="text-xs text-muted-foreground">Senha:</span>
                       {editandoSenha === emp.id ? (
                         <div className="flex items-center gap-1">
-                          <input value={novaSenha} onChange={e => setNovaSenha(e.target.value.toUpperCase())}
+                          <input
+                            value={novaSenha}
+                            onChange={(event) => setNovaSenha(event.target.value.toUpperCase())}
                             placeholder="Nova senha"
-                            className="px-2 py-1 rounded-lg bg-background border border-primary text-xs w-24 focus:outline-none" />
-                          <button onClick={() => salvarSenha(emp.id)} className="text-xs text-primary font-bold hover:brightness-110">✓</button>
-                          <button onClick={() => setEditandoSenha(null)} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
+                            className="px-2 py-1 rounded-lg bg-background border border-primary text-xs w-28 focus:outline-none"
+                          />
+                          <button onClick={() => salvarSenha(emp.id)} className="text-xs text-primary font-bold hover:brightness-110">
+                            ✓
+                          </button>
+                          <button onClick={() => setEditandoSenha(null)} className="text-xs text-muted-foreground hover:text-foreground">
+                            ✕
+                          </button>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{emp.senha || "—"}</span>
-                          <button onClick={() => { setEditandoSenha(emp.id); setNovaSenha(emp.senha || ""); }}
-                            className="text-xs text-muted-foreground hover:text-primary transition-colors">✏️</button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                            {emp.senha_configurada ? "Protegida" : "Pendente"}
+                          </span>
+                          <button
+                            onClick={() => {
+                              setEditandoSenha(emp.id);
+                              setNovaSenha("");
+                            }}
+                            className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            🔑
+                          </button>
                         </div>
                       )}
                     </div>
                   </div>
+
                   <div className="flex items-center gap-2">
-                    <button onClick={() => iniciarVisita(emp)}
-                      className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-heading font-bold hover:bg-primary hover:text-primary-foreground transition-all">
+                    <button
+                      onClick={() => iniciarVisita(emp)}
+                      className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-heading font-bold hover:bg-primary hover:text-primary-foreground transition-all"
+                    >
                       🔧 Iniciar Visita
                     </button>
-                    <button onClick={() => deletarEmpresa(emp.id)}
-                      className="text-muted-foreground hover:text-destructive transition-colors text-xs">🗑️</button>
+                    <button
+                      onClick={() => deletarEmpresa(emp.id)}
+                      className="text-muted-foreground hover:text-destructive transition-colors text-xs"
+                    >
+                      🗑️
+                    </button>
                   </div>
                 </div>
 
-                {/* Próxima visita */}
-                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border mb-4 ${vencida ? "bg-red-500/10 border-red-500/30 text-red-400" : urgente ? "bg-amber-500/10 border-amber-500/30 text-amber-400" : "bg-green-500/10 border-green-500/30 text-green-400"}`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${vencida ? "bg-red-400" : urgente ? "bg-amber-400 animate-pulse" : "bg-green-400"}`} />
-                  {vencida ? `Visita atrasada ${Math.abs(dias)} dia(s)` : `Próxima visita em ${dias} dia(s) — ${new Date(emp.proxima_visita).toLocaleDateString("pt-BR")}`}
+                <div
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border mb-4 ${
+                    vencida
+                      ? "bg-red-500/10 border-red-500/30 text-red-400"
+                      : urgente
+                        ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                        : "bg-green-500/10 border-green-500/30 text-green-400"
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      vencida ? "bg-red-400" : urgente ? "bg-amber-400 animate-pulse" : "bg-green-400"
+                    }`}
+                  />
+                  {vencida
+                    ? `Visita atrasada ${Math.abs(dias)} dia(s)`
+                    : `Próxima visita em ${dias} dia(s) — ${new Date(emp.proxima_visita).toLocaleDateString("pt-BR")}`}
                 </div>
 
-                {/* PCs */}
                 <div>
-                  <p className="text-xs text-muted-foreground font-semibold mb-2">🖥️ Computadores ({emp.pcs?.length || 0})</p>
+                  <p className="text-xs text-muted-foreground font-semibold mb-2">
+                    🖥️ Computadores ({emp.pcs?.length || 0})
+                  </p>
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {(emp.pcs || []).map(pc => (
+                    {(emp.pcs || []).map((pc) => (
                       <div key={pc.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-background border border-border text-xs">
                         <span className="font-semibold">{pc.nome}</span>
                         {pc.setor && <span className="text-muted-foreground">· {pc.setor}</span>}
-                        <button onClick={() => removerPC(pc.id)} className="text-muted-foreground hover:text-destructive ml-1 transition-colors">×</button>
+                        <button onClick={() => removerPC(pc.id)} className="text-muted-foreground hover:text-destructive ml-1 transition-colors">
+                          ×
+                        </button>
                       </div>
                     ))}
                   </div>
                   <div className="flex gap-2">
-                    <input value={pcNome} onChange={e => setPcNome(e.target.value)} placeholder="Nome do PC (ex: PC-01 — João)"
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-background border border-border text-xs focus:outline-none focus:border-primary" />
-                    <input value={pcSetor} onChange={e => setPcSetor(e.target.value)} placeholder="Setor (opcional)"
-                      className="w-32 px-3 py-1.5 rounded-lg bg-background border border-border text-xs focus:outline-none focus:border-primary" />
-                    <button onClick={() => adicionarPC(emp.id)}
-                      className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all">
+                    <input
+                      value={pcNome}
+                      onChange={(event) => setPcNome(event.target.value)}
+                      placeholder="Nome do PC (ex: PC-01 — João)"
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-background border border-border text-xs focus:outline-none focus:border-primary"
+                    />
+                    <input
+                      value={pcSetor}
+                      onChange={(event) => setPcSetor(event.target.value)}
+                      placeholder="Setor (opcional)"
+                      className="w-32 px-3 py-1.5 rounded-lg bg-background border border-border text-xs focus:outline-none focus:border-primary"
+                    />
+                    <button
+                      onClick={() => adicionarPC(emp.id)}
+                      className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-all"
+                    >
                       + PC
                     </button>
                   </div>
@@ -298,31 +423,54 @@ const AdminEmpresas = () => {
         </div>
       )}
 
-      {/* ── ABA: NOVA EMPRESA ── */}
       {abaAtiva === "nova" && (
         <div className="bg-card border border-border rounded-2xl p-6 space-y-3 max-w-lg">
           <h2 className="font-heading font-black text-lg mb-2">Nova Empresa</h2>
-          <input value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))} placeholder="Nome da empresa *"
-            className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary" />
-          <input value={form.contato_nome} onChange={e => setForm(f => ({ ...f, contato_nome: e.target.value }))} placeholder="Nome do responsável"
-            className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary" />
-          <input value={form.contato_telefone} onChange={e => setForm(f => ({ ...f, contato_telefone: e.target.value }))} placeholder="WhatsApp do responsável"
-            className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary" />
+          <input
+            value={form.nome}
+            onChange={(event) => setForm((current) => ({ ...current, nome: event.target.value }))}
+            placeholder="Nome da empresa *"
+            className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary"
+          />
+          <input
+            value={form.contato_nome}
+            onChange={(event) => setForm((current) => ({ ...current, contato_nome: event.target.value }))}
+            placeholder="Nome do responsável"
+            className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary"
+          />
+          <input
+            value={form.contato_telefone}
+            onChange={(event) => setForm((current) => ({ ...current, contato_telefone: event.target.value }))}
+            placeholder="WhatsApp do responsável"
+            className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary"
+          />
           <div>
             <p className="text-xs text-muted-foreground mb-2">Plano</p>
             <div className="flex gap-2">
-              {PLANOS.map(p => (
-                <button key={p} type="button" onClick={() => setForm(f => ({ ...f, plano: p }))}
-                  className={`px-4 py-2 rounded-lg text-xs font-heading font-bold border transition-all ${form.plano === p ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:border-primary hover:text-primary"}`}>
-                  {p}
+              {PLANOS.map((plano) => (
+                <button
+                  key={plano}
+                  type="button"
+                  onClick={() => setForm((current) => ({ ...current, plano }))}
+                  className={`px-4 py-2 rounded-lg text-xs font-heading font-bold border transition-all ${
+                    form.plano === plano
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background border-border text-muted-foreground hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {plano}
                 </button>
               ))}
             </div>
           </div>
           <div>
             <p className="text-xs text-muted-foreground mb-1">Data da primeira visita *</p>
-            <input type="date" value={form.proxima_visita} onChange={e => setForm(f => ({ ...f, proxima_visita: e.target.value }))}
-              className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary" />
+            <input
+              type="date"
+              value={form.proxima_visita}
+              onChange={(event) => setForm((current) => ({ ...current, proxima_visita: event.target.value }))}
+              className="w-full px-4 py-2.5 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary"
+            />
           </div>
           <div className="p-3 rounded-xl bg-primary/5 border border-primary/20">
             <p className="text-xs text-muted-foreground mb-2">Acesso do cliente</p>
@@ -332,27 +480,43 @@ const AdminEmpresas = () => {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs text-muted-foreground w-12">Senha</span>
-              <input value={form.senha} onChange={e => setForm(f => ({ ...f, senha: e.target.value.toUpperCase() }))}
-                className="font-heading font-black text-primary bg-transparent border-b border-primary/30 focus:outline-none focus:border-primary text-sm w-28" />
-              <button type="button" onClick={() => setForm(f => ({ ...f, senha: gerarSenha() }))}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors">🔄 Gerar nova</button>
+              <input
+                value={form.senha}
+                onChange={(event) => setForm((current) => ({ ...current, senha: event.target.value.toUpperCase() }))}
+                className="font-heading font-black text-primary bg-transparent border-b border-primary/30 focus:outline-none focus:border-primary text-sm w-28"
+              />
+              <button
+                type="button"
+                onClick={() => setForm((current) => ({ ...current, senha: gerarSenha() }))}
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                🔄 Gerar nova
+              </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">O cliente usa código + senha para acessar o painel</p>
+            <p className="text-xs text-muted-foreground mt-2">O cliente usa código + senha para acessar o painel.</p>
           </div>
-          <button onClick={criarEmpresa}
-            className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm hover:brightness-110 transition-all">
+          <button
+            onClick={criarEmpresa}
+            className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm hover:brightness-110 transition-all"
+          >
             Criar Empresa
           </button>
         </div>
       )}
 
-      {/* ── ABA: VISITA ── */}
       {abaAtiva === "visita" && empresaSelecionada && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-heading font-black text-lg">🔧 Visita — {empresaSelecionada.nome}</h2>
-              <p className="text-sm text-muted-foreground">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</p>
+              <p className="text-sm text-muted-foreground">
+                {new Date().toLocaleDateString("pt-BR", {
+                  weekday: "long",
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
             </div>
             <div className="text-right">
               <p className="text-xs text-muted-foreground mb-1">Progresso geral</p>
@@ -366,10 +530,12 @@ const AdminEmpresas = () => {
           </div>
 
           {(empresaSelecionada.pcs || []).length === 0 && (
-            <p className="text-muted-foreground text-sm p-4 bg-card border border-border rounded-xl">Nenhum PC cadastrado nessa empresa. Adicione PCs primeiro na lista.</p>
+            <p className="text-muted-foreground text-sm p-4 bg-card border border-border rounded-xl">
+              Nenhum PC cadastrado nessa empresa. Adicione PCs primeiro na lista.
+            </p>
           )}
 
-          {(empresaSelecionada.pcs || []).map(pc => (
+          {(empresaSelecionada.pcs || []).map((pc) => (
             <div key={pc.id} className="bg-card border border-border rounded-2xl p-5">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -386,10 +552,17 @@ const AdminEmpresas = () => {
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {CHECKLIST_ITENS.map(item => (
-                  <button key={item.key} type="button"
+                {CHECKLIST_ITENS.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
                     onClick={() => toggleCheck(pc.id, item.key)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${checklist[pc.id]?.[item.key] ? "bg-green-500/10 border-green-500/30 text-green-400" : "bg-background border-border text-muted-foreground hover:border-primary"}`}>
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                      checklist[pc.id]?.[item.key]
+                        ? "bg-green-500/10 border-green-500/30 text-green-400"
+                        : "bg-background border-border text-muted-foreground hover:border-primary"
+                    }`}
+                  >
                     <span>{item.emoji}</span>
                     <span>{item.label}</span>
                     {checklist[pc.id]?.[item.key] && <span className="ml-auto">✓</span>}
@@ -402,12 +575,18 @@ const AdminEmpresas = () => {
           {(empresaSelecionada.pcs || []).length > 0 && (
             <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
               <p className="font-heading font-bold text-sm">📝 Observações da visita</p>
-              <textarea value={obsVisita} onChange={e => setObsVisita(e.target.value)}
+              <textarea
+                value={obsVisita}
+                onChange={(event) => setObsVisita(event.target.value)}
                 placeholder="PC-02 com HD perto do limite, recomendar troca em breve..."
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary resize-none" />
-              <button onClick={salvarVisita} disabled={salvandoVisita}
-                className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm hover:brightness-110 transition-all disabled:opacity-50">
+                className="w-full px-4 py-3 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary resize-none"
+              />
+              <button
+                onClick={salvarVisita}
+                disabled={salvandoVisita}
+                className="px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm hover:brightness-110 transition-all disabled:opacity-50"
+              >
                 {salvandoVisita ? "Salvando..." : "✓ Concluir Visita"}
               </button>
             </div>

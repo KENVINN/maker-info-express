@@ -10,6 +10,7 @@ import TrackingSection from "@/components/TrackingSection";
 import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import ScrollReveal from "@/components/ScrollReveal";
+import SpotlightCard from "@/components/SpotlightCard";
 
 const ServicosPreview = () => (
   <section className="py-16 bg-card/60 backdrop-blur">
@@ -34,7 +35,7 @@ const EmpresasCTA = () => (
   <section className="py-20">
     <div className="container px-4 max-w-5xl mx-auto">
       <ScrollReveal>
-        <div className="relative rounded-2xl bg-card neon-border-cyan overflow-hidden px-8 py-12 md:px-16 md:py-14 flex flex-col md:flex-row items-center gap-8 md:gap-16">
+        <SpotlightCard className="relative rounded-2xl bg-card neon-border-cyan overflow-hidden px-8 py-12 md:px-16 md:py-14 flex flex-col md:flex-row items-center gap-8 md:gap-16">
           <div className="text-5xl shrink-0">🏢</div>
           <div className="flex-1 text-center md:text-left">
             <span className="inline-block px-3 py-1 rounded-full bg-primary/15 text-primary text-xs font-semibold mb-4">
@@ -54,7 +55,7 @@ const EmpresasCTA = () => (
           >
             Ver planos →
           </a>
-        </div>
+        </SpotlightCard>
       </ScrollReveal>
     </div>
   </section>
