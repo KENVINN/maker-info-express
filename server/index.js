@@ -168,6 +168,56 @@ function normalizeOptionalValue(value) {
   return value ? value : null;
 }
 
+function describeSupabaseKey(value) {
+  const key = `${value || ""}`;
+
+  if (!key) {
+    return { present: false, format: "missing", length: 0, prefix: "" };
+  }
+
+  if (key.startsWith("sbp_")) {
+    return { present: true, format: "personal_access_token", length: key.length, prefix: key.slice(0, 8) };
+  }
+
+  if (key.startsWith("sb_secret_")) {
+    return {
+      present: true,
+      format: key.includes("·") || key.includes("...") ? "masked_secret_key" : "secret_key",
+      length: key.length,
+      prefix: key.slice(0, 16),
+    };
+  }
+
+  if (key.startsWith("sb_publishable_")) {
+    return { present: true, format: "publishable_key", length: key.length, prefix: key.slice(0, 20) };
+  }
+
+  if (key.startsWith("eyJ")) {
+    return { present: true, format: "jwt", length: key.length, prefix: key.slice(0, 12) };
+  }
+
+  return { present: true, format: "unknown", length: key.length, prefix: key.slice(0, 12) };
+}
+
+async function runSupabaseDiagnostic(table) {
+  const result = await supabase.from(table).select("id").limit(1);
+
+  if (result.error) {
+    return {
+      ok: false,
+      code: result.error.code || null,
+      message: result.error.message || "Unknown error",
+      details: result.error.details || null,
+      hint: result.error.hint || null,
+    };
+  }
+
+  return {
+    ok: true,
+    count: Array.isArray(result.data) ? result.data.length : 0,
+  };
+}
+
 function unwrap(result, message, status = 500) {
   if (result.error) {
     throw new HttpError(status, message);
@@ -333,6 +383,34 @@ app.post("/api/auth/admin/logout", (_req, res) => {
   clearSessionCookie(res);
   res.status(204).end();
 });
+
+app.get(
+  "/api/admin/diagnostics/supabase",
+  requireSession("admin"),
+  asyncHandler(async (_req, res) => {
+    const [pedidos, empresas, leads] = await Promise.all([
+      runSupabaseDiagnostic("pedidos"),
+      runSupabaseDiagnostic("empresas"),
+      runSupabaseDiagnostic("leads_b2b"),
+    ]);
+
+    res.json({
+      urlHost: (() => {
+        try {
+          return new URL(env.supabaseUrl).host;
+        } catch {
+          return env.supabaseUrl;
+        }
+      })(),
+      key: describeSupabaseKey(env.supabaseServiceRoleKey),
+      tables: {
+        pedidos,
+        empresas,
+        leads,
+      },
+    });
+  }),
+);
 
 app.post(
   "/api/auth/company/login",
