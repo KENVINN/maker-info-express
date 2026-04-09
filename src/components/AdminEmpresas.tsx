@@ -70,23 +70,6 @@ const AdminEmpresas = ({ prefill, onPrefillConsumed }: Props) => {
 
   const prefillApplied = useRef(false);
 
-  useEffect(() => {
-    carregarEmpresas();
-  }, [carregarEmpresas]);
-
-  useEffect(() => {
-    if (!prefill || prefillApplied.current) return;
-    prefillApplied.current = true;
-    setForm((current) => ({
-      ...current,
-      nome: prefill.nome,
-      contato_nome: prefill.contato_nome,
-      contato_telefone: prefill.contato_telefone,
-    }));
-    setAbaAtiva("nova");
-    onPrefillConsumed?.();
-  }, [prefill, onPrefillConsumed]);
-
   const mostrarErro = (error: unknown) => {
     const message = error instanceof Error ? error.message : "Nao foi possivel concluir a operacao.";
     setErro(message);
@@ -105,6 +88,23 @@ const AdminEmpresas = ({ prefill, onPrefillConsumed }: Props) => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    carregarEmpresas();
+  }, [carregarEmpresas]);
+
+  useEffect(() => {
+    if (!prefill || prefillApplied.current) return;
+    prefillApplied.current = true;
+    setForm((current) => ({
+      ...current,
+      nome: prefill.nome,
+      contato_nome: prefill.contato_nome,
+      contato_telefone: prefill.contato_telefone,
+    }));
+    setAbaAtiva("nova");
+    onPrefillConsumed?.();
+  }, [prefill, onPrefillConsumed]);
 
   const criarEmpresa = async () => {
     if (!form.nome || !form.proxima_visita) {

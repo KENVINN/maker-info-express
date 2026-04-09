@@ -73,16 +73,6 @@ const Admin = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!logado) {
-      return;
-    }
-
-    carregarPedidos();
-    const intervalId = window.setInterval(carregarPedidos, 20000);
-    return () => window.clearInterval(intervalId);
-  }, [carregarPedidos, logado]);
-
   const mostrarErro = (error: unknown) => {
     const message = error instanceof Error ? error.message : "Nao foi possivel concluir a operacao.";
     setErroOperacao(message);
@@ -107,6 +97,16 @@ const Admin = () => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!logado) {
+      return;
+    }
+
+    carregarPedidos();
+    const intervalId = window.setInterval(carregarPedidos, 20000);
+    return () => window.clearInterval(intervalId);
+  }, [carregarPedidos, logado]);
 
   const login = async () => {
     try {
