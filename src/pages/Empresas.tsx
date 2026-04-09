@@ -1,8 +1,11 @@
+import { useState } from "react";
+
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
 import ScrollReveal from "@/components/ScrollReveal";
-import { ShieldCheck, MonitorCheck, Wrench, HeadphonesIcon } from "lucide-react";
+import { type LucideIcon, ShieldCheck, MonitorCheck, Wrench, HeadphonesIcon } from "lucide-react";
+import { api } from "@/lib/api";
 
 const WHATSAPP_URL = "https://api.whatsapp.com/send/?phone=556592824709&text=Olá%2C+gostaria+de+saber+mais+sobre+os+planos+para+empresas&type=phone_number&app_absent=0";
 
@@ -66,45 +69,72 @@ const planos = [
       "Verificação de saúde dos HDs",
       "Atualização do Windows",
       "Suporte remoto ilimitado",
-      "Atendimento prioritário 24h",
       "Relatório mensal detalhado",
       "Consultoria em TI inclusa",
     ],
   },
 ];
 
-const servicos = [
+const niveisPlano = [
+  { chave: "pequeno", titulo: "Pequeno", pcs: "até 5 PCs", resumo: "Essencial", destaque: false },
+  { chave: "medio", titulo: "Médio", pcs: "6 a 15 PCs", resumo: "Mais contratado", destaque: true },
+  { chave: "grande", titulo: "Grande", pcs: "15+ PCs", resumo: "Operação crítica", destaque: false },
+] as const;
+
+type PlanoKey = (typeof niveisPlano)[number]["chave"];
+
+type CoberturaPlano = {
+  icon: LucideIcon;
+  titulo: string;
+  descricao: string;
+  observacao: string;
+  valores: Record<PlanoKey, string>;
+};
+
+const coberturaPlanos: CoberturaPlano[] = [
   {
     icon: MonitorCheck,
-    emoji: "🖥️",
-    titulo: "Manutenção Preventiva Mensal",
-    problema: "Equipamentos parando na hora errada custa caro.",
-    descricao: "Visita mensal para limpar fisicamente os PCs, verificar temperaturas, checar saúde dos discos e atualizar o sistema. Prevenimos antes do problema acontecer.",
-    beneficios: ["Menos quebras inesperadas", "PCs sempre atualizados", "Relatório de cada visita"],
+    titulo: "Manutenção preventiva",
+    descricao: "Rotina técnica para reduzir travamentos, superaquecimento, lentidão e falhas antes que virem prejuízo.",
+    observacao: "Menos surpresa, menos máquina parada e mais previsibilidade para a operação.",
+    valores: {
+      pequeno: "Mensal",
+      medio: "Mensal",
+      grande: "Quinzenal",
+    },
   },
   {
     icon: HeadphonesIcon,
-    emoji: "🎧",
-    titulo: "Suporte Técnico Remoto",
-    problema: "Problema urgente e não pode esperar visita?",
-    descricao: "Acessamos o computador do seu colaborador remotamente via AnyDesk e resolvemos na hora. Sem deslocamento, sem espera, sem parar o trabalho.",
-    beneficios: ["Resolução em minutos", "Sem precisar sair do lugar", "Disponível nos dias úteis"],
+    titulo: "Suporte remoto",
+    descricao: "Atendimento rápido para erros, travamentos e ajustes do dia a dia sem esperar visita técnica.",
+    observacao: "Seu time volta a trabalhar mais rápido, com menos interrupção.",
+    valores: {
+      pequeno: "Incluído",
+      medio: "Ilimitado",
+      grande: "Ilimitado prioritário",
+    },
   },
   {
     icon: Wrench,
-    emoji: "🔧",
-    titulo: "Manutenção Corretiva",
-    problema: "PC quebrou e precisa resolver rápido?",
-    descricao: "Atendemos chamados de emergência com prioridade para clientes com contrato. Diagnóstico, reparo e retorno do equipamento o mais rápido possível.",
-    beneficios: ["Prioridade no atendimento", "Orçamento antes do serviço", "Garantia no reparo"],
+    titulo: "Manutenção corretiva",
+    descricao: "Diagnóstico e reparo para quando o problema já aconteceu e precisa de resposta sem enrolação.",
+    observacao: "Quem tem contrato não entra no fim da fila quando a urgência aparece.",
+    valores: {
+      pequeno: "Fila prioritária",
+      medio: "Atendimento expresso",
+      grande: "Prioridade máxima",
+    },
   },
   {
     icon: ShieldCheck,
-    emoji: "🛡️",
-    titulo: "Consultoria e Relatório de TI",
-    problema: "Não sabe o estado real dos equipamentos da empresa?",
-    descricao: "Entregamos todo mês um relatório completo: quais PCs estão com problema, o que precisa de upgrade em breve e recomendações para evitar paradas.",
-    beneficios: ["Decisões com base em dados", "Planejamento de upgrades", "Incluído nos planos Médio e Grande"],
+    titulo: "Relatório e consultoria",
+    descricao: "Clareza sobre o estado dos equipamentos, próximos riscos e onde vale investir antes do problema crescer.",
+    observacao: "Você deixa de apagar incêndio e passa a decidir com base em cenário real.",
+    valores: {
+      pequeno: "Sob demanda",
+      medio: "Relatório mensal",
+      grande: "Relatório + consultoria",
+    },
   },
 ];
 
@@ -126,7 +156,28 @@ const diferenciais = [
   },
 ];
 
+const QTD_PCS_OPTIONS = ["1–5 PCs", "6–15 PCs", "15+ PCs", "Ainda não sei"];
+
 const Empresas = () => {
+  const [form, setForm] = useState({ nome_empresa: "", contato_nome: "", contato_telefone: "", qtd_pcs: "" });
+  const [enviando, setEnviando] = useState(false);
+  const [sucesso, setSucesso] = useState(false);
+  const [erro, setErro] = useState("");
+
+  const enviarLead = async () => {
+    if (!form.nome_empresa.trim() || !form.contato_telefone.trim()) return;
+    setEnviando(true);
+    setErro("");
+    try {
+      await api.leads.create(form);
+      setSucesso(true);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível enviar. Tente pelo WhatsApp.");
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -204,33 +255,120 @@ const Empresas = () => {
           </div>
         </div>
 
-        {/* Serviços incluídos */}
+        {/* Cobertura dos planos */}
         <div className="container px-4 max-w-6xl mx-auto mb-24">
           <ScrollReveal>
             <h2 className="font-heading text-3xl font-black text-center mb-4">
-              O que está{" "}
-              <span className="text-gradient-neon">incluído nos planos</span>
+              Veja o nível de{" "}
+              <span className="text-gradient-neon">proteção em cada plano</span>
             </h2>
             <p className="text-muted-foreground text-center max-w-xl mx-auto mb-12">
-              Cada plano cobre todos esses serviços, de forma preventiva ou sob demanda.
+              Você não está contratando só visita técnica. Está comprando prevenção, resposta rápida e mais controle sobre a TI da empresa.
             </p>
           </ScrollReveal>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {servicos.map((s, i) => (
-              <ScrollReveal key={i} delay={i * 100}>
-                <div className="relative flex flex-col h-full p-6 rounded-2xl bg-card neon-border-purple hover:neon-glow-purple transition-all duration-300 group">
-                  <div className="text-4xl mb-4 group-hover:animate-float">{s.emoji}</div>
-                  <h2 className="font-heading font-black text-lg mb-2 text-foreground">{s.titulo}</h2>
-                  <p className="text-primary text-sm font-semibold mb-3 italic">"{s.problema}"</p>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-1">{s.descricao}</p>
-                  <ul className="space-y-1.5">
-                    {s.beneficios.map((b, j) => (
-                      <li key={j} className="flex items-center gap-2 text-sm text-foreground">
-                        <span className="text-primary font-bold">✓</span>
-                        {b}
-                      </li>
+          <ScrollReveal delay={100}>
+            <div className="hidden lg:block overflow-hidden rounded-[28px] bg-card/70 backdrop-blur neon-border-purple">
+              <div className="grid grid-cols-[minmax(0,1.8fr)_repeat(3,minmax(0,0.95fr))] bg-background/50">
+                <div className="px-6 py-5 border-b border-border/70">
+                  <p className="text-xs font-bold uppercase tracking-[0.28em] text-muted-foreground mb-2">
+                    Comparativo
+                  </p>
+                  <p className="font-heading text-2xl font-black text-foreground">
+                    O que sua empresa recebe
+                  </p>
+                </div>
+                {niveisPlano.map((plano) => (
+                  <div
+                    key={plano.chave}
+                    className={`px-4 py-5 border-b border-border/70 ${plano.destaque ? "bg-primary/5" : ""}`}
+                  >
+                    <p className="text-xs font-bold uppercase tracking-[0.24em] text-muted-foreground mb-1">
+                      Plano
+                    </p>
+                    <p className="font-heading text-xl font-black text-foreground">{plano.titulo}</p>
+                    <p className="text-xs text-primary font-semibold mt-1">{plano.resumo}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{plano.pcs}</p>
+                  </div>
+                ))}
+              </div>
+
+              {coberturaPlanos.map((item, index) => (
+                <div
+                  key={item.titulo}
+                  className={`grid grid-cols-[minmax(0,1.8fr)_repeat(3,minmax(0,0.95fr))] ${
+                    index > 0 ? "border-t border-border/70" : ""
+                  }`}
+                >
+                  <div className="px-6 py-5">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-primary/10 neon-border-cyan flex items-center justify-center shrink-0">
+                        <item.icon size={22} className="text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-heading text-lg font-black text-foreground mb-2">{item.titulo}</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-2">{item.descricao}</p>
+                        <p className="text-xs font-semibold text-primary">{item.observacao}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {niveisPlano.map((plano) => (
+                    <div
+                      key={plano.chave}
+                      className={`px-4 py-5 flex items-center ${plano.destaque ? "bg-primary/5" : ""}`}
+                    >
+                      <div
+                        className={`w-full rounded-2xl px-3 py-3 text-center text-sm font-bold leading-snug ${
+                          plano.destaque
+                            ? "bg-primary/15 text-primary border border-primary/20"
+                            : "bg-background/70 text-foreground border border-border"
+                        }`}
+                      >
+                        {item.valores[plano.chave]}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </ScrollReveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+            {coberturaPlanos.map((item, index) => (
+              <ScrollReveal key={item.titulo} delay={index * 80}>
+                <div className="h-full rounded-2xl bg-card p-5 neon-border-purple">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-11 h-11 rounded-2xl bg-primary/10 neon-border-cyan flex items-center justify-center shrink-0">
+                      <item.icon size={20} className="text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-heading text-lg font-black text-foreground">{item.titulo}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed mt-1">{item.descricao}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {niveisPlano.map((plano) => (
+                      <div
+                        key={plano.chave}
+                        className={`rounded-2xl border px-3 py-3 text-center ${
+                          plano.destaque
+                            ? "border-primary/20 bg-primary/10"
+                            : "border-border bg-background/50"
+                        }`}
+                      >
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                          {plano.titulo}
+                        </p>
+                        <p className="mt-1 text-[10px] font-semibold text-primary">{plano.resumo}</p>
+                        <p className="mt-2 text-xs font-bold leading-snug text-foreground">
+                          {item.valores[plano.chave]}
+                        </p>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+
+                  <p className="mt-4 text-xs font-semibold text-primary">{item.observacao}</p>
                 </div>
               </ScrollReveal>
             ))}
@@ -262,24 +400,89 @@ const Empresas = () => {
           </div>
         </div>
 
-        {/* CTA final */}
-        <div className="container px-4 max-w-2xl mx-auto text-center mt-24">
+        {/* CTA final — formulário de lead */}
+        <div className="container px-4 max-w-xl mx-auto mt-24">
           <ScrollReveal>
-            <h2 className="font-heading text-3xl md:text-4xl font-black mb-4">
-              Sua empresa merece TI de qualidade 🚀
-            </h2>
-            <p className="text-muted-foreground mb-8">
-              Manda uma mensagem agora. Fazemos uma visita de diagnóstico grátis antes de fechar qualquer contrato.
-            </p>
-            <a
-              href={WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-10 py-5 rounded-xl bg-[#25D366] text-white font-heading text-lg font-bold hover:brightness-110 transition-all shadow-lg shadow-[#25D366]/25"
-            >
-              <WhatsAppIcon />
-              FALAR COM O TÉCNICO AGORA
-            </a>
+            <div className="text-center mb-8">
+              <h2 className="font-heading text-3xl md:text-4xl font-black mb-4">
+                Agende um diagnóstico gratuito 🚀
+              </h2>
+              <p className="text-muted-foreground">
+                Preencha abaixo e entraremos em contato em até 24h. Sem compromisso.
+              </p>
+            </div>
+
+            {sucesso ? (
+              <div className="p-6 rounded-2xl bg-green-500/10 border border-green-500/30 text-center space-y-3">
+                <p className="text-green-400 font-heading font-black text-xl">✓ Recebemos seu contato!</p>
+                <p className="text-muted-foreground text-sm">
+                  Entraremos em contato pelo WhatsApp em breve para agendar a visita de diagnóstico.
+                </p>
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#25D366] text-white font-heading font-bold text-sm hover:brightness-110 transition-all"
+                >
+                  <WhatsAppIcon />
+                  Falar agora pelo WhatsApp
+                </a>
+              </div>
+            ) : (
+              <div className="bg-card border border-border rounded-2xl p-6 space-y-3">
+                <input
+                  value={form.nome_empresa}
+                  onChange={(e) => setForm((f) => ({ ...f, nome_empresa: e.target.value }))}
+                  placeholder="Nome da empresa *"
+                  className="w-full px-4 py-3 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary"
+                />
+                <input
+                  value={form.contato_nome}
+                  onChange={(e) => setForm((f) => ({ ...f, contato_nome: e.target.value }))}
+                  placeholder="Seu nome (responsável)"
+                  className="w-full px-4 py-3 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary"
+                />
+                <input
+                  value={form.contato_telefone}
+                  onChange={(e) => setForm((f) => ({ ...f, contato_telefone: e.target.value }))}
+                  placeholder="WhatsApp para contato *"
+                  className="w-full px-4 py-3 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-primary"
+                />
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">Quantos computadores sua empresa tem?</p>
+                  <div className="flex flex-wrap gap-2">
+                    {QTD_PCS_OPTIONS.map((op) => (
+                      <button
+                        key={op}
+                        type="button"
+                        onClick={() => setForm((f) => ({ ...f, qtd_pcs: op }))}
+                        className={`px-4 py-2 rounded-lg text-xs font-heading font-bold border transition-all ${
+                          form.qtd_pcs === op
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background border-border text-muted-foreground hover:border-primary hover:text-primary"
+                        }`}
+                      >
+                        {op}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {erro && <p className="text-destructive text-sm">{erro}</p>}
+                <button
+                  onClick={enviarLead}
+                  disabled={enviando || !form.nome_empresa.trim() || !form.contato_telefone.trim()}
+                  className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-heading font-bold text-sm hover:brightness-110 transition-all disabled:opacity-50"
+                >
+                  {enviando ? "Enviando..." : "Solicitar diagnóstico gratuito"}
+                </button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Prefere falar agora?{" "}
+                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:brightness-110 transition-colors">
+                    Abrir WhatsApp
+                  </a>
+                </p>
+              </div>
+            )}
           </ScrollReveal>
         </div>
 
