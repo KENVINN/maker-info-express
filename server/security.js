@@ -41,8 +41,10 @@ export function requireAllowedOrigin(req, res, next) {
   }
 
   const origin = req.get("origin");
+  const host = req.get("host");
+  const requestOrigin = host ? `${req.protocol}://${host}` : null;
 
-  if (!origin || !env.allowedOrigins.includes(origin)) {
+  if (!origin || (!env.allowedOrigins.includes(origin) && origin !== requestOrigin)) {
     return res.status(403).json({ error: "Origem nao autorizada." });
   }
 
